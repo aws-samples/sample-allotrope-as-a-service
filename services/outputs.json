@@ -1,0 +1,13 @@
+{
+  "AutonomousServicesStack": {
+    "DVaaSAPIEndpointD509D4BE": "https://4ndgjn16zd.execute-api.us-east-1.amazonaws.com/prod/",
+    "ASMFilesBucket": "asm-converted-files",
+    "MultiInstrumentAPIEndpoint": "https://6uogqq4zb5.execute-api.us-east-1.amazonaws.com/prod/",
+    "UnifiedConverterAPIEndpoint": "https://tqzatn5bse.execute-api.us-east-1.amazonaws.com/prod/",
+    "ATaaSAPIEndpoint": "https://3dbnsq6w6h.execute-api.us-east-1.amazonaws.com/prod/",
+    "ATaaSAPIEndpoint1C78CA84": "https://3dbnsq6w6h.execute-api.us-east-1.amazonaws.com/prod/",
+    "UnifiedConverterAPIEndpoint054814FB": "https://tqzatn5bse.execute-api.us-east-1.amazonaws.com/prod/",
+    "DVaaSAPIEndpoint": "https://4ndgjn16zd.execute-api.us-east-1.amazonaws.com/prod/",
+    "MultiInstrumentAPIEndpoint79694308": "https://6uogqq4zb5.execute-api.us-east-1.amazonaws.com/prod/"
+  }
+}

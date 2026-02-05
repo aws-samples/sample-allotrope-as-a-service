@@ -22,7 +22,7 @@ class DashboardStack(Stack):
         # S3 bucket (private, served via CloudFront)
         website_bucket = s3.Bucket(
             self, "DashboardBucket",
-            bucket_name="asm-dashboard-website",
+            bucket_name=f"asm-dashboard-website-{cdk.Aws.ACCOUNT_ID}-{cdk.Aws.REGION}",
             removal_policy=RemovalPolicy.DESTROY,
             auto_delete_objects=True
         )

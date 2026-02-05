@@ -56,17 +56,17 @@ class AutonomousServicesStack(Stack):
             }
         )
 
-        # Add S3 buckets for storage
+        # Add S3 buckets for storage (names include account ID for global uniqueness)
         asm_files_bucket = s3.Bucket(
             self, "ASMConvertedFiles",
-            bucket_name="asm-converted-files",
+            bucket_name=f"asm-converted-files-{cdk.Aws.ACCOUNT_ID}-{cdk.Aws.REGION}",
             removal_policy=RemovalPolicy.DESTROY,
             auto_delete_objects=True
         )
 
         validation_results_bucket = s3.Bucket(
             self, "ASMValidationResults",
-            bucket_name="asm-validation-results",
+            bucket_name=f"asm-validation-results-{cdk.Aws.ACCOUNT_ID}-{cdk.Aws.REGION}",
             removal_policy=RemovalPolicy.DESTROY,
             auto_delete_objects=True
         )
@@ -187,6 +187,24 @@ class AutonomousServicesStack(Stack):
                     "Access-Control-Allow-Origin": True
                 }
             }]
+        )
+
+        # Health check for ATaaS
+        ataas_health = ataas_api.root.add_resource("health")
+        ataas_health.add_method(
+            "GET",
+            apigateway.MockIntegration(
+                integration_responses=[{
+                    "statusCode": "200",
+                    "responseTemplates": {
+                        "application/json": '{"status": "healthy", "service": "ATaaS"}'
+                    }
+                }],
+                request_templates={
+                    "application/json": '{"statusCode": 200}'
+                }
+            ),
+            method_responses=[{"statusCode": "200"}]
         )
 
         # Multi-Instrument API Gateway

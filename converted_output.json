@@ -1,0 +1,49 @@
+{
+  "$asm.manifest": "http://purl.allotrope.org/manifests/solution-analyzer/BENCHLING/2023/09/solution-analyzer.manifest",
+  "measurement document": [
+    {
+      "measurement identifier": "SAMPLE_001",
+      "measurement time": "2025-12-22T09:34:35.436985",
+      "processed data document": [
+        {
+          "concentration": 5.2,
+          "pH": 7.1,
+          "temperature": 23.5
+        }
+      ]
+    },
+    {
+      "measurement identifier": "SAMPLE_002",
+      "measurement time": "2025-12-22T09:34:35.437255",
+      "processed data document": [
+        {
+          "concentration": 3.8,
+          "pH": 6.9,
+          "temperature": 24.1
+        }
+      ]
+    },
+    {
+      "measurement identifier": "SAMPLE_003",
+      "measurement time": "2025-12-22T09:34:35.437267",
+      "processed data document": [
+        {
+          "concentration": 7.1,
+          "pH": 7.3,
+          "temperature": 23.8
+        }
+      ]
+    },
+    {
+      "measurement identifier": "SAMPLE_004",
+      "measurement time": "2025-12-22T09:34:35.437295",
+      "processed data document": [
+        {
+          "concentration": 4.5,
+          "pH": 7.0,
+          "temperature": 24.0
+        }
+      ]
+    }
+  ]
+}

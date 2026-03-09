@@ -1,0 +1,12 @@
+{
+  "$asm.manifest": "http://purl.allotrope.org/manifests/solution-analyzer/BENCHLING/2023/09/solution-analyzer.manifest",
+  "measurement document": [
+    {
+      "measurement identifier": "TEST_001",
+      "measurement time": "2025-12-23T15:58:20.020208",
+      "processed data document": {
+        "format": "CSV"
+      }
+    }
+  ]
+}

@@ -1,0 +1,18 @@
+
+Show Commands
+
+python demo_presentation.py --show manifest      # Manifest file example
+python demo_presentation.py --show instruments   # Supported instruments list
+
+
+# 1. Check services are healthy
+python demo_presentation.py --health-check
+
+# 2. Convert their actual data
+python demo_presentation.py --demo conversion
+
+# 3. Show validation comparison (the "wow" moment)
+python demo_presentation.py --demo validation
+
+# 4. Show performance metrics
+python demo_presentation.py --demo performance

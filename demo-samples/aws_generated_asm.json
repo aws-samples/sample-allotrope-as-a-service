@@ -1,0 +1,2514 @@
+{
+  "$asm.manifest": "http://purl.allotrope.org/manifests/solution-analyzer/REC/2025/06/solution-analyzer.manifest",
+  "solution analyzer aggregate document": {
+    "data system document": {
+      "ASM converter name": "aws_nova_flex2_converter",
+      "ASM converter version": "1.0.0",
+      "file name": "nova_flex2_output.csv",
+      "software name": "Nova FLEX2"
+    },
+    "device system document": {
+      "device identifier": "bioprofile flex2",
+      "product manufacturer": "nova biomedical",
+      "device document": [
+        {
+          "device type": "solution analyzer"
+        }
+      ]
+    },
+    "solution analyzer document": [
+      {
+        "measurement aggregate document": {
+          "measurement document": [
+            {
+              "measurement identifier": "measurement-1",
+              "measurement time": "11/1/2025  4:46:26 AM",
+              "device control aggregate document": {
+                "device control document": [
+                  {
+                    "device type": "solution analyzer",
+                    "detection type": "sensor"
+                  }
+                ]
+              },
+              "pH": {
+                "value": 7.183,
+                "unit": "pH"
+              },
+              "pO2": {
+                "value": 94.5,
+                "unit": "mmHg"
+              },
+              "pCO2": {
+                "value": 31.4,
+                "unit": "mmHg"
+              },
+              "osmolality": {
+                "value": 302,
+                "unit": "mosm/kg"
+              },
+              "analyte aggregate document": {
+                "analyte document": [
+                  {
+                    "analyte name": "glutamine",
+                    "molar concentration": {
+                      "value": 1.8,
+                      "unit": "mmol/L"
+                    }
+                  },
+                  {
+                    "analyte name": "glutamate",
+                    "molar concentration": {
+                      "value": 2.38,
+                      "unit": "mmol/L"
+                    }
+                  },
+                  {
+                    "analyte name": "glucose",
+                    "mass concentration": {
+                      "value": 8.21,
+                      "unit": "g/L"
+                    }
+                  },
+                  {
+                    "analyte name": "lactate",
+                    "mass concentration": {
+                      "value": 0.25,
+                      "unit": "g/L"
+                    }
+                  },
+                  {
+                    "analyte name": "ammonium",
+                    "molar concentration": {
+                      "value": 1.02,
+                      "unit": "mmol/L"
+                    }
+                  },
+                  {
+                    "analyte name": "sodium",
+                    "molar concentration": {
+                      "value": 98.7,
+                      "unit": "mmol/L"
+                    }
+                  },
+                  {
+                    "analyte name": "potassium",
+                    "molar concentration": {
+                      "value": 5.68,
+                      "unit": "mmol/L"
+                    }
+                  },
+                  {
+                    "analyte name": "calcium",
+                    "molar concentration": {
+                      "value": 0.43,
+                      "unit": "mmol/L"
+                    }
+                  }
+                ]
+              },
+              "sample document": {
+                "sample identifier": "XB21-720-0300",
+                "description": "Default"
+              }
+            },
+            {
+              "measurement identifier": "measurement-2",
+              "measurement time": "11/1/2025  4:51:31 AM",
+              "device control aggregate document": {
+                "device control document": [
+                  {
+                    "device type": "solution analyzer",
+                    "detection type": "sensor"
+                  }
+                ]
+              },
+              "pH": {
+                "value": 7.164,
+                "unit": "pH"
+              },
+              "pO2": {
+                "value": 63.1,
+                "unit": "mmHg"
+              },
+              "pCO2": {
+                "value": 24,
+                "unit": "mmHg"
+              },
+              "osmolality": {
+                "value": 301,
+                "unit": "mosm/kg"
+              },
+              "analyte aggregate document": {
+                "analyte document": [
+                  {
+                    "analyte name": "glutamine",
+                    "molar concentration": {
+                      "value": 1.69,
+                      "unit": "mmol/L"
+                    }
+                  },
+                  {
+                    "analyte name": "glutamate",
+                    "molar concentration": {
+                      "value": 2.32,
+                      "unit": "mmol/L"
+                    }
+                  },
+                  {
+                    "analyte name": "glucose",
+                    "mass concentration": {
+                      "value": 7.87,
+                      "unit": "g/L"
+                    }
+                  },
+                  {
+                    "analyte name": "lactate",
+                    "mass concentration": {
+                      "value": 0.48,
+                      "unit": "g/L"
+                    }
+                  },
+                  {
+                    "analyte name": "ammonium",
+                    "molar concentration": {
+                      "value": 1.08,
+                      "unit": "mmol/L"
+                    }
+                  },
+                  {
+                    "analyte name": "sodium",
+                    "molar concentration": {
+                      "value": 98.8,
+                      "unit": "mmol/L"
+                    }
+                  },
+                  {
+                    "analyte name": "potassium",
+                    "molar concentration": {
+                      "value": 5.72,
+                      "unit": "mmol/L"
+                    }
+                  },
+                  {
+                    "analyte name": "calcium",
+                    "molar concentration": {
+                      "value": 0.43,
+                      "unit": "mmol/L"
+                    }
+                  }
+                ]
+              },
+              "sample document": {
+                "sample identifier": "XB22-720-0270",
+                "description": "Default"
+              }
+            },
+            {
+              "measurement identifier": "measurement-3",
+              "measurement time": "11/2/2025  10:37:02 AM",
+              "device control aggregate document": {
+                "device control document": [
+                  {
+                    "device type": "solution analyzer",
+                    "detection type": "sensor"
+                  }
+                ]
+              },
+              "pH": {
+                "value": 6.976,
+                "unit": "pH"
+              },
+              "pO2": {
+                "value": 70.7,
+                "unit": "mmHg"
+              },
+              "pCO2": {
+                "value": 11.1,
+                "unit": "mmHg"
+              },
+              "osmolality": {
+                "value": 295,
+                "unit": "mosm/kg"
+              },
+              "analyte aggregate document": {
+                "analyte document": [
+                  {
+                    "analyte name": "glutamine",
+                    "molar concentration": {
+                      "value": 1.74,
+                      "unit": "mmol/L"
+                    }
+                  },
+                  {
+                    "analyte name": "glutamate",
+                    "molar concentration": {
+                      "value": 2.96,
+                      "unit": "mmol/L"
+                    }
+                  },
+                  {
+                    "analyte name": "glucose",
+                    "mass concentration": {
+                      "value": 7,
+                      "unit": "g/L"
+                    }
+                  },
+                  {
+                    "analyte name": "lactate",
+                    "mass concentration": {
+                      "value": 0.93,
+                      "unit": "g/L"
+                    }
+                  },
+                  {
+                    "analyte name": "ammonium",
+                    "molar concentration": {
+                      "value": 1.73,
+                      "unit": "mmol/L"
+                    }
+                  },
+                  {
+                    "analyte name": "sodium",
+                    "molar concentration": {
+                      "value": 98.9,
+                      "unit": "mmol/L"
+                    }
+                  },
+                  {
+                    "analyte name": "potassium",
+                    "molar concentration": {
+                      "value": 5.49,
+                      "unit": "mmol/L"
+                    }
+                  },
+                  {
+                    "analyte name": "calcium",
+                    "molar concentration": {
+                      "value": 0.43,
+                      "unit": "mmol/L"
+                    }
+                  }
+                ]
+              },
+              "sample document": {
+                "sample identifier": "XB21-0698-0120",
+                "description": "Default"
+              }
+            },
+            {
+              "measurement identifier": "measurement-4",
+              "measurement time": "11/2/2025  10:42:58 AM",
+              "device control aggregate document": {
+                "device control document": [
+                  {
+                    "device type": "solution analyzer",
+                    "detection type": "sensor"
+                  }
+                ]
+              },
+              "pH": {
+                "value": 6.876,
+                "unit": "pH"
+              },
+              "pO2": {
+                "value": 69.8,
+                "unit": "mmHg"
+              },
+              "pCO2": {
+                "value": 14.6,
+                "unit": "mmHg"
+              },
+              "osmolality": {
+                "value": 302,
+                "unit": "mosm/kg"
+              },
+              "analyte aggregate document": {
+                "analyte document": [
+                  {
+                    "analyte name": "glutamine",
+                    "molar concentration": {
+                      "value": 1.57,
+                      "unit": "mmol/L"
+                    }
+                  },
+                  {
+                    "analyte name": "glutamate",
+                    "molar concentration": {
+                      "value": 2.68,
+                      "unit": "mmol/L"
+                    }
+                  },
+                  {
+                    "analyte name": "glucose",
+                    "mass concentration": {
+                      "value": 6.1,
+                      "unit": "g/L"
+                    }
+                  },
+                  {
+                    "analyte name": "lactate",
+                    "mass concentration": {
+                      "value": 1.49,
+                      "unit": "g/L"
+                    }
+                  },
+                  {
+                    "analyte name": "ammonium",
+                    "molar concentration": {
+                      "value": 1.67,
+                      "unit": "mmol/L"
+                    }
+                  },
+                  {
+                    "analyte name": "sodium",
+                    "molar concentration": {
+                      "value": 103.7,
+                      "unit": "mmol/L"
+                    }
+                  },
+                  {
+                    "analyte name": "potassium",
+                    "molar concentration": {
+                      "value": 5.3,
+                      "unit": "mmol/L"
+                    }
+                  },
+                  {
+                    "analyte name": "calcium",
+                    "molar concentration": {
+                      "value": 0.43,
+                      "unit": "mmol/L"
+                    }
+                  }
+                ]
+              },
+              "sample document": {
+                "sample identifier": "XB22-0690-0190",
+                "description": "Default"
+              }
+            },
+            {
+              "measurement identifier": "measurement-5",
+              "measurement time": "11/3/2025  6:51:35 AM",
+              "device control aggregate document": {
+                "device control document": [
+                  {
+                    "device type": "solution analyzer",
+                    "detection type": "sensor"
+                  }
+                ]
+              },
+              "pH": {
+                "value": 6.895,
+                "unit": "pH"
+              },
+              "pO2": {
+                "value": 84.4,
+                "unit": "mmHg"
+              },
+              "pCO2": {
+                "value": 17.6,
+                "unit": "mmHg"
+              },
+              "osmolality": {
+                "value": 298,
+                "unit": "mosm/kg"
+              },
+              "analyte aggregate document": {
+                "analyte document": [
+                  {
+                    "analyte name": "glutamine",
+                    "molar concentration": {
+                      "value": 1.7,
+                      "unit": "mmol/L"
+                    }
+                  },
+                  {
+                    "analyte name": "glutamate",
+                    "molar concentration": {
+                      "value": 3.13,
+                      "unit": "mmol/L"
+                    }
+                  },
+                  {
+                    "analyte name": "glucose",
+                    "mass concentration": {
+                      "value": 5.72,
+                      "unit": "g/L"
+                    }
+                  },
+                  {
+                    "analyte name": "lactate",
+                    "mass concentration": {
+                      "value": 1.44,
+                      "unit": "g/L"
+                    }
+                  },
+                  {
+                    "analyte name": "ammonium",
+                    "molar concentration": {
+                      "value": 2.26,
+                      "unit": "mmol/L"
+                    }
+                  },
+                  {
+                    "analyte name": "sodium",
+                    "molar concentration": {
+                      "value": 105.1,
+                      "unit": "mmol/L"
+                    }
+                  },
+                  {
+                    "analyte name": "potassium",
+                    "molar concentration": {
+                      "value": 5.13,
+                      "unit": "mmol/L"
+                    }
+                  },
+                  {
+                    "analyte name": "calcium",
+                    "molar concentration": {
+                      "value": 0.42,
+                      "unit": "mmol/L"
+                    }
+                  }
+                ]
+              },
+              "sample document": {
+                "sample identifier": "XB21-0690-0190",
+                "description": "Default"
+              }
+            },
+            {
+              "measurement identifier": "measurement-6",
+              "measurement time": "11/3/2025  6:57:21 AM",
+              "device control aggregate document": {
+                "device control document": [
+                  {
+                    "device type": "solution analyzer",
+                    "detection type": "sensor"
+                  }
+                ]
+              },
+              "pH": {
+                "value": 6.887,
+                "unit": "pH"
+              },
+              "pO2": {
+                "value": 76.7,
+                "unit": "mmHg"
+              },
+              "pCO2": {
+                "value": 26.1,
+                "unit": "mmHg"
+              },
+              "osmolality": {
+                "value": 309,
+                "unit": "mosm/kg"
+              },
+              "analyte aggregate document": {
+                "analyte document": [
+                  {
+                    "analyte name": "glutamine",
+                    "molar concentration": {
+                      "value": 1.31,
+                      "unit": "mmol/L"
+                    }
+                  },
+                  {
+                    "analyte name": "glutamate",
+                    "molar concentration": {
+                      "value": 2.78,
+                      "unit": "mmol/L"
+                    }
+                  },
+                  {
+                    "analyte name": "glucose",
+                    "mass concentration": {
+                      "value": 4.13,
+                      "unit": "g/L"
+                    }
+                  },
+                  {
+                    "analyte name": "lactate",
+                    "mass concentration": {
+                      "value": 2.44,
+                      "unit": "g/L"
+                    }
+                  },
+                  {
+                    "analyte name": "ammonium",
+                    "molar concentration": {
+                      "value": 2,
+                      "unit": "mmol/L"
+                    }
+                  },
+                  {
+                    "analyte name": "sodium",
+                    "molar concentration": {
+                      "value": 116.8,
+                      "unit": "mmol/L"
+                    }
+                  },
+                  {
+                    "analyte name": "potassium",
+                    "molar concentration": {
+                      "value": 4.64,
+                      "unit": "mmol/L"
+                    }
+                  },
+                  {
+                    "analyte name": "calcium",
+                    "molar concentration": {
+                      "value": 0.41,
+                      "unit": "mmol/L"
+                    }
+                  }
+                ]
+              },
+              "sample document": {
+                "sample identifier": "XB22-0690-0270",
+                "description": "Default"
+              }
+            },
+            {
+              "measurement identifier": "measurement-7",
+              "measurement time": "11/4/2025  6:54:09 AM",
+              "device control aggregate document": {
+                "device control document": [
+                  {
+                    "device type": "solution analyzer",
+                    "detection type": "sensor"
+                  }
+                ]
+              },
+              "pH": {
+                "value": 6.911,
+                "unit": "pH"
+              },
+              "pO2": {
+                "value": 71.5,
+                "unit": "mmHg"
+              },
+              "pCO2": {
+                "value": 35.3,
+                "unit": "mmHg"
+              },
+              "osmolality": {
+                "value": 300,
+                "unit": "mosm/kg"
+              },
+              "analyte aggregate document": {
+                "analyte document": [
+                  {
+                    "analyte name": "glutamine",
+                    "molar concentration": {
+                      "value": 1.54,
+                      "unit": "mmol/L"
+                    }
+                  },
+                  {
+                    "analyte name": "glutamate",
+                    "molar concentration": {
+                      "value": 3.01,
+                      "unit": "mmol/L"
+                    }
+                  },
+                  {
+                    "analyte name": "glucose",
+                    "mass concentration": {
+                      "value": 4.52,
+                      "unit": "g/L"
+                    }
+                  },
+                  {
+                    "analyte name": "lactate",
+                    "mass concentration": {
+                      "value": 1.72,
+                      "unit": "g/L"
+                    }
+                  },
+                  {
+                    "analyte name": "ammonium",
+                    "molar concentration": {
+                      "value": 2.16,
+                      "unit": "mmol/L"
+                    }
+                  },
+                  {
+                    "analyte name": "sodium",
+                    "molar concentration": {
+                      "value": 112.7,
+                      "unit": "mmol/L"
+                    }
+                  },
+                  {
+                    "analyte name": "potassium",
+                    "molar concentration": {
+                      "value": 4.62,
+                      "unit": "mmol/L"
+                    }
+                  },
+                  {
+                    "analyte name": "calcium",
+                    "molar concentration": {
+                      "value": 0.41,
+                      "unit": "mmol/L"
+                    }
+                  }
+                ]
+              },
+              "sample document": {
+                "sample identifier": "XB21-0690-0370",
+                "description": "Default"
+              }
+            },
+            {
+              "measurement identifier": "measurement-8",
+              "measurement time": "11/4/2025  6:58:56 AM",
+              "device control aggregate document": {
+                "device control document": [
+                  {
+                    "device type": "solution analyzer",
+                    "detection type": "sensor"
+                  }
+                ]
+              },
+              "pH": {
+                "value": 6.885,
+                "unit": "pH"
+              },
+              "pO2": {
+                "value": 89.5,
+                "unit": "mmHg"
+              },
+              "pCO2": {
+                "value": 40.3,
+                "unit": "mmHg"
+              },
+              "osmolality": {
+                "value": 303,
+                "unit": "mosm/kg"
+              },
+              "analyte aggregate document": {
+                "analyte document": [
+                  {
+                    "analyte name": "glutamine",
+                    "molar concentration": {
+                      "value": 0.88,
+                      "unit": "mmol/L"
+                    }
+                  },
+                  {
+                    "analyte name": "glutamate",
+                    "molar concentration": {
+                      "value": 2.49,
+                      "unit": "mmol/L"
+                    }
+                  },
+                  {
+                    "analyte name": "glucose",
+                    "mass concentration": {
+                      "value": 2.18,
+                      "unit": "g/L"
+                    }
+                  },
+                  {
+                    "analyte name": "lactate",
+                    "mass concentration": {
+                      "value": 2.85,
+                      "unit": "g/L"
+                    }
+                  },
+                  {
+                    "analyte name": "ammonium",
+                    "molar concentration": {
+                      "value": 1.64,
+                      "unit": "mmol/L"
+                    }
+                  },
+                  {
+                    "analyte name": "sodium",
+                    "molar concentration": {
+                      "value": 121.9,
+                      "unit": "mmol/L"
+                    }
+                  },
+                  {
+                    "analyte name": "potassium",
+                    "molar concentration": {
+                      "value": 3.61,
+                      "unit": "mmol/L"
+                    }
+                  },
+                  {
+                    "analyte name": "calcium",
+                    "molar concentration": {
+                      "value": 0.39,
+                      "unit": "mmol/L"
+                    }
+                  }
+                ]
+              },
+              "sample document": {
+                "sample identifier": "XB22-0690-0390",
+                "description": "Default"
+              }
+            },
+            {
+              "measurement identifier": "measurement-9",
+              "measurement time": "11/5/2025  7:12:09 AM",
+              "device control aggregate document": {
+                "device control document": [
+                  {
+                    "device type": "solution analyzer",
+                    "detection type": "sensor"
+                  }
+                ]
+              },
+              "pH": {
+                "value": 7.042,
+                "unit": "pH"
+              },
+              "pO2": {
+                "value": 101.8,
+                "unit": "mmHg"
+              },
+              "pCO2": {
+                "value": 222.3,
+                "unit": "mmHg"
+              },
+              "osmolality": {
+                "value": 421,
+                "unit": "mosm/kg"
+              },
+              "analyte aggregate document": {
+                "analyte document": [
+                  {
+                    "analyte name": "glutamine",
+                    "molar concentration": {
+                      "value": 14.57,
+                      "unit": "mmol/L"
+                    }
+                  },
+                  {
+                    "analyte name": "glutamate",
+                    "molar concentration": {
+                      "value": 0.76,
+                      "unit": "mmol/L"
+                    }
+                  },
+                  {
+                    "analyte name": "glucose",
+                    "mass concentration": {
+                      "value": 3.01,
+                      "unit": "g/L"
+                    }
+                  },
+                  {
+                    "analyte name": "lactate",
+                    "mass concentration": {
+                      "value": 2.9,
+                      "unit": "g/L"
+                    }
+                  },
+                  {
+                    "analyte name": "ammonium",
+                    "molar concentration": {
+                      "value": 3.73,
+                      "unit": "mmol/L"
+                    }
+                  },
+                  {
+                    "analyte name": "sodium",
+                    "molar concentration": {
+                      "value": 157.9,
+                      "unit": "mmol/L"
+                    }
+                  },
+                  {
+                    "analyte name": "potassium",
+                    "molar concentration": {
+                      "value": 10.66,
+                      "unit": "mmol/L"
+                    }
+                  },
+                  {
+                    "analyte name": "calcium",
+                    "molar concentration": {
+                      "value": 0.23,
+                      "unit": "mmol/L"
+                    }
+                  }
+                ]
+              },
+              "sample document": {
+                "sample identifier": "XB84-0713",
+                "description": "Default"
+              }
+            },
+            {
+              "measurement identifier": "measurement-10",
+              "measurement time": "11/5/2025  7:15:31 AM",
+              "device control aggregate document": {
+                "device control document": [
+                  {
+                    "device type": "solution analyzer",
+                    "detection type": "sensor"
+                  }
+                ]
+              },
+              "pH": {
+                "value": 7.039,
+                "unit": "pH"
+              },
+              "pO2": {
+                "value": 141,
+                "unit": "mmHg"
+              },
+              "pCO2": {
+                "value": 136.4,
+                "unit": "mmHg"
+              },
+              "osmolality": {
+                "value": 419,
+                "unit": "mosm/kg"
+              },
+              "analyte aggregate document": {
+                "analyte document": [
+                  {
+                    "analyte name": "glutamine",
+                    "molar concentration": {
+                      "value": 14.59,
+                      "unit": "mmol/L"
+                    }
+                  },
+                  {
+                    "analyte name": "glutamate",
+                    "molar concentration": {
+                      "value": 1.09,
+                      "unit": "mmol/L"
+                    }
+                  },
+                  {
+                    "analyte name": "glucose",
+                    "mass concentration": {
+                      "value": 2.66,
+                      "unit": "g/L"
+                    }
+                  },
+                  {
+                    "analyte name": "lactate",
+                    "mass concentration": {
+                      "value": 4,
+                      "unit": "g/L"
+                    }
+                  },
+                  {
+                    "analyte name": "ammonium",
+                    "molar concentration": {
+                      "value": 2.16,
+                      "unit": "mmol/L"
+                    }
+                  },
+                  {
+                    "analyte name": "sodium",
+                    "molar concentration": {
+                      "value": 154.4,
+                      "unit": "mmol/L"
+                    }
+                  },
+                  {
+                    "analyte name": "potassium",
+                    "molar concentration": {
+                      "value": 10.45,
+                      "unit": "mmol/L"
+                    }
+                  },
+                  {
+                    "analyte name": "calcium",
+                    "molar concentration": {
+                      "value": 0.22,
+                      "unit": "mmol/L"
+                    }
+                  }
+                ]
+              },
+              "sample document": {
+                "sample identifier": "XB85-0712",
+                "description": "Default"
+              }
+            },
+            {
+              "measurement identifier": "measurement-11",
+              "measurement time": "11/5/2025  7:23:56 AM",
+              "device control aggregate document": {
+                "device control document": [
+                  {
+                    "device type": "solution analyzer",
+                    "detection type": "sensor"
+                  }
+                ]
+              },
+              "pH": {
+                "value": 6.889,
+                "unit": "pH"
+              },
+              "pO2": {
+                "value": 54.9,
+                "unit": "mmHg"
+              },
+              "pCO2": {
+                "value": 42.5,
+                "unit": "mmHg"
+              },
+              "osmolality": {
+                "value": 290,
+                "unit": "mosm/kg"
+              },
+              "analyte aggregate document": {
+                "analyte document": [
+                  {
+                    "analyte name": "glutamine",
+                    "molar concentration": {
+                      "value": 1.15,
+                      "unit": "mmol/L"
+                    }
+                  },
+                  {
+                    "analyte name": "glutamate",
+                    "molar concentration": {
+                      "value": 2.54,
+                      "unit": "mmol/L"
+                    }
+                  },
+                  {
+                    "analyte name": "glucose",
+                    "mass concentration": {
+                      "value": 3.19,
+                      "unit": "g/L"
+                    }
+                  },
+                  {
+                    "analyte name": "lactate",
+                    "mass concentration": {
+                      "value": 1.87,
+                      "unit": "g/L"
+                    }
+                  },
+                  {
+                    "analyte name": "ammonium",
+                    "molar concentration": {
+                      "value": 1.73,
+                      "unit": "mmol/L"
+                    }
+                  },
+                  {
+                    "analyte name": "sodium",
+                    "molar concentration": {
+                      "value": 110.9,
+                      "unit": "mmol/L"
+                    }
+                  },
+                  {
+                    "analyte name": "potassium",
+                    "molar concentration": {
+                      "value": 3.97,
+                      "unit": "mmol/L"
+                    }
+                  },
+                  {
+                    "analyte name": "calcium",
+                    "molar concentration": {
+                      "value": 0.38,
+                      "unit": "mmol/L"
+                    }
+                  }
+                ]
+              },
+              "sample document": {
+                "sample identifier": "XB21-0690-0420",
+                "description": "Default"
+              }
+            },
+            {
+              "measurement identifier": "measurement-12",
+              "measurement time": "11/5/2025  7:28:16 AM",
+              "device control aggregate document": {
+                "device control document": [
+                  {
+                    "device type": "solution analyzer",
+                    "detection type": "sensor"
+                  }
+                ]
+              },
+              "pH": {
+                "value": 6.887,
+                "unit": "pH"
+              },
+              "pO2": {
+                "value": 72.6,
+                "unit": "mmHg"
+              },
+              "pCO2": {
+                "value": 37.4,
+                "unit": "mmHg"
+              },
+              "osmolality": {
+                "value": 279,
+                "unit": "mosm/kg"
+              },
+              "analyte aggregate document": {
+                "analyte document": [
+                  {
+                    "analyte name": "glutamine",
+                    "molar concentration": {
+                      "value": 0.61,
+                      "unit": "mmol/L"
+                    }
+                  },
+                  {
+                    "analyte name": "glutamate",
+                    "molar concentration": {
+                      "value": 1.98,
+                      "unit": "mmol/L"
+                    }
+                  },
+                  {
+                    "analyte name": "glucose",
+                    "mass concentration": {
+                      "value": 1.99,
+                      "unit": "g/L"
+                    }
+                  },
+                  {
+                    "analyte name": "lactate",
+                    "mass concentration": {
+                      "value": 2.21,
+                      "unit": "g/L"
+                    }
+                  },
+                  {
+                    "analyte name": "ammonium",
+                    "molar concentration": {
+                      "value": 1.05,
+                      "unit": "mmol/L"
+                    }
+                  },
+                  {
+                    "analyte name": "sodium",
+                    "molar concentration": {
+                      "value": 114,
+                      "unit": "mmol/L"
+                    }
+                  },
+                  {
+                    "analyte name": "potassium",
+                    "molar concentration": {
+                      "value": 2.76,
+                      "unit": "mmol/L"
+                    }
+                  },
+                  {
+                    "analyte name": "calcium",
+                    "molar concentration": {
+                      "value": 0.37,
+                      "unit": "mmol/L"
+                    }
+                  }
+                ]
+              },
+              "sample document": {
+                "sample identifier": "XB22-0690-0370",
+                "description": "Default"
+              }
+            },
+            {
+              "measurement identifier": "measurement-13",
+              "measurement time": "11/5/2025  7:57:22 AM",
+              "device control aggregate document": {
+                "device control document": [
+                  {
+                    "device type": "solution analyzer",
+                    "detection type": "sensor"
+                  }
+                ]
+              },
+              "pH": {
+                "value": 6.92,
+                "unit": "pH"
+              },
+              "pO2": {
+                "value": 124.1,
+                "unit": "mmHg"
+              },
+              "pCO2": {
+                "value": 50.1,
+                "unit": "mmHg"
+              },
+              "osmolality": {
+                "value": 331,
+                "unit": "mosm/kg"
+              },
+              "analyte aggregate document": {
+                "analyte document": [
+                  {
+                    "analyte name": "glutamine",
+                    "molar concentration": {
+                      "value": 0,
+                      "unit": "mmol/L"
+                    }
+                  },
+                  {
+                    "analyte name": "glutamate",
+                    "molar concentration": {
+                      "value": 0,
+                      "unit": "mmol/L"
+                    }
+                  },
+                  {
+                    "analyte name": "glucose",
+                    "mass concentration": {
+                      "value": 0,
+                      "unit": "g/L"
+                    }
+                  },
+                  {
+                    "analyte name": "lactate",
+                    "mass concentration": {
+                      "value": 0,
+                      "unit": "g/L"
+                    }
+                  },
+                  {
+                    "analyte name": "ammonium",
+                    "molar concentration": {
+                      "value": 0,
+                      "unit": "mmol/L"
+                    }
+                  },
+                  {
+                    "analyte name": "sodium",
+                    "molar concentration": {
+                      "value": 0,
+                      "unit": "mmol/L"
+                    }
+                  },
+                  {
+                    "analyte name": "potassium",
+                    "molar concentration": {
+                      "value": 0,
+                      "unit": "mmol/L"
+                    }
+                  },
+                  {
+                    "analyte name": "calcium",
+                    "molar concentration": {
+                      "value": 0,
+                      "unit": "mmol/L"
+                    }
+                  }
+                ]
+              },
+              "sample document": {
+                "sample identifier": "XB18-0698",
+                "description": "Default"
+              }
+            },
+            {
+              "measurement identifier": "measurement-14",
+              "measurement time": "11/5/2025  8:03:40 AM",
+              "device control aggregate document": {
+                "device control document": [
+                  {
+                    "device type": "solution analyzer",
+                    "detection type": "sensor"
+                  }
+                ]
+              },
+              "pH": {
+                "value": 6.923,
+                "unit": "pH"
+              },
+              "pO2": {
+                "value": 132.1,
+                "unit": "mmHg"
+              },
+              "pCO2": {
+                "value": 48.3,
+                "unit": "mmHg"
+              },
+              "osmolality": {
+                "value": 0,
+                "unit": "mosm/kg"
+              },
+              "analyte aggregate document": {
+                "analyte document": [
+                  {
+                    "analyte name": "glutamine",
+                    "molar concentration": {
+                      "value": 0,
+                      "unit": "mmol/L"
+                    }
+                  },
+                  {
+                    "analyte name": "glutamate",
+                    "molar concentration": {
+                      "value": 0,
+                      "unit": "mmol/L"
+                    }
+                  },
+                  {
+                    "analyte name": "glucose",
+                    "mass concentration": {
+                      "value": 0,
+                      "unit": "g/L"
+                    }
+                  },
+                  {
+                    "analyte name": "lactate",
+                    "mass concentration": {
+                      "value": 0,
+                      "unit": "g/L"
+                    }
+                  },
+                  {
+                    "analyte name": "ammonium",
+                    "molar concentration": {
+                      "value": 0,
+                      "unit": "mmol/L"
+                    }
+                  },
+                  {
+                    "analyte name": "sodium",
+                    "molar concentration": {
+                      "value": 0,
+                      "unit": "mmol/L"
+                    }
+                  },
+                  {
+                    "analyte name": "potassium",
+                    "molar concentration": {
+                      "value": 0,
+                      "unit": "mmol/L"
+                    }
+                  },
+                  {
+                    "analyte name": "calcium",
+                    "molar concentration": {
+                      "value": 0,
+                      "unit": "mmol/L"
+                    }
+                  }
+                ]
+              },
+              "sample document": {
+                "sample identifier": "XB20-0693",
+                "description": "Default"
+              }
+            },
+            {
+              "measurement identifier": "measurement-15",
+              "measurement time": "11/5/2025  8:06:15 AM",
+              "device control aggregate document": {
+                "device control document": [
+                  {
+                    "device type": "solution analyzer",
+                    "detection type": "sensor"
+                  }
+                ]
+              },
+              "pH": {
+                "value": 6.92,
+                "unit": "pH"
+              },
+              "pO2": {
+                "value": 124.1,
+                "unit": "mmHg"
+              },
+              "pCO2": {
+                "value": 50.1,
+                "unit": "mmHg"
+              },
+              "osmolality": {
+                "value": 331,
+                "unit": "mosm/kg"
+              },
+              "analyte aggregate document": {
+                "analyte document": [
+                  {
+                    "analyte name": "glutamine",
+                    "molar concentration": {
+                      "value": 0,
+                      "unit": "mmol/L"
+                    }
+                  },
+                  {
+                    "analyte name": "glutamate",
+                    "molar concentration": {
+                      "value": 0,
+                      "unit": "mmol/L"
+                    }
+                  },
+                  {
+                    "analyte name": "glucose",
+                    "mass concentration": {
+                      "value": 0,
+                      "unit": "g/L"
+                    }
+                  },
+                  {
+                    "analyte name": "lactate",
+                    "mass concentration": {
+                      "value": 0,
+                      "unit": "g/L"
+                    }
+                  },
+                  {
+                    "analyte name": "ammonium",
+                    "molar concentration": {
+                      "value": 0,
+                      "unit": "mmol/L"
+                    }
+                  },
+                  {
+                    "analyte name": "sodium",
+                    "molar concentration": {
+                      "value": 0,
+                      "unit": "mmol/L"
+                    }
+                  },
+                  {
+                    "analyte name": "potassium",
+                    "molar concentration": {
+                      "value": 0,
+                      "unit": "mmol/L"
+                    }
+                  },
+                  {
+                    "analyte name": "calcium",
+                    "molar concentration": {
+                      "value": 0,
+                      "unit": "mmol/L"
+                    }
+                  }
+                ]
+              },
+              "sample document": {
+                "sample identifier": "XB18-0698",
+                "description": "Default"
+              }
+            },
+            {
+              "measurement identifier": "measurement-16",
+              "measurement time": "11/5/2025  8:12:26 AM",
+              "device control aggregate document": {
+                "device control document": [
+                  {
+                    "device type": "solution analyzer",
+                    "detection type": "sensor"
+                  }
+                ]
+              },
+              "pH": {
+                "value": 6.858,
+                "unit": "pH"
+              },
+              "pO2": {
+                "value": 109.7,
+                "unit": "mmHg"
+              },
+              "pCO2": {
+                "value": 60.5,
+                "unit": "mmHg"
+              },
+              "osmolality": {
+                "value": 0,
+                "unit": "mosm/kg"
+              },
+              "analyte aggregate document": {
+                "analyte document": [
+                  {
+                    "analyte name": "glutamine",
+                    "molar concentration": {
+                      "value": 0,
+                      "unit": "mmol/L"
+                    }
+                  },
+                  {
+                    "analyte name": "glutamate",
+                    "molar concentration": {
+                      "value": 0,
+                      "unit": "mmol/L"
+                    }
+                  },
+                  {
+                    "analyte name": "glucose",
+                    "mass concentration": {
+                      "value": 0,
+                      "unit": "g/L"
+                    }
+                  },
+                  {
+                    "analyte name": "lactate",
+                    "mass concentration": {
+                      "value": 0,
+                      "unit": "g/L"
+                    }
+                  },
+                  {
+                    "analyte name": "ammonium",
+                    "molar concentration": {
+                      "value": 0,
+                      "unit": "mmol/L"
+                    }
+                  },
+                  {
+                    "analyte name": "sodium",
+                    "molar concentration": {
+                      "value": 0,
+                      "unit": "mmol/L"
+                    }
+                  },
+                  {
+                    "analyte name": "potassium",
+                    "molar concentration": {
+                      "value": 0,
+                      "unit": "mmol/L"
+                    }
+                  },
+                  {
+                    "analyte name": "calcium",
+                    "molar concentration": {
+                      "value": 0,
+                      "unit": "mmol/L"
+                    }
+                  }
+                ]
+              },
+              "sample document": {
+                "sample identifier": "XB53-0686",
+                "description": "Default"
+              }
+            },
+            {
+              "measurement identifier": "measurement-17",
+              "measurement time": "11/5/2025  8:17:31 AM",
+              "device control aggregate document": {
+                "device control document": [
+                  {
+                    "device type": "solution analyzer",
+                    "detection type": "sensor"
+                  }
+                ]
+              },
+              "pH": {
+                "value": 6.855,
+                "unit": "pH"
+              },
+              "pO2": {
+                "value": 103.4,
+                "unit": "mmHg"
+              },
+              "pCO2": {
+                "value": 61.3,
+                "unit": "mmHg"
+              },
+              "osmolality": {
+                "value": 0,
+                "unit": "mosm/kg"
+              },
+              "analyte aggregate document": {
+                "analyte document": [
+                  {
+                    "analyte name": "glutamine",
+                    "molar concentration": {
+                      "value": 0,
+                      "unit": "mmol/L"
+                    }
+                  },
+                  {
+                    "analyte name": "glutamate",
+                    "molar concentration": {
+                      "value": 0,
+                      "unit": "mmol/L"
+                    }
+                  },
+                  {
+                    "analyte name": "glucose",
+                    "mass concentration": {
+                      "value": 0,
+                      "unit": "g/L"
+                    }
+                  },
+                  {
+                    "analyte name": "lactate",
+                    "mass concentration": {
+                      "value": 0,
+                      "unit": "g/L"
+                    }
+                  },
+                  {
+                    "analyte name": "ammonium",
+                    "molar concentration": {
+                      "value": 0,
+                      "unit": "mmol/L"
+                    }
+                  },
+                  {
+                    "analyte name": "sodium",
+                    "molar concentration": {
+                      "value": 0,
+                      "unit": "mmol/L"
+                    }
+                  },
+                  {
+                    "analyte name": "potassium",
+                    "molar concentration": {
+                      "value": 0,
+                      "unit": "mmol/L"
+                    }
+                  },
+                  {
+                    "analyte name": "calcium",
+                    "molar concentration": {
+                      "value": 0,
+                      "unit": "mmol/L"
+                    }
+                  }
+                ]
+              },
+              "sample document": {
+                "sample identifier": "XB54-0686",
+                "description": "Default"
+              }
+            },
+            {
+              "measurement identifier": "measurement-18",
+              "measurement time": "11/5/2025  8:22:51 AM",
+              "device control aggregate document": {
+                "device control document": [
+                  {
+                    "device type": "solution analyzer",
+                    "detection type": "sensor"
+                  }
+                ]
+              },
+              "pH": {
+                "value": 6.865,
+                "unit": "pH"
+              },
+              "pO2": {
+                "value": 109.6,
+                "unit": "mmHg"
+              },
+              "pCO2": {
+                "value": 59.3,
+                "unit": "mmHg"
+              },
+              "osmolality": {
+                "value": 0,
+                "unit": "mosm/kg"
+              },
+              "analyte aggregate document": {
+                "analyte document": [
+                  {
+                    "analyte name": "glutamine",
+                    "molar concentration": {
+                      "value": 0,
+                      "unit": "mmol/L"
+                    }
+                  },
+                  {
+                    "analyte name": "glutamate",
+                    "molar concentration": {
+                      "value": 0,
+                      "unit": "mmol/L"
+                    }
+                  },
+                  {
+                    "analyte name": "glucose",
+                    "mass concentration": {
+                      "value": 0,
+                      "unit": "g/L"
+                    }
+                  },
+                  {
+                    "analyte name": "lactate",
+                    "mass concentration": {
+                      "value": 0,
+                      "unit": "g/L"
+                    }
+                  },
+                  {
+                    "analyte name": "ammonium",
+                    "molar concentration": {
+                      "value": 0,
+                      "unit": "mmol/L"
+                    }
+                  },
+                  {
+                    "analyte name": "sodium",
+                    "molar concentration": {
+                      "value": 0,
+                      "unit": "mmol/L"
+                    }
+                  },
+                  {
+                    "analyte name": "potassium",
+                    "molar concentration": {
+                      "value": 0,
+                      "unit": "mmol/L"
+                    }
+                  },
+                  {
+                    "analyte name": "calcium",
+                    "molar concentration": {
+                      "value": 0,
+                      "unit": "mmol/L"
+                    }
+                  }
+                ]
+              },
+              "sample document": {
+                "sample identifier": "XB55-0687",
+                "description": "Default"
+              }
+            },
+            {
+              "measurement identifier": "measurement-19",
+              "measurement time": "11/5/2025  8:26:53 AM",
+              "device control aggregate document": {
+                "device control document": [
+                  {
+                    "device type": "solution analyzer",
+                    "detection type": "sensor"
+                  }
+                ]
+              },
+              "pH": {
+                "value": 6.863,
+                "unit": "pH"
+              },
+              "pO2": {
+                "value": 105.6,
+                "unit": "mmHg"
+              },
+              "pCO2": {
+                "value": 59.6,
+                "unit": "mmHg"
+              },
+              "osmolality": {
+                "value": 0,
+                "unit": "mosm/kg"
+              },
+              "analyte aggregate document": {
+                "analyte document": [
+                  {
+                    "analyte name": "glutamine",
+                    "molar concentration": {
+                      "value": 0,
+                      "unit": "mmol/L"
+                    }
+                  },
+                  {
+                    "analyte name": "glutamate",
+                    "molar concentration": {
+                      "value": 0,
+                      "unit": "mmol/L"
+                    }
+                  },
+                  {
+                    "analyte name": "glucose",
+                    "mass concentration": {
+                      "value": 0,
+                      "unit": "g/L"
+                    }
+                  },
+                  {
+                    "analyte name": "lactate",
+                    "mass concentration": {
+                      "value": 0,
+                      "unit": "g/L"
+                    }
+                  },
+                  {
+                    "analyte name": "ammonium",
+                    "molar concentration": {
+                      "value": 0,
+                      "unit": "mmol/L"
+                    }
+                  },
+                  {
+                    "analyte name": "sodium",
+                    "molar concentration": {
+                      "value": 0,
+                      "unit": "mmol/L"
+                    }
+                  },
+                  {
+                    "analyte name": "potassium",
+                    "molar concentration": {
+                      "value": 0,
+                      "unit": "mmol/L"
+                    }
+                  },
+                  {
+                    "analyte name": "calcium",
+                    "molar concentration": {
+                      "value": 0,
+                      "unit": "mmol/L"
+                    }
+                  }
+                ]
+              },
+              "sample document": {
+                "sample identifier": "XB56-0685",
+                "description": "Default"
+              }
+            },
+            {
+              "measurement identifier": "measurement-20",
+              "measurement time": "11/6/2025  6:55:58 AM",
+              "device control aggregate document": {
+                "device control document": [
+                  {
+                    "device type": "solution analyzer",
+                    "detection type": "sensor"
+                  }
+                ]
+              },
+              "pH": {
+                "value": 6.891,
+                "unit": "pH"
+              },
+              "pO2": {
+                "value": 30.7,
+                "unit": "mmHg"
+              },
+              "pCO2": {
+                "value": 42,
+                "unit": "mmHg"
+              },
+              "osmolality": {
+                "value": 274,
+                "unit": "mosm/kg"
+              },
+              "analyte aggregate document": {
+                "analyte document": [
+                  {
+                    "analyte name": "glutamine",
+                    "molar concentration": {
+                      "value": 0.8,
+                      "unit": "mmol/L"
+                    }
+                  },
+                  {
+                    "analyte name": "glutamate",
+                    "molar concentration": {
+                      "value": 2.2,
+                      "unit": "mmol/L"
+                    }
+                  },
+                  {
+                    "analyte name": "glucose",
+                    "mass concentration": {
+                      "value": 1.71,
+                      "unit": "g/L"
+                    }
+                  },
+                  {
+                    "analyte name": "lactate",
+                    "mass concentration": {
+                      "value": 1.7,
+                      "unit": "g/L"
+                    }
+                  },
+                  {
+                    "analyte name": "ammonium",
+                    "molar concentration": {
+                      "value": 1.27,
+                      "unit": "mmol/L"
+                    }
+                  },
+                  {
+                    "analyte name": "sodium",
+                    "molar concentration": {
+                      "value": 111.2,
+                      "unit": "mmol/L"
+                    }
+                  },
+                  {
+                    "analyte name": "potassium",
+                    "molar concentration": {
+                      "value": 3.44,
+                      "unit": "mmol/L"
+                    }
+                  },
+                  {
+                    "analyte name": "calcium",
+                    "molar concentration": {
+                      "value": 0.38,
+                      "unit": "mmol/L"
+                    }
+                  }
+                ]
+              },
+              "sample document": {
+                "sample identifier": "XB21-0690-0420",
+                "description": "Default"
+              }
+            },
+            {
+              "measurement identifier": "measurement-21",
+              "measurement time": "11/6/2025  6:59:53 AM",
+              "device control aggregate document": {
+                "device control document": [
+                  {
+                    "device type": "solution analyzer",
+                    "detection type": "sensor"
+                  }
+                ]
+              },
+              "pH": {
+                "value": 6.905,
+                "unit": "pH"
+              },
+              "pO2": {
+                "value": 21.8,
+                "unit": "mmHg"
+              },
+              "pCO2": {
+                "value": 52.9,
+                "unit": "mmHg"
+              },
+              "osmolality": {
+                "value": 274,
+                "unit": "mosm/kg"
+              },
+              "analyte aggregate document": {
+                "analyte document": [
+                  {
+                    "analyte name": "glutamine",
+                    "molar concentration": {
+                      "value": 0.47,
+                      "unit": "mmol/L"
+                    }
+                  },
+                  {
+                    "analyte name": "glutamate",
+                    "molar concentration": {
+                      "value": 1.6,
+                      "unit": "mmol/L"
+                    }
+                  },
+                  {
+                    "analyte name": "glucose",
+                    "mass concentration": {
+                      "value": 2.22,
+                      "unit": "g/L"
+                    }
+                  },
+                  {
+                    "analyte name": "lactate",
+                    "mass concentration": {
+                      "value": 1.6,
+                      "unit": "g/L"
+                    }
+                  },
+                  {
+                    "analyte name": "ammonium",
+                    "molar concentration": {
+                      "value": 0.97,
+                      "unit": "mmol/L"
+                    }
+                  },
+                  {
+                    "analyte name": "sodium",
+                    "molar concentration": {
+                      "value": 106.1,
+                      "unit": "mmol/L"
+                    }
+                  },
+                  {
+                    "analyte name": "potassium",
+                    "molar concentration": {
+                      "value": 2.97,
+                      "unit": "mmol/L"
+                    }
+                  },
+                  {
+                    "analyte name": "calcium",
+                    "molar concentration": {
+                      "value": 0.35,
+                      "unit": "mmol/L"
+                    }
+                  }
+                ]
+              },
+              "sample document": {
+                "sample identifier": "XB22-0690-0520",
+                "description": "Default"
+              }
+            },
+            {
+              "measurement identifier": "measurement-22",
+              "measurement time": "11/6/2025  7:05:31 AM",
+              "device control aggregate document": {
+                "device control document": [
+                  {
+                    "device type": "solution analyzer",
+                    "detection type": "sensor"
+                  }
+                ]
+              },
+              "pH": {
+                "value": 7.087,
+                "unit": "pH"
+              },
+              "pO2": {
+                "value": 148.9,
+                "unit": "mmHg"
+              },
+              "pCO2": {
+                "value": 61.2,
+                "unit": "mmHg"
+              },
+              "osmolality": {
+                "value": 0,
+                "unit": "mosm/kg"
+              },
+              "analyte aggregate document": {
+                "analyte document": [
+                  {
+                    "analyte name": "glutamine",
+                    "molar concentration": {
+                      "value": 0,
+                      "unit": "mmol/L"
+                    }
+                  },
+                  {
+                    "analyte name": "glutamate",
+                    "molar concentration": {
+                      "value": 0,
+                      "unit": "mmol/L"
+                    }
+                  },
+                  {
+                    "analyte name": "glucose",
+                    "mass concentration": {
+                      "value": 0,
+                      "unit": "g/L"
+                    }
+                  },
+                  {
+                    "analyte name": "lactate",
+                    "mass concentration": {
+                      "value": 0,
+                      "unit": "g/L"
+                    }
+                  },
+                  {
+                    "analyte name": "ammonium",
+                    "molar concentration": {
+                      "value": 0,
+                      "unit": "mmol/L"
+                    }
+                  },
+                  {
+                    "analyte name": "sodium",
+                    "molar concentration": {
+                      "value": 0,
+                      "unit": "mmol/L"
+                    }
+                  },
+                  {
+                    "analyte name": "potassium",
+                    "molar concentration": {
+                      "value": 0,
+                      "unit": "mmol/L"
+                    }
+                  },
+                  {
+                    "analyte name": "calcium",
+                    "molar concentration": {
+                      "value": 0,
+                      "unit": "mmol/L"
+                    }
+                  }
+                ]
+              },
+              "sample document": {
+                "sample identifier": "XB17-0711",
+                "description": "Default"
+              }
+            },
+            {
+              "measurement identifier": "measurement-23",
+              "measurement time": "11/6/2025  7:08:47 AM",
+              "device control aggregate document": {
+                "device control document": [
+                  {
+                    "device type": "solution analyzer",
+                    "detection type": "sensor"
+                  }
+                ]
+              },
+              "pH": {
+                "value": 7.082,
+                "unit": "pH"
+              },
+              "pO2": {
+                "value": 148.6,
+                "unit": "mmHg"
+              },
+              "pCO2": {
+                "value": 62.2,
+                "unit": "mmHg"
+              },
+              "osmolality": {
+                "value": 0,
+                "unit": "mosm/kg"
+              },
+              "analyte aggregate document": {
+                "analyte document": [
+                  {
+                    "analyte name": "glutamine",
+                    "molar concentration": {
+                      "value": 0,
+                      "unit": "mmol/L"
+                    }
+                  },
+                  {
+                    "analyte name": "glutamate",
+                    "molar concentration": {
+                      "value": 0,
+                      "unit": "mmol/L"
+                    }
+                  },
+                  {
+                    "analyte name": "glucose",
+                    "mass concentration": {
+                      "value": 0,
+                      "unit": "g/L"
+                    }
+                  },
+                  {
+                    "analyte name": "lactate",
+                    "mass concentration": {
+                      "value": 0,
+                      "unit": "g/L"
+                    }
+                  },
+                  {
+                    "analyte name": "ammonium",
+                    "molar concentration": {
+                      "value": 0,
+                      "unit": "mmol/L"
+                    }
+                  },
+                  {
+                    "analyte name": "sodium",
+                    "molar concentration": {
+                      "value": 0,
+                      "unit": "mmol/L"
+                    }
+                  },
+                  {
+                    "analyte name": "potassium",
+                    "molar concentration": {
+                      "value": 0,
+                      "unit": "mmol/L"
+                    }
+                  },
+                  {
+                    "analyte name": "calcium",
+                    "molar concentration": {
+                      "value": 0,
+                      "unit": "mmol/L"
+                    }
+                  }
+                ]
+              },
+              "sample document": {
+                "sample identifier": "XB19-0710",
+                "description": "Default"
+              }
+            },
+            {
+              "measurement identifier": "measurement-24",
+              "measurement time": "11/6/2025  10:37:14 AM",
+              "device control aggregate document": {
+                "device control document": [
+                  {
+                    "device type": "solution analyzer",
+                    "detection type": "sensor"
+                  }
+                ]
+              },
+              "pH": {
+                "value": 7.079,
+                "unit": "pH"
+              },
+              "pO2": {
+                "value": 76.8,
+                "unit": "mmHg"
+              },
+              "pCO2": {
+                "value": 45.9,
+                "unit": "mmHg"
+              },
+              "osmolality": {
+                "value": 303,
+                "unit": "mosm/kg"
+              },
+              "analyte aggregate document": {
+                "analyte document": [
+                  {
+                    "analyte name": "glutamine",
+                    "molar concentration": {
+                      "value": 1.05,
+                      "unit": "mmol/L"
+                    }
+                  },
+                  {
+                    "analyte name": "glutamate",
+                    "molar concentration": {
+                      "value": 2.52,
+                      "unit": "mmol/L"
+                    }
+                  },
+                  {
+                    "analyte name": "glucose",
+                    "mass concentration": {
+                      "value": 7.83,
+                      "unit": "g/L"
+                    }
+                  },
+                  {
+                    "analyte name": "lactate",
+                    "mass concentration": {
+                      "value": 0.3,
+                      "unit": "g/L"
+                    }
+                  },
+                  {
+                    "analyte name": "ammonium",
+                    "molar concentration": {
+                      "value": 1.28,
+                      "unit": "mmol/L"
+                    }
+                  },
+                  {
+                    "analyte name": "sodium",
+                    "molar concentration": {
+                      "value": 105,
+                      "unit": "mmol/L"
+                    }
+                  },
+                  {
+                    "analyte name": "potassium",
+                    "molar concentration": {
+                      "value": 5.82,
+                      "unit": "mmol/L"
+                    }
+                  },
+                  {
+                    "analyte name": "calcium",
+                    "molar concentration": {
+                      "value": 0.43,
+                      "unit": "mmol/L"
+                    }
+                  }
+                ]
+              },
+              "sample document": {
+                "sample identifier": "XB17-0710",
+                "description": "Default"
+              }
+            },
+            {
+              "measurement identifier": "measurement-25",
+              "measurement time": "11/6/2025  10:42:28 AM",
+              "device control aggregate document": {
+                "device control document": [
+                  {
+                    "device type": "solution analyzer",
+                    "detection type": "sensor"
+                  }
+                ]
+              },
+              "pH": {
+                "value": 7.069,
+                "unit": "pH"
+              },
+              "pO2": {
+                "value": 74,
+                "unit": "mmHg"
+              },
+              "pCO2": {
+                "value": 40,
+                "unit": "mmHg"
+              },
+              "osmolality": {
+                "value": 303,
+                "unit": "mosm/kg"
+              },
+              "analyte aggregate document": {
+                "analyte document": [
+                  {
+                    "analyte name": "glutamine",
+                    "molar concentration": {
+                      "value": 0.96,
+                      "unit": "mmol/L"
+                    }
+                  },
+                  {
+                    "analyte name": "glutamate",
+                    "molar concentration": {
+                      "value": 2.42,
+                      "unit": "mmol/L"
+                    }
+                  },
+                  {
+                    "analyte name": "glucose",
+                    "mass concentration": {
+                      "value": 7.74,
+                      "unit": "g/L"
+                    }
+                  },
+                  {
+                    "analyte name": "lactate",
+                    "mass concentration": {
+                      "value": 0.44,
+                      "unit": "g/L"
+                    }
+                  },
+                  {
+                    "analyte name": "ammonium",
+                    "molar concentration": {
+                      "value": 1.28,
+                      "unit": "mmol/L"
+                    }
+                  },
+                  {
+                    "analyte name": "sodium",
+                    "molar concentration": {
+                      "value": 99.3,
+                      "unit": "mmol/L"
+                    }
+                  },
+                  {
+                    "analyte name": "potassium",
+                    "molar concentration": {
+                      "value": 5.68,
+                      "unit": "mmol/L"
+                    }
+                  },
+                  {
+                    "analyte name": "calcium",
+                    "molar concentration": {
+                      "value": 0.41,
+                      "unit": "mmol/L"
+                    }
+                  }
+                ]
+              },
+              "sample document": {
+                "sample identifier": "XB19-0710",
+                "description": "Default"
+              }
+            },
+            {
+              "measurement identifier": "measurement-26",
+              "measurement time": "11/6/2025  4:30:55 PM",
+              "device control aggregate document": {
+                "device control document": [
+                  {
+                    "device type": "solution analyzer",
+                    "detection type": "sensor"
+                  }
+                ]
+              },
+              "pH": {
+                "value": 7.067,
+                "unit": "pH"
+              },
+              "pO2": {
+                "value": 77.4,
+                "unit": "mmHg"
+              },
+              "pCO2": {
+                "value": 37.3,
+                "unit": "mmHg"
+              },
+              "osmolality": {
+                "value": 0,
+                "unit": "mosm/kg"
+              },
+              "analyte aggregate document": {
+                "analyte document": [
+                  {
+                    "analyte name": "glutamine",
+                    "molar concentration": {
+                      "value": 0,
+                      "unit": "mmol/L"
+                    }
+                  },
+                  {
+                    "analyte name": "glutamate",
+                    "molar concentration": {
+                      "value": 0,
+                      "unit": "mmol/L"
+                    }
+                  },
+                  {
+                    "analyte name": "glucose",
+                    "mass concentration": {
+                      "value": 0,
+                      "unit": "g/L"
+                    }
+                  },
+                  {
+                    "analyte name": "lactate",
+                    "mass concentration": {
+                      "value": 0,
+                      "unit": "g/L"
+                    }
+                  },
+                  {
+                    "analyte name": "ammonium",
+                    "molar concentration": {
+                      "value": 0,
+                      "unit": "mmol/L"
+                    }
+                  },
+                  {
+                    "analyte name": "sodium",
+                    "molar concentration": {
+                      "value": 0,
+                      "unit": "mmol/L"
+                    }
+                  },
+                  {
+                    "analyte name": "potassium",
+                    "molar concentration": {
+                      "value": 0,
+                      "unit": "mmol/L"
+                    }
+                  },
+                  {
+                    "analyte name": "calcium",
+                    "molar concentration": {
+                      "value": 0,
+                      "unit": "mmol/L"
+                    }
+                  }
+                ]
+              },
+              "sample document": {
+                "sample identifier": "XB17-0710",
+                "description": "PH ONLY"
+              }
+            },
+            {
+              "measurement identifier": "measurement-27",
+              "measurement time": "11/6/2025  4:35:14 PM",
+              "device control aggregate document": {
+                "device control document": [
+                  {
+                    "device type": "solution analyzer",
+                    "detection type": "sensor"
+                  }
+                ]
+              },
+              "pH": {
+                "value": 7.05,
+                "unit": "pH"
+              },
+              "pO2": {
+                "value": 72.8,
+                "unit": "mmHg"
+              },
+              "pCO2": {
+                "value": 27.3,
+                "unit": "mmHg"
+              },
+              "osmolality": {
+                "value": 0,
+                "unit": "mosm/kg"
+              },
+              "analyte aggregate document": {
+                "analyte document": [
+                  {
+                    "analyte name": "glutamine",
+                    "molar concentration": {
+                      "value": 0,
+                      "unit": "mmol/L"
+                    }
+                  },
+                  {
+                    "analyte name": "glutamate",
+                    "molar concentration": {
+                      "value": 0,
+                      "unit": "mmol/L"
+                    }
+                  },
+                  {
+                    "analyte name": "glucose",
+                    "mass concentration": {
+                      "value": 0,
+                      "unit": "g/L"
+                    }
+                  },
+                  {
+                    "analyte name": "lactate",
+                    "mass concentration": {
+                      "value": 0,
+                      "unit": "g/L"
+                    }
+                  },
+                  {
+                    "analyte name": "ammonium",
+                    "molar concentration": {
+                      "value": 0,
+                      "unit": "mmol/L"
+                    }
+                  },
+                  {
+                    "analyte name": "sodium",
+                    "molar concentration": {
+                      "value": 0,
+                      "unit": "mmol/L"
+                    }
+                  },
+                  {
+                    "analyte name": "potassium",
+                    "molar concentration": {
+                      "value": 0,
+                      "unit": "mmol/L"
+                    }
+                  },
+                  {
+                    "analyte name": "calcium",
+                    "molar concentration": {
+                      "value": 0,
+                      "unit": "mmol/L"
+                    }
+                  }
+                ]
+              },
+              "sample document": {
+                "sample identifier": "XB19-0710",
+                "description": "PH ONLY"
+              }
+            }
+          ]
+        }
+      }
+    ]
+  },
+  "technique": "solution analyzer",
+  "technique_confidence": 1
+}

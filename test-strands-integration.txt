@@ -1,0 +1,24 @@
+=== Testing TypeScript → Python Strands Agent Integration ===
+
+=== Testing Individual Python Agent ===
+
+🔄 Calling Python file analysis agent directly...
+📁 Agent path: C:\app\asm2agent\src\agents\strands-file-analysis-agent.py
+❌ Agent failed with code: 2
+Error output: Argument expected for the -c option
+usage: python [option] ... [-c cmd | -m mod | file | -] [arg] ...
+Try `python -h' for more information.
+
+Standard output:
+
+=== Testing Converter Generation Agent ===
+
+🔄 Calling Python converter generation agent...
+❌ Converter agent failed with code: 1
+Error output: 
+
+🎯 Integration test completed!
+📋 Next steps:
+  1. If agents work individually, integrate with TypeScript orchestrator
+  2. Test with real laboratory data files
+  3. Deploy generated converters as Lambda functions

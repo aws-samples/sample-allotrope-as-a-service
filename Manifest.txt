@@ -1,0 +1,6 @@
+Manifest
+List of instruments (Internal catalog) get a head start
+Allotropy library
+Do they use Jupyter notebooks for developing parsers
+Human in the loop review (Code review) - how they want that presented
+Do they want to register custom parsers with ATaaS service so they are cached

@@ -4,9 +4,11 @@ import TopNavigation from '@cloudscape-design/components/top-navigation'
 import Tabs from '@cloudscape-design/components/tabs'
 import '@cloudscape-design/global-styles/index.css'
 
-// Import both use case components
+// Import all components
 import ValidationApp from './ValidationApp'
 import VisualizationApp from './VisualizationApp'
+import ManifestCreator from './ManifestCreator'
+import InstrumentRegistry from './InstrumentRegistry'
 
 function CombinedApp() {
   const [activeTab, setActiveTab] = useState('validation')
@@ -50,13 +52,23 @@ function CombinedApp() {
             tabs={[
               {
                 id: 'validation',
-                label: 'Use Case 2: Validation & Certification',
+                label: 'Validation & Certification',
                 content: <ValidationApp />
               },
               {
                 id: 'visualization',
-                label: 'Use Case 1: Multi-Instrument Visualization',
+                label: 'Data Visualization',
                 content: <VisualizationApp />
+              },
+              {
+                id: 'manifest',
+                label: 'Manifest Creator',
+                content: <ManifestCreator />
+              },
+              {
+                id: 'registry',
+                label: 'Instrument Registry',
+                content: <InstrumentRegistry />
               }
             ]}
           />

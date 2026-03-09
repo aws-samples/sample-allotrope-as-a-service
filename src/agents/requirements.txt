@@ -1,0 +1,10 @@
+# Python dependencies for Strands agents
+strands-agents>=0.1.0
+boto3>=1.26.0
+botocore>=1.29.0
+
+# Allotropy integration (Anthropic skill)
+allotropy==0.1.55
+pandas==2.0.3
+openpyxl==3.1.2
+pdfplumber==0.9.0

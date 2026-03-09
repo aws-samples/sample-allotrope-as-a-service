@@ -1,0 +1,146 @@
+[
+  {
+    "canonical_id": "novabio-flex2",
+    "vendor_id": "NOVABIO_FLEX2",
+    "name": "BioProfile FLEX2",
+    "manufacturer": "Nova Biomedical",
+    "instrument_type": "solution_analyzer",
+    "allotropy_supported": true,
+    "aliases": ["bioprofile flex2", "Nova FLEX2", "FLEX2", "flex 2"]
+  },
+  {
+    "canonical_id": "beckman-vicell-blu",
+    "vendor_id": "BECKMAN_VI_CELL_BLU",
+    "name": "Vi-CELL BLU",
+    "manufacturer": "Beckman Coulter",
+    "instrument_type": "cell_counter",
+    "allotropy_supported": true,
+    "aliases": ["vicell blu", "vi-cell blu", "vicell"]
+  },
+  {
+    "canonical_id": "beckman-vicell-xr",
+    "vendor_id": "BECKMAN_VI_CELL_XR",
+    "name": "Vi-CELL XR",
+    "manufacturer": "Beckman Coulter",
+    "instrument_type": "cell_counter",
+    "allotropy_supported": true,
+    "aliases": ["vicell xr", "vi-cell xr"]
+  },
+  {
+    "canonical_id": "moldev-softmax-pro",
+    "vendor_id": "MOLDEV_SOFTMAX_PRO",
+    "name": "SoftMax Pro",
+    "manufacturer": "Molecular Devices",
+    "instrument_type": "plate_reader",
+    "allotropy_supported": true,
+    "aliases": ["softmax pro", "softmax"]
+  },
+  {
+    "canonical_id": "perkin-elmer-envision",
+    "vendor_id": "PERKIN_ELMER_ENVISION",
+    "name": "EnVision",
+    "manufacturer": "PerkinElmer",
+    "instrument_type": "plate_reader",
+    "allotropy_supported": true,
+    "aliases": ["envision"]
+  },
+  {
+    "canonical_id": "roche-cedex-bioht",
+    "vendor_id": "ROCHE_CEDEX_BIOHT",
+    "name": "CEDEX BioHT",
+    "manufacturer": "Roche",
+    "instrument_type": "solution_analyzer",
+    "allotropy_supported": true,
+    "aliases": ["cedex bioht", "cedex"]
+  },
+  {
+    "canonical_id": "thermo-nanodrop-eight",
+    "vendor_id": "THERMO_FISHER_NANODROP_EIGHT",
+    "name": "NanoDrop Eight",
+    "manufacturer": "Thermo Fisher Scientific",
+    "instrument_type": "spectrophotometer",
+    "allotropy_supported": true,
+    "aliases": ["nanodrop eight", "nanodrop 8"]
+  },
+  {
+    "canonical_id": "thermo-qubit4",
+    "vendor_id": "THERMO_FISHER_QUBIT4",
+    "name": "Qubit 4",
+    "manufacturer": "Thermo Fisher Scientific",
+    "instrument_type": "spectrophotometer",
+    "allotropy_supported": true,
+    "aliases": ["qubit 4", "qubit4"]
+  },
+  {
+    "canonical_id": "appbio-quantstudio",
+    "vendor_id": "APPBIO_QUANTSTUDIO",
+    "name": "QuantStudio",
+    "manufacturer": "Applied Biosystems",
+    "instrument_type": "qpcr",
+    "allotropy_supported": true,
+    "aliases": ["quantstudio", "quant studio"]
+  },
+  {
+    "canonical_id": "qiacuity-dpcr",
+    "vendor_id": "QIACUITY_DPCR",
+    "name": "QIAcuity dPCR",
+    "manufacturer": "Qiagen",
+    "instrument_type": "dpcr",
+    "allotropy_supported": true,
+    "aliases": ["qiacuity", "qia cuity"]
+  },
+  {
+    "canonical_id": "biorad-bioplex",
+    "vendor_id": "BIORAD_BIOPLEX",
+    "name": "BioPlex",
+    "manufacturer": "Bio-Rad",
+    "instrument_type": "plate_reader",
+    "allotropy_supported": true,
+    "aliases": ["bioplex", "bio plex"]
+  },
+  {
+    "canonical_id": "agilent-gen5",
+    "vendor_id": "AGILENT_GEN5",
+    "name": "Gen5 (BioTek)",
+    "manufacturer": "Agilent",
+    "instrument_type": "plate_reader",
+    "allotropy_supported": true,
+    "aliases": ["gen5", "biotek gen5"]
+  },
+  {
+    "canonical_id": "bmg-mars",
+    "vendor_id": "BMG_MARS",
+    "name": "MARS",
+    "manufacturer": "BMG Labtech",
+    "instrument_type": "plate_reader",
+    "allotropy_supported": true,
+    "aliases": ["mars", "bmg mars"]
+  },
+  {
+    "canonical_id": "chemometec-nc-view",
+    "vendor_id": "CHEMOMETEC_NC_VIEW",
+    "name": "NC-View",
+    "manufacturer": "ChemoMetec",
+    "instrument_type": "cell_counter",
+    "allotropy_supported": true,
+    "aliases": ["nc-view", "ncview"]
+  },
+  {
+    "canonical_id": "beckman-pharmspec",
+    "vendor_id": "BECKMAN_PHARMSPEC",
+    "name": "PharmSpec",
+    "manufacturer": "Beckman Coulter",
+    "instrument_type": "spectrophotometer",
+    "allotropy_supported": true,
+    "aliases": ["pharmspec", "pharm spec"]
+  },
+  {
+    "canonical_id": "unchained-lunatic",
+    "vendor_id": "UNCHAINED_LABS_LUNATIC",
+    "name": "Lunatic",
+    "manufacturer": "Unchained Labs",
+    "instrument_type": "spectrophotometer",
+    "allotropy_supported": true,
+    "aliases": ["lunatic"]
+  }
+]

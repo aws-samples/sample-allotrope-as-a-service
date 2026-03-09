@@ -1,0 +1,189 @@
+AWS-Allotrope scientific data transformation service 
+Opportunity and Context 
+
+ASM (Allotrope Simple Model) serves as a standardized format for capturing lab data making it easier to exchange scientific data across systems. 
+Allotrope and AWS are partnering to enable AI ready scientific data at scale by creating a set of vendor neutral services in the cloud that lower the barrier of entry to adoption of ASM.  These services will 
+* Eliminate undifferentiated need for to develop the conversion tools and set up infrastructure to run the tools
+* Lower cost of adoption by leveraging shared infrastructure[TD1][TL2], governance and maintenance across organizations
+* Maintain a shared collaborative library of mappings from vendors specific source to the standardized ASM format 
+* Ensure data security and confidentiality with no persistent data storage
+* Help manage lifecycle of Allotrope standards as they evolve
+The foundational services required are
+ASM Transformation as a Service  (ATaaS) : This will be a cloud based service accessible via an API to enable transform raw data acquired from an instrument or a software system into an ASM file including metadata standardization, handling organization-specific fields, and integrating reference data from multiple sources into ASM files.
+ASM data validation as a service (DVaaS): This will be a certification service that validates  that any ASM output created by users or third-party solution conforms to a common understanding of structures and constraints defined in the ASM standard. 
+Additional services: Once the foundational services for creating normalized data are established, we will be able to create additional downstream services such as
+- Create knowledge graph that helps mine the scientific data available in ASM format
+- Create a methods repository that leverages ASM template to share and standardize commonly used methods within an organization or across organizations working in partnership
+As a next step, we are looking to execute a Proof of Concept for foundational services in consultation with Merck to define the scope of service, establish a solution approach and define criteria for viability of these services.
+
+Proposed POC
+
+Use Case Selection. Merck/Allotrope are prioritizing use cases that address the most significant current barriers to adoption. Additional use cases will be incorporated in future phases.
+Scope Definition. Merck will identify proof-of-concept (POC) scopes that demonstrate substantial business value.
+Architecture Development. AWS will develop a reference architecture and prototype following AWS best practices.
+Initial Deployment Model. The initial solution will be a self-managed AWS architecture deployed in the customer's account (Merck or other Allotrope member). Deployment will be automated via cloud templates, providing end users with a fully managed service experience.
+Future Evolution. Based on adoption / consumption metrics, development feedback, and customer needs, we will evaluate progression toward a full AWS managed service in later phases.
+
+Use case 1: ASM Conversion & Visualization
+Goal: Create AI-ready ASM data with the speed, scale, and consistency needed to drive science. Carry out on-demand dashboard visualization of AI-ready ASM data.
+Scope: 2 vendors of plate readers, 1 vendor of a cell counter, and 1 vendor of a solution analyzer. Visualization will be a web-based knowledge graph.
+What this will demonstrate: Demonstrate efficiency gains a scientist would experience when running multiple analyses on a sample and then wanting to visualize the aggregated results to make assessments.  This is done manually now, consuming valuable scientist time not doing science, and is complicated by the across the diversity of instrumentation and software we have in laboratories that aren’t natively interoperable.
+Key metrics to measure-- Speed: files per minute, Scale: # files that can be ingested  at once, Precision: ability to map consistently
+
+Use case 2: ASM Validation & Certification
+
+Goal: ASM validation & certification service which will be essential for consistency & AI-readiness when ASMs are being created at scale across the industry
+Scope: Compare above ASM files produced by Use Case 1 to those provided by Merck and vs the ASM schema. Minimum goal – if files match, label the other file as Allotrope Validated or Certified .  Stretch goal – if files don’t match, write a report to identifying the differences and create update the non-conforming file to be conformant
+What this will demonstrate: mock up of ASM Certification service and Remediation service
+Key metrics to measure—Accuracy: proper categorization of match vs non-match, and labeling of differences. Precision: consistency of remediation.
+
+
+Proposed Solution 
+
+The Allotrope Converter Service represents a modern approach to laboratory data standardization, designed to meet the demanding requirements of pharmaceutical research environments.  This service enables scientists to convert instrument data into standardized formats without requiring local software installation or persistent storage of sensitive data in the cloud.
+How it Works:
+Data Generation and Submission
+When a laboratory instrument generates data, the file is automatically routed through a secure edge gateway. This gateway serves as the bridge between the laboratory environment and the cloud-based conversion service. Scientists can also manually submit files through a secure interface when needed.
+Intelligent Processing:
+Upon receiving a file, the service:
+1. Identifies the source instrument and file format
+2. Checks file and route to one of the following processing strategies:. [TL3][TL4]
+a. Selects the right approved converter from the library. If there is a substantive change (like new version available) route for approval. 
+b. Generates new conversion code. Routes for scientific review and approval.
+3. Executes the converter
+4. Generates compliant ASM file output
+5. Returns the converted file to the requestor
+
+Scientists Experience:[TL5]
+From the scientist’s perspective, the process is straightforward:
+* Generate data from laboratory instrument
+* Automatic submission through edge gateway
+* Receive converted ASM file
+* Utilize standardized data
+* Visualize data in a knowledge graph
+
+Data Admin Experience
+* Get notified of new converter
+* Review converter code and quality report
+* Approve, edit or reject converter
+
+
+
+
+APPENDIX
+Key Benefits
+Security and Compliance
+The service maintains data privacy by:
+* Processing files in memory
+* Not persisting source or converted data
+* Implementing secure transmission protocols
+* Providing comprehensive audit trails
+
+Operational Efficiency
+* Eliminates need for local conversion software
+* Reduces IT infrastructure requirements
+* Enables immediate access to standardized data
+* Supports multiple instrument types
+Data Quality
+* Consistent application of conversion rules
+* Standardized output formats
+* Built-in validation
+* Quality scoring
+Regulatory Compliance
+* Audit trail generation
+* Controlled access
+* Data integrity checks
+* Compliance with GxP requirements
+Technical Solution Architecture
+The Allotrope Converter Service provides a cloud-based, transient data conversion capability that transforms laboratory instrument data into standardized Allotrope Simple Model (ASM) format. The service operates on a request-response model, processing data without persistent storage of source files or converted outputs in the cloud environment.
+System Overview
+The solution implements a secure, scalable architecture that enables automated conversion of instrument data while maintaining data privacy and regulatory compliance. The architecture consists of three primary layers:
+1. Data Ingestion Layer
+2. Intelligent Converter Hub
+3. Scientists Interface Layer
+Core Components
+1. Laboratory Data Ingestion
+Edge Gateway
+* Provides secure connection point for laboratory instruments
+* Implements protocol translation and data validation
+* Manages authentication and authorization
+* Handles initial format validation
+Data Movement Service
+* Orchestrates secure file transfer
+* Implements retry logic and error handling
+* Provides audit logging
+* Ensures data integrity during transmission
+2. Intelligent Converter Hub
+Format Detection/Code Generation Engine
+* Automatically identifies incoming file formats
+* Generates appropriate conversion parameters
+* Implements dynamic code generation
+* Manages conversion workflows
+Components:
+* Format Detector Service
+* Code Generation Engine
+* Validation Service
+* Workflow Manager
+ASM Generation Engine
+* Applies Allotrope ontology mapping
+* Creates compliant ASM files
+* Performs schema validation
+* Implements quality scoring
+Key Features:
+* Dynamic ontology mapping
+* Schema validation
+* Quality certification
+* Compliance checking
+Code Generation Approval Workflow
+Workflow Steps:
+1. Code Generation
+* Conversion logic creation
+* Parameter configuration
+* Dependency mapping
+2. Scientific Review
+* Code review interface
+* Validation checks
+* Test conversion results
+* Impact analysis
+3. Approval Process
+* Multiple approval levels (if required)
+* Electronic signatures
+* Audit trail creation
+* Version control
+4. Deployment
+* Approved code implementation
+* Configuration management
+* Runtime validation
+* Performance monitoring
+Quality Controls
+* Code validation metrics
+* Test coverage requirements
+* Performance benchmarks
+* Compliance checks
+Audit Trail
+* Approval timestamps
+* Reviewer information
+* Change documentation
+* Version history
+3. Security and Compliance
+Authentication and Authorization
+* IAM-based access control
+* API key management
+* Role-based access control
+* Audit logging
+Data Protection
+* TLS encryption in transit
+* No persistent storage of data
+* Secure parameter handling
+* Session management
+
+[TD1]@Tessler, Lee how do you envision the shared infrastructure working?
+[TL2R1]This may refer to AgentCore or perhaps us building an AWS Service for the entire solution
+[TL3]Please describe the business logic here, so we can confirm we are aligned with the Merck team. I believe it is--
+
+A. If this device is already associated with a converter, jump to step 6 
+B. If not, then proceed to step 3.
+[TL4R3]@Tavares, Duverney 
+[TL5]This is not quite right. The scientist will not conduct the validation, they will just utilized standardized data.
+
+There is a second persona, lets call it the ASM data admin, who will be the one in the approval workflow, will oversee the validation

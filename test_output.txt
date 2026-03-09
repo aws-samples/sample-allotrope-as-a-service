@@ -1,0 +1,20 @@
+============================================================
+ALLOTROPY INTEGRATION TEST SUITE
+============================================================
+
+=== Testing Allotropy Import ===
+
+Traceback (most recent call last):
+  File "C:\app\asm2agent\test_allotropy_integration.py", line 196, in <module>
+    sys.exit(main())
+             ~~~~^^
+  File "C:\app\asm2agent\test_allotropy_integration.py", line 162, in main
+    results.append(("Allotropy Import", test_allotropy_import()))
+                                        ~~~~~~~~~~~~~~~~~~~~~^^
+  File "C:\app\asm2agent\test_allotropy_integration.py", line 20, in test_allotropy_import
+    print("\u2705 Allotropy library imported successfully")
+    ~~~~~^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Python313\Lib\encodings\cp1252.py", line 19, in encode
+    return codecs.charmap_encode(input,self.errors,encoding_table)[0]
+           ~~~~~~~~~~~~~~~~~~~~~^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+UnicodeEncodeError: 'charmap' codec can't encode character '\u2705' in position 0: character maps to <undefined>

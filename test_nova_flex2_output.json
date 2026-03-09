@@ -1,0 +1,294 @@
+{
+  "$asm.manifest": "http://purl.allotrope.org/manifests/solution-analyzer/REC/2025/06/solution-analyzer.manifest",
+  "solution analyzer aggregate document": {
+    "data system document": {
+      "ASM conversion time": "2026-01-28T15:41:50.359829+00:00",
+      "ASM converter name": "aws-asm-service",
+      "ASM converter version": "1.0.0",
+      "ASM file identifier": "SampleResults-1.json",
+      "data system instance identifier": "SampleResults.csv",
+      "file name": "SampleResults.csv",
+      "software name": "flex2"
+    },
+    "device system document": {
+      "device identifier": "bioprofile flex2",
+      "product manufacturer": "nova biomedical",
+      "device document": [
+        {
+          "device type": "solution analyzer"
+        }
+      ]
+    },
+    "solution analyzer document": [
+      {
+        "analyst": "Flex2admin",
+        "measurement aggregate document": {
+          "measurement document": [
+            {
+              "measurement identifier": "80794c11-6b12-4a2f-bc16-f29579fcd0f6",
+              "measurement time": "2025-11-01T04:46:26.000+00:00",
+              "device control aggregate document": {
+                "device control document": [
+                  {
+                    "device type": "blood gas analyzer",
+                    "detection type": "sensor"
+                  }
+                ]
+              },
+              "pO2": {
+                "value": 94.5,
+                "unit": "mmHg"
+              },
+              "pCO2": {
+                "value": 31.4,
+                "unit": "mmHg"
+              },
+              "oxygen saturation": {
+                "value": 61.9,
+                "unit": "%"
+              },
+              "carbon dioxide saturation": {
+                "value": 4.3,
+                "unit": "%"
+              },
+              "sample document": {
+                "sample identifier": "XB21-720-0300",
+                "description": "Default"
+              }
+            },
+            {
+              "measurement identifier": "ec5420df-5460-450f-990d-261482106d44",
+              "measurement time": "2025-11-01T04:46:26.000+00:00",
+              "device control aggregate document": {
+                "device control document": [
+                  {
+                    "device type": "pH",
+                    "detection type": "sensor"
+                  }
+                ]
+              },
+              "pH": {
+                "value": 7.183,
+                "unit": "pH"
+              },
+              "temperature": {
+                "value": null,
+                "unit": "degC"
+              },
+              "sample document": {
+                "sample identifier": "XB21-720-0300",
+                "description": "Default"
+              }
+            },
+            {
+              "measurement identifier": "b76aca16-b528-4126-9e1e-d1c322ce8688",
+              "measurement time": "2025-11-01T04:46:26.000+00:00",
+              "device control aggregate document": {
+                "device control document": [
+                  {
+                    "device type": "osmolality",
+                    "detection type": "sensor"
+                  }
+                ]
+              },
+              "osmolality": {
+                "value": 302.0,
+                "unit": "mosm/kg"
+              },
+              "sample document": {
+                "sample identifier": "XB21-720-0300",
+                "description": "Default"
+              }
+            },
+            {
+              "measurement identifier": "bb051bec-ca3d-4b20-ab11-5e6276f236bf",
+              "measurement time": "2025-11-01T04:46:26.000+00:00",
+              "device control aggregate document": {
+                "device control document": [
+                  {
+                    "device type": "metabolite analyzer",
+                    "detection type": "sensor"
+                  }
+                ]
+              },
+              "analyte aggregate document": {
+                "analyte document": [
+                  {
+                    "analyte name": "glutamine",
+                    "molar concentration": {
+                      "value": 1.8,
+                      "unit": "mmol/L"
+                    }
+                  },
+                  {
+                    "analyte name": "glutamate",
+                    "molar concentration": {
+                      "value": 2.38,
+                      "unit": "mmol/L"
+                    }
+                  },
+                  {
+                    "analyte name": "glucose",
+                    "mass concentration": {
+                      "value": 8.21,
+                      "unit": "g/L"
+                    }
+                  },
+                  {
+                    "analyte name": "lactate",
+                    "mass concentration": {
+                      "value": 0.25,
+                      "unit": "g/L"
+                    }
+                  },
+                  {
+                    "analyte name": "ammonium",
+                    "molar concentration": {
+                      "value": 1.02,
+                      "unit": "mmol/L"
+                    }
+                  },
+                  {
+                    "analyte name": "sodium",
+                    "molar concentration": {
+                      "value": 98.7,
+                      "unit": "mmol/L"
+                    }
+                  },
+                  {
+                    "analyte name": "potassium",
+                    "molar concentration": {
+                      "value": 5.68,
+                      "unit": "mmol/L"
+                    }
+                  },
+                  {
+                    "analyte name": "calcium",
+                    "molar concentration": {
+                      "value": 0.43,
+                      "unit": "mmol/L"
+                    }
+                  }
+                ]
+              },
+              "sample document": {
+                "sample identifier": "XB21-720-0300",
+                "description": "Default"
+              }
+            }
+          ],
+          "calculated data aggregate document": {
+            "calculated data document": [
+              {
+                "calculated data identifier": "23e3611e-5e0c-4a14-9aea-cfceeb86ad3f",
+                "calculated data name": "temperature corrected pH",
+                "calculated result": {
+                  "value": 7.189,
+                  "unit": "pH"
+                }
+              },
+              {
+                "calculated data identifier": "5c651f30-9af6-4d72-b4c9-4170058d5708",
+                "calculated data name": "temperature corrected pO2",
+                "calculated result": {
+                  "value": 91.7,
+                  "unit": "mmHg"
+                }
+              },
+              {
+                "calculated data identifier": "83e02720-4c17-48dd-afad-5ff936010807",
+                "calculated data name": "temperature corrected pCO2",
+                "calculated result": {
+                  "value": 30.7,
+                  "unit": "mmHg"
+                }
+              },
+              {
+                "calculated data identifier": "b2ca554a-64ab-40ac-b417-f52a35c61a62",
+                "calculated data name": "bicarbonate",
+                "calculated result": {
+                  "value": 11.8,
+                  "unit": "mmol/L"
+                }
+              }
+            ],
+            "data source aggregate document": {
+              "data source document": [
+                {
+                  "data source identifier": "ec5420df-5460-450f-990d-261482106d44",
+                  "data source feature": "pH measurement"
+                },
+                {
+                  "data source identifier": "80794c11-6b12-4a2f-bc16-f29579fcd0f6",
+                  "data source feature": "pO2 measurement"
+                },
+                {
+                  "data source identifier": "80794c11-6b12-4a2f-bc16-f29579fcd0f6",
+                  "data source feature": "pCO2 measurement"
+                },
+                {
+                  "data source identifier": "80794c11-6b12-4a2f-bc16-f29579fcd0f6",
+                  "data source feature": "pCO2 measurement"
+                },
+                {
+                  "data source identifier": "ec5420df-5460-450f-990d-261482106d44",
+                  "data source feature": "pH measurement"
+                }
+              ]
+            }
+          },
+          "custom information aggregate document": {
+            "custom information document": [
+              {
+                "datum label": "Pre-Dilution Multiplier",
+                "scalar double datum": 1.0,
+                "unit": "(unitless)"
+              },
+              {
+                "datum label": "Vessel Pressure (psi)",
+                "scalar double datum": 0.0,
+                "unit": "psi"
+              },
+              {
+                "datum label": "Sparging O2%",
+                "scalar double datum": 20.9,
+                "unit": "%"
+              },
+              {
+                "datum label": "pH / Gas Flow Time",
+                "scalar double datum": 4.38,
+                "unit": "sec"
+              },
+              {
+                "datum label": "Chemistry Flow Time",
+                "scalar double datum": 8.13,
+                "unit": "sec"
+              },
+              {
+                "datum label": "Chemistry Dilution Ratio",
+                "scalar double datum": 0.5,
+                "unit": "(unitless)"
+              },
+              {
+                "datum label": "Chemistry Cartridge Lot Number",
+                "scalar string datum": "25204008"
+              },
+              {
+                "datum label": "Chemistry Card Lot Number",
+                "scalar string datum": "25261044"
+              },
+              {
+                "datum label": "Gas Cartridge Lot Number",
+                "scalar string datum": "25175029"
+              },
+              {
+                "datum label": "Gas Card Lot Number",
+                "scalar string datum": "25209073"
+              }
+            ]
+          }
+        }
+      }
+    ]
+  }
+}

@@ -1,0 +1,73 @@
+# MRL-Allotrope-AWS Call 12/11/25
+
+
+
+
+### Project Overview & Alignment
+
+* Three-part service architecture confirmed:
+    * Transformation service (file conversion)
+    * Data validation/certification service
+    * ASM consumption/knowledge utilization service
+* Landing area needed for consumption beyond object storage
+* Opportunity to create “data product as a service” for easier adoption
+
+### Value Proposition & Market Positioning
+
+* Eliminates undifferentiated heavy lifting for instrument vendors
+* API integration allows vendors to avoid building conversion capabilities
+* Consistency benefits across allotrope community through centralized validation
+* Some vendors may resist if conversion is their core offering
+* 1/3 of instruments have API capability, 2/3 require file-drop approach
+
+### Technical Architecture Requirements
+
+* Secure ingestion layer via Transfer Family, Storage Gateway, or DataSync
+* Support both API calls and file landing patterns (S3 bucket + Lambda)
+* Large language model and agents central to solution
+* Reference architecture and working prototype delivery model
+* Cloud template for easy deployment and POC testing
+
+### Consumption Layer Challenges
+
+* Current workflow: knowledge graph → relational database → visualization tools
+* Need direct knowledge graph consumption without semantic erosion
+* Three use cases identified:
+    * Chat/GPT interface for interrogation
+    * Dynamic dashboard creation and visualization
+    * Direct tool integration (SageMaker, visualization platforms)
+* AWS QuickSight MCP server integration potential solution
+
+### POC Scope Definition
+
+* Use Case 0: Single solution analyzer converter development
+    * Four modalities: blood gas, metabolite, osmometer, cell counter
+    * Monthly CSV files with sample rows
+    * Medium complexity instrument class
+    * Test AI-driven converter creation vs. existing library integration
+* Merck to provide: CSV files, ASM schemas, reference ASM outputs
+* Success metrics: schema validation + data quality/accuracy checks
+
+### Certification & Validation Framework
+
+* Two-part validation approach:
+    * JSON schema validator against published allotrope schema
+    * Data quality check ensuring no value corruption during conversion
+* Allotrope certification program launching early 2026
+* Manual inspection acceptable for initial POC phase
+* Custom information must use proper schema structure
+
+### Confidentiality & Next Steps
+
+* Project under mutual NDA between AWS and Merck
+* No external discussions of AWS involvement
+* Merck to provide Use Case 0 artifacts: solution analyzer CSV files, schemas, reference ASMs
+* AWS to share data flow diagrams and component architecture for review
+* Target: fast-track development of first converter with 10x speed improvement
+
+### Additional Context
+
+* Opportunity: landing area for consumption beyond basic object storage needed
+* Current bottleneck: converter development speed and accuracy
+* Library persistence and community contribution model to be determined post-POC
+

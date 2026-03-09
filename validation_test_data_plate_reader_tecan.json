@@ -1,0 +1,12 @@
+{
+  "valid": true,
+  "validation_level": "certification",
+  "timestamp": "2025-12-23T15:58:18.431522",
+  "errors": [],
+  "warnings": [],
+  "certification": {
+    "status": "ALLOTROPE_CERTIFIED",
+    "certificate_id": "CERT-20251223155818",
+    "issued_at": "2025-12-23T15:58:18.431577"
+  }
+}

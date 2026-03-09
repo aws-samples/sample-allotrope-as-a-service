@@ -1,0 +1,18 @@
+Here is how to check the API endpoints
+
+cd c:\app\asm2agent\services
+cdk deploy --outputs-file outputs.json
+type outputs.json
+
+Produces the following info:
+
+AutonomousServicesStack.ASMFilesBucket = asm-converted-files
+AutonomousServicesStack.ATaaSAPIEndpoint = https://3dbnsq6w6h.execute-api.us-east-1.amazonaws.com/prod/
+AutonomousServicesStack.ATaaSAPIEndpoint1C78CA84 = https://3dbnsq6w6h.execute-api.us-east-1.amazonaws.com/prod/
+AutonomousServicesStack.DVaaSAPIEndpoint = https://4ndgjn16zd.execute-api.us-east-1.amazonaws.com/prod/
+AutonomousServicesStack.DVaaSAPIEndpointD509D4BE = https://4ndgjn16zd.execute-api.us-east-1.amazonaws.com/prod/
+AutonomousServicesStack.MultiInstrumentAPIEndpoint = https://6uogqq4zb5.execute-api.us-east-1.amazonaws.com/prod/
+AutonomousServicesStack.MultiInstrumentAPIEndpoint79694308 = https://6uogqq4zb5.execute-api.us-east-1.amazonaws.com/prod/
+AutonomousServicesStack.UnifiedConverterAPIEndpoint = https://tqzatn5bse.execute-api.us-east-1.amazonaws.com/prod/
+AutonomousServicesStack.UnifiedConverterAPIEndpoint054814FB = https://tqzatn5bse.execute-api.us-east-1.amazonaws.com/prod/
+

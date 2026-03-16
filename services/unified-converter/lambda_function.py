@@ -12,6 +12,54 @@ import io
 import uuid
 from datetime import datetime
 
+dynamodb = boto3.resource('dynamodb')
+
+def try_custom_converter(vendor, model, file_content):
+    """Try custom converter from registry"""
+    
+    try:
+        # Query registry for matching converter
+        registry_table = dynamodb.Table(os.environ.get('CONVERTER_REGISTRY_TABLE'))
+        
+        # Scan for matching vendor and model (simple implementation)
+        response = registry_table.scan(
+            FilterExpression='vendor = :vendor AND model = :model AND #status = :status',
+            ExpressionAttributeNames={'#status': 'status'},
+            ExpressionAttributeValues={
+                ':vendor': vendor,
+                ':model': model,
+                ':status': 'APPROVED'
+            }
+        )
+        
+        if not response.get('Items'):
+            return {'success': False, 'error': 'No approved converter found'}
+        
+        converter = response['Items'][0]
+        converter_id = converter['converter_id']
+        
+        # Call Custom Converter Service
+        custom_endpoint = os.environ.get('CUSTOM_CONVERTER_ENDPOINT')
+        
+        result = requests.post(
+            custom_endpoint,
+            json={'converter_id': converter_id, 'file_content': file_content},
+            timeout=60
+        )
+        
+        if result.status_code == 200:
+            data = result.json()
+            return {
+                'success': True,
+                'converter_id': converter_id,
+                'asm_output': data.get('asm_output')
+            }
+        
+        return {'success': False, 'error': f"Custom converter failed: {result.text[:200]}"}
+        
+    except Exception as e:
+        return {'success': False, 'error': f"Custom converter error: {str(e)}"}
+
 def lambda_handler(event, context):
     """Unified conversion with intelligent fallback"""
     
@@ -24,6 +72,7 @@ def lambda_handler(event, context):
         
         file_content = body.get('file_content', '')
         file_name = body.get('file_name', 'unknown.txt')
+        manifest = body.get('manifest', {})
         store_results = body.get('store_results', False)
         
         if not file_content:
@@ -31,7 +80,37 @@ def lambda_handler(event, context):
         
         conversion_id = f"UNIFIED-{datetime.utcnow().strftime('%Y%m%d%H%M%S')}"
         
-        # Check if it's Nova FLEX2 - use custom converter
+        # Step 1: Check Custom Converter Registry (if manifest provided)
+        if manifest:
+            vendor = manifest.get('vendor', '')
+            model = manifest.get('model', '')
+            
+            custom_result = try_custom_converter(vendor, model, file_content)
+            if custom_result['success']:
+                response = {
+                    'conversion_id': conversion_id,
+                    'timestamp': datetime.utcnow().isoformat(),
+                    'method': 'custom-converter',
+                    'converter_used': custom_result.get('converter_id'),
+                    'asm_output': custom_result['asm_output'],
+                    'status': 'success',
+                    'message': 'Converted using custom converter'
+                }
+                
+                if store_results:
+                    storage_result = store_conversion(response)
+                    response['storage'] = storage_result
+                
+                return {
+                    'statusCode': 200,
+                    'headers': {
+                        'Content-Type': 'application/json',
+                        'Access-Control-Allow-Origin': '*'
+                    },
+                    'body': json.dumps(response)
+                }
+        
+        # Check if it's Nova FLEX2 - use embedded custom converter
         if is_nova_flex2(file_content, file_name):
             nova_result = convert_nova_flex2(file_content)
             if nova_result['success']:
@@ -58,7 +137,7 @@ def lambda_handler(event, context):
                     'body': json.dumps(response)
                 }
         
-        # Step 1: Try Multi-Instrument Service (fast, rule-based)
+        # Step 2: Try Multi-Instrument Service (fast, rule-based)
         multi_instrument_result = try_multi_instrument(file_content, file_name)
         
         if multi_instrument_result['success']:

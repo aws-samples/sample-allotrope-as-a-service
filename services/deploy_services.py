@@ -83,6 +83,26 @@ class AutonomousServicesStack(Stack):
             removal_policy=RemovalPolicy.DESTROY
         )
 
+        # Custom Converter Registry table
+        converter_registry_table = dynamodb.Table(
+            self, "CustomConverterRegistry",
+            table_name="CustomConverterRegistry",
+            partition_key=dynamodb.Attribute(
+                name="converter_id",
+                type=dynamodb.AttributeType.STRING
+            ),
+            billing_mode=dynamodb.BillingMode.PAY_PER_REQUEST,
+            removal_policy=RemovalPolicy.DESTROY
+        )
+
+        # S3 bucket for custom converters
+        converters_bucket = s3.Bucket(
+            self, "CustomConvertersBucket",
+            bucket_name=f"custom-converters-{cdk.Aws.ACCOUNT_ID}-{cdk.Aws.REGION}",
+            removal_policy=RemovalPolicy.DESTROY,
+            auto_delete_objects=True
+        )
+
         # Grant storage permissions to ATaaS
         asm_files_bucket.grant_read_write(ataas_lambda)
         validation_results_bucket.grant_read_write(ataas_lambda)
@@ -250,6 +270,214 @@ class AutonomousServicesStack(Stack):
             method_responses=[{"statusCode": "200"}]
         )
 
+        # Custom Converter Service Lambda
+        custom_converter_lambda = _lambda.Function(
+            self, "CustomConverterFunction",
+            runtime=_lambda.Runtime.PYTHON_3_9,
+            handler="lambda_function.lambda_handler",
+            code=_lambda.Code.from_asset("custom-converter"),
+            timeout=Duration.seconds(60),
+            memory_size=512,
+            environment={
+                "CONVERTER_REGISTRY_TABLE": converter_registry_table.table_name,
+                "CONVERTERS_BUCKET": converters_bucket.bucket_name,
+                "SERVICE_NAME": "CustomConverter"
+            }
+        )
+
+        # Grant permissions
+        converter_registry_table.grant_read_data(custom_converter_lambda)
+        converters_bucket.grant_read(custom_converter_lambda)
+
+        # Custom Converter API
+        custom_converter_api = apigateway.RestApi(
+            self, "CustomConverterAPI",
+            rest_api_name="Custom Converter Service",
+            description="Execute approved custom converters",
+            default_cors_preflight_options=apigateway.CorsOptions(
+                allow_origins=apigateway.Cors.ALL_ORIGINS,
+                allow_methods=apigateway.Cors.ALL_METHODS,
+                allow_headers=["Content-Type", "Authorization"]
+            )
+        )
+
+        # Execute endpoint
+        execute_resource = custom_converter_api.root.add_resource("execute")
+        execute_resource.add_method(
+            "POST",
+            apigateway.LambdaIntegration(custom_converter_lambda),
+            method_responses=[{
+                "statusCode": "200",
+                "responseHeaders": {
+                    "Access-Control-Allow-Origin": True
+                }
+            }]
+        )
+
+        # Register endpoint (for uploading converters)
+        register_resource = custom_converter_api.root.add_resource("register")
+        register_lambda = _lambda.Function(
+            self, "RegisterConverterFunction",
+            runtime=_lambda.Runtime.PYTHON_3_9,
+            handler="index.lambda_handler",
+            code=_lambda.Code.from_inline("""
+import json
+import boto3
+import os
+from datetime import datetime
+
+s3 = boto3.client('s3')
+dynamodb = boto3.resource('dynamodb')
+
+def lambda_handler(event, context):
+    try:
+        body = json.loads(event['body']) if isinstance(event['body'], str) else event['body']
+        
+        converter_id = body.get('converter_id')
+        converter_code = body.get('converter_code')
+        vendor = body.get('vendor')
+        model = body.get('model')
+        instrument_type = body.get('instrument_type')
+        
+        if not all([converter_id, converter_code, vendor, model, instrument_type]):
+            return {'statusCode': 400, 'body': json.dumps({'error': 'Missing required fields'})}
+        
+        # Store converter in S3
+        bucket = os.environ['CONVERTERS_BUCKET']
+        s3_key = f"converters/{converter_id}.py"
+        s3.put_object(Bucket=bucket, Key=s3_key, Body=converter_code)
+        
+        # Create registry entry
+        table = dynamodb.Table(os.environ['CONVERTER_REGISTRY_TABLE'])
+        table.put_item(Item={
+            'converter_id': converter_id,
+            'vendor': vendor,
+            'model': model,
+            'instrument_type': instrument_type,
+            's3_location': s3_key,
+            'status': 'PENDING',
+            'created_at': datetime.utcnow().isoformat()
+        })
+        
+        return {
+            'statusCode': 200,
+            'headers': {'Access-Control-Allow-Origin': '*'},
+            'body': json.dumps({'converter_id': converter_id, 'status': 'PENDING'})
+        }
+    except Exception as e:
+        return {'statusCode': 500, 'body': json.dumps({'error': str(e)})}
+"""),
+            timeout=Duration.seconds(30),
+            memory_size=256,
+            environment={
+                "CONVERTER_REGISTRY_TABLE": converter_registry_table.table_name,
+                "CONVERTERS_BUCKET": converters_bucket.bucket_name
+            }
+        )
+        
+        converter_registry_table.grant_write_data(register_lambda)
+        converters_bucket.grant_write(register_lambda)
+        
+        register_resource.add_method(
+            "POST",
+            apigateway.LambdaIntegration(register_lambda),
+            method_responses=[{"statusCode": "200"}]
+        )
+
+        # Approve endpoint
+        approve_resource = custom_converter_api.root.add_resource("approve")
+        approve_lambda = _lambda.Function(
+            self, "ApproveConverterFunction",
+            runtime=_lambda.Runtime.PYTHON_3_9,
+            handler="index.lambda_handler",
+            code=_lambda.Code.from_inline("""
+import json
+import boto3
+import os
+
+dynamodb = boto3.resource('dynamodb')
+
+def lambda_handler(event, context):
+    try:
+        body = json.loads(event['body']) if isinstance(event['body'], str) else event['body']
+        converter_id = body.get('converter_id')
+        approved_by = body.get('approved_by', 'system')
+        
+        if not converter_id:
+            return {'statusCode': 400, 'body': json.dumps({'error': 'converter_id required'})}
+        
+        table = dynamodb.Table(os.environ['CONVERTER_REGISTRY_TABLE'])
+        table.update_item(
+            Key={'converter_id': converter_id},
+            UpdateExpression='SET #status = :status, approved_by = :approved_by',
+            ExpressionAttributeNames={'#status': 'status'},
+            ExpressionAttributeValues={':status': 'APPROVED', ':approved_by': approved_by}
+        )
+        
+        return {
+            'statusCode': 200,
+            'headers': {'Access-Control-Allow-Origin': '*'},
+            'body': json.dumps({'converter_id': converter_id, 'status': 'APPROVED'})
+        }
+    except Exception as e:
+        return {'statusCode': 500, 'body': json.dumps({'error': str(e)})}
+"""),
+            timeout=Duration.seconds(30),
+            memory_size=256,
+            environment={
+                "CONVERTER_REGISTRY_TABLE": converter_registry_table.table_name
+            }
+        )
+        
+        converter_registry_table.grant_write_data(approve_lambda)
+        
+        approve_resource.add_method(
+            "POST",
+            apigateway.LambdaIntegration(approve_lambda),
+            method_responses=[{"statusCode": "200"}]
+        )
+
+        # List endpoint (for dashboard)
+        list_lambda = _lambda.Function(
+            self, "ListConvertersFunction",
+            runtime=_lambda.Runtime.PYTHON_3_9,
+            handler="index.lambda_handler",
+            code=_lambda.Code.from_inline("""
+import json
+import boto3
+import os
+
+dynamodb = boto3.resource('dynamodb')
+
+def lambda_handler(event, context):
+    try:
+        table = dynamodb.Table(os.environ['CONVERTER_REGISTRY_TABLE'])
+        response = table.scan()
+        
+        return {
+            'statusCode': 200,
+            'headers': {'Access-Control-Allow-Origin': '*'},
+            'body': json.dumps({'converters': response.get('Items', [])})
+        }
+    except Exception as e:
+        return {'statusCode': 500, 'body': json.dumps({'error': str(e)})}
+"""),
+            timeout=Duration.seconds(30),
+            memory_size=256,
+            environment={
+                "CONVERTER_REGISTRY_TABLE": converter_registry_table.table_name
+            }
+        )
+        
+        converter_registry_table.grant_read_data(list_lambda)
+        
+        list_resource = custom_converter_api.root.add_resource("list")
+        list_resource.add_method(
+            "GET",
+            apigateway.LambdaIntegration(list_lambda),
+            method_responses=[{"statusCode": "200"}]
+        )
+
         # Unified Converter Lambda (tries Multi-Instrument first, then ATaaS)
         unified_lambda = _lambda.Function(
             self, "UnifiedConverterFunction",
@@ -261,6 +489,8 @@ class AutonomousServicesStack(Stack):
             environment={
                 "MULTI_INSTRUMENT_ENDPOINT": multi_instrument_api.url + "convert",
                 "ATAAS_ENDPOINT": ataas_api.url + "convert",
+                "CUSTOM_CONVERTER_ENDPOINT": custom_converter_api.url + "execute",
+                "CONVERTER_REGISTRY_TABLE": converter_registry_table.table_name,
                 "ASM_FILES_BUCKET": asm_files_bucket.bucket_name,
                 "CONVERSION_HISTORY_TABLE": conversion_history_table.table_name,
                 "SERVICE_NAME": "UnifiedConverter"
@@ -270,6 +500,7 @@ class AutonomousServicesStack(Stack):
         # Grant permissions
         asm_files_bucket.grant_read_write(unified_lambda)
         conversion_history_table.grant_read_write_data(unified_lambda)
+        converter_registry_table.grant_read_data(unified_lambda)
 
         # Unified Converter API
         unified_api = apigateway.RestApi(
@@ -324,6 +555,24 @@ class AutonomousServicesStack(Stack):
             self, "UnifiedConverterAPIEndpoint",
             value=unified_api.url,
             description="Unified Converter API (Multi-Instrument + AI fallback)"
+        )
+
+        cdk.CfnOutput(
+            self, "CustomConverterAPIEndpoint",
+            value=custom_converter_api.url,
+            description="Custom Converter Service API"
+        )
+
+        cdk.CfnOutput(
+            self, "ConverterRegistryTable",
+            value=converter_registry_table.table_name,
+            description="Custom Converter Registry DynamoDB table"
+        )
+
+        cdk.CfnOutput(
+            self, "ConvertersBucket",
+            value=converters_bucket.bucket_name,
+            description="S3 bucket for custom converter code"
         )
 
 app = cdk.App()

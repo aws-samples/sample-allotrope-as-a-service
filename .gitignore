@@ -60,3 +60,7 @@ tmp/
 Thumbs.db
 
 .kiro/steering
+
+# Backups and snapshots
+*.zip
+MEMORY-*.md

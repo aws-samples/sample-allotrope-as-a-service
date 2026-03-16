@@ -6,12 +6,74 @@ import '@cloudscape-design/global-styles/index.css'
 
 // Import all components
 import ValidationApp from './ValidationApp'
+import ValidateASMApp from './ValidateASMApp'
+import ConvertInstrumentApp from './ConvertInstrumentApp'
 import VisualizationApp from './VisualizationApp'
+import ControlTowerApp from './ControlTowerApp'
 import ManifestCreator from './ManifestCreator'
 import InstrumentRegistry from './InstrumentRegistry'
+import ConverterManagementApp from './ConverterManagementApp'
 
 function CombinedApp() {
-  const [activeTab, setActiveTab] = useState('validation')
+  const [activeTab, setActiveTab] = useState('validate-asm')
+
+  // Define all tabs including hidden ones
+  const allTabs = [
+    {
+      id: 'validate-asm',
+      label: 'Validate ASM File',
+      content: <ValidateASMApp />,
+      visible: true
+    },
+    {
+      id: 'convert-instrument',
+      label: 'Convert Instrument File',
+      content: <ConvertInstrumentApp />,
+      visible: true
+    },
+    {
+      id: 'control-tower',
+      label: 'Control Tower',
+      content: <ControlTowerApp />,
+      visible: true
+    },
+    {
+      id: 'manifest',
+      label: 'Instrument Config Creator',
+      content: <ManifestCreator />,
+      visible: true
+    },
+    {
+      id: 'registry',
+      label: 'Instrument Registry',
+      content: <InstrumentRegistry />,
+      visible: true
+    },
+    {
+      id: 'converters',
+      label: 'Converter Management',
+      content: <ConverterManagementApp />,
+      visible: true
+    },
+    {
+      id: 'validation',
+      label: 'Compare & Certify',
+      content: <ValidationApp />,
+      visible: false
+    },
+    {
+      id: 'visualization',
+      label: 'Data Visualization',
+      content: <VisualizationApp />,
+      visible: false
+    }
+  ]
+
+  // Get visible tabs for the tab bar
+  const visibleTabs = allTabs.filter(tab => tab.visible)
+
+  // Find current tab content (including hidden tabs)
+  const currentTab = allTabs.find(tab => tab.id === activeTab)
 
   return (
     <>
@@ -32,6 +94,30 @@ function CombinedApp() {
           },
           {
             type: 'menu-dropdown',
+            text: 'More Tools',
+            items: [
+              { 
+                id: 'compare', 
+                text: 'Compare & Certify', 
+                href: '#',
+                onFollow: (e) => {
+                  e.preventDefault();
+                  setActiveTab('validation');
+                }
+              },
+              { 
+                id: 'visualization', 
+                text: 'Data Visualization', 
+                href: '#',
+                onFollow: (e) => {
+                  e.preventDefault();
+                  setActiveTab('visualization');
+                }
+              }
+            ]
+          },
+          {
+            type: 'menu-dropdown',
             text: 'Resources',
             items: [
               { id: 'api', text: 'API Documentation', href: '#' },
@@ -46,32 +132,15 @@ function CombinedApp() {
         navigationHide
         toolsHide
         content={
-          <Tabs
-            activeTabId={activeTab}
-            onChange={({ detail }) => setActiveTab(detail.activeTabId)}
-            tabs={[
-              {
-                id: 'validation',
-                label: 'Validation & Certification',
-                content: <ValidationApp />
-              },
-              {
-                id: 'visualization',
-                label: 'Data Visualization',
-                content: <VisualizationApp />
-              },
-              {
-                id: 'manifest',
-                label: 'Manifest Creator',
-                content: <ManifestCreator />
-              },
-              {
-                id: 'registry',
-                label: 'Instrument Registry',
-                content: <InstrumentRegistry />
-              }
-            ]}
-          />
+          visibleTabs.some(tab => tab.id === activeTab) ? (
+            <Tabs
+              activeTabId={activeTab}
+              onChange={({ detail }) => setActiveTab(detail.activeTabId)}
+              tabs={visibleTabs}
+            />
+          ) : (
+            currentTab?.content
+          )
         }
       />
     </>

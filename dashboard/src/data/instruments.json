@@ -142,5 +142,25 @@
     "instrument_type": "spectrophotometer",
     "allotropy_supported": true,
     "aliases": ["lunatic"]
+  },
+  {
+    "canonical_id": "novabio-flex2-custom",
+    "vendor_id": "NOVABIO_FLEX2_CUSTOM",
+    "name": "BioProfile FLEX2 (Custom)",
+    "manufacturer": "Nova Biomedical",
+    "instrument_type": "solution_analyzer",
+    "allotropy_supported": false,
+    "converter_type": "custom",
+    "aliases": ["bioprofile flex2 custom", "Nova FLEX2 custom"]
+  },
+  {
+    "canonical_id": "charlesriver-endoscan",
+    "vendor_id": "CHARLESRIVER_ENDOSCAN_V",
+    "name": "EndoScan-V",
+    "manufacturer": "Charles River",
+    "instrument_type": "endotoxin_testing",
+    "allotropy_supported": false,
+    "converter_type": "custom",
+    "aliases": ["endoscan-v", "endoscan v", "endoscan"]
   }
 ]

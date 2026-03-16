@@ -65,7 +65,7 @@ export default function InstrumentRegistry() {
   return (
     <SpaceBetween size="l">
       <Alert type="info">
-        Browse 16+ instruments supported by the allotropy library. Add your own aliases to match your lab's naming conventions.
+        Browse 18+ instruments supported by allotropy library and custom converters. Add your own aliases to match your lab's naming conventions.
       </Alert>
 
       <Container>
@@ -118,11 +118,11 @@ export default function InstrumentRegistry() {
                 sortingField: 'instrument_type'
               },
               {
-                id: 'allotropy',
-                header: 'Allotropy',
+                id: 'converter',
+                header: 'Converter Type',
                 cell: item => item.allotropy_supported 
-                  ? <Badge color="green">Supported</Badge>
-                  : <Badge color="grey">Not Supported</Badge>
+                  ? <Badge color="green">Allotropy</Badge>
+                  : <Badge color="blue">Custom</Badge>
               }
             ]}
             items={filteredInstruments}

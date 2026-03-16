@@ -301,7 +301,7 @@ function App() {
                           </div>
                           <div>
                             <Box variant="awsui-key-label">Validator</Box>
-                            <Box>{beforeValidation.validator}</Box>
+                            <Box>DVaaS</Box>
                           </div>
                         </ColumnLayout>
 
@@ -344,7 +344,7 @@ function App() {
                           </div>
                           <div>
                             <Box variant="awsui-key-label">Validator</Box>
-                            <Box>{afterValidation.validator}</Box>
+                            <Box>DVaaS</Box>
                           </div>
                         </ColumnLayout>
 

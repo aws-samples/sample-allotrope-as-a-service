@@ -81,8 +81,8 @@ export default function ManifestCreator() {
 
   const downloadManifest = () => {
     const filename = isCustom 
-      ? 'custom_instrument_manifest.json'
-      : `${instrument.canonical_id}_manifest.json`
+      ? 'custom_instrument_config.json'
+      : `${instrument.canonical_id}_config.json`
     const blob = new Blob([JSON.stringify(manifest, null, 2)], { type: 'application/json' })
     const url = URL.createObjectURL(blob)
     const a = document.createElement('a')
@@ -97,7 +97,7 @@ export default function ManifestCreator() {
   return (
     <SpaceBetween size="l">
       <Alert type="info">
-        Create a manifest file for your instrument. This file contains metadata that ensures 100% accurate ASM conversion.
+        Create an instrument config file for your instrument. This file contains metadata that ensures 100% accurate ASM conversion.
         Create once per instrument, reuse for all files from that instrument.
       </Alert>
 
@@ -260,7 +260,7 @@ export default function ManifestCreator() {
             </SpaceBetween>
           </Container>
 
-          <Container header={<Header variant="h2">Manifest Preview</Header>}>
+          <Container header={<Header variant="h2">Instrument Config Preview</Header>}>
             <SpaceBetween size="m">
               {isCustom && (
                 <Alert key="preview-alert" type="warning">
@@ -279,7 +279,7 @@ export default function ManifestCreator() {
                 </pre>
               </Box>
               <Button key="download-button" variant="primary" onClick={downloadManifest}>
-                Download manifest.json
+                Download instrument_config.json
               </Button>
             </SpaceBetween>
           </Container>

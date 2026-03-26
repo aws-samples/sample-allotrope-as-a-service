@@ -24,19 +24,27 @@ class AutonomousServicesStack(Stack):
         reportlab_layer = _lambda.LayerVersion(
             self, "ReportlabLayer",
             code=_lambda.Code.from_asset("lambda-layers/reportlab-layer"),
-            compatible_runtimes=[_lambda.Runtime.PYTHON_3_9],
+            compatible_runtimes=[_lambda.Runtime.PYTHON_3_12],
             description="Reportlab for PDF generation"
+        )
+
+        # Lambda Layer for jsonschema-rs
+        jsonschema_rs_layer = _lambda.LayerVersion(
+            self, "JsonschemaRsLayer",
+            code=_lambda.Code.from_asset("lambda-layers/jsonschema-rs-layer"),
+            compatible_runtimes=[_lambda.Runtime.PYTHON_3_12],
+            description="jsonschema-rs for Allotrope schema validation"
         )
 
         # DVaaS Lambda Function
         dvaas_lambda = _lambda.Function(
             self, "DVaaSFunction",
-            runtime=_lambda.Runtime.PYTHON_3_9,
+            runtime=_lambda.Runtime.PYTHON_3_12,
             handler="lambda_function.lambda_handler",
             code=_lambda.Code.from_asset("dvaas"),
-            layers=[reportlab_layer],
+            layers=[reportlab_layer, jsonschema_rs_layer],
             timeout=Duration.seconds(300),
-            memory_size=512,
+            memory_size=1024,
             environment={
                 "SERVICE_NAME": "DVaaS"
             }

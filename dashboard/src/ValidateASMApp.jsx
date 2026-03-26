@@ -44,7 +44,6 @@ function ValidateASMApp() {
         body: JSON.stringify({
           asm_data: asmData,
           validation_level: 'comprehensive',
-          use_allotropy_validator: true,
           generate_report: true,
           file_name: file[0].name
         })
@@ -88,7 +87,7 @@ function ValidateASMApp() {
     const recommendations = []
     
     // Analyze errors and provide recommendations
-    if (errors?.some(e => e.includes('data-source-aggregate-document') || e.includes('traceability'))) {
+    if (errors?.some(e => e.includes('data source') || e.includes('traceability'))) {
       recommendations.push({
         issue: 'Missing Data Source Traceability',
         severity: 'high',
@@ -108,19 +107,17 @@ function ValidateASMApp() {
       })
     }
     
-    if (errors?.some(e => e.includes('measurement') && e.includes('not found'))) {
+    if (errors?.some(e => e.includes('is a required property'))) {
+      const missing = errors.filter(e => e.includes('is a required property')).map(e => {
+        const match = e.match(/"([^"]+)" is a required property/)
+        return match ? match[1] : null
+      }).filter(Boolean)
       recommendations.push({
-        issue: 'Missing Measurement Documents',
+        issue: 'Missing Required Properties',
         severity: 'high',
-        description: 'The ASM file structure is missing required measurement documents.',
-        fix: 'Ensure your ASM file follows the proper nested structure with measurement aggregate document containing measurement documents.',
-        example: `"measurement aggregate document": {
-  "measurement document": [{
-    "measurement identifier": "measurement-1",
-    "device type": "pH meter",
-    "pH": {"value": 7.183, "unit": "pH"}
-  }]
-}`
+        description: `The Allotrope schema requires these fields: ${missing.join(', ')}`,
+        fix: 'Add the missing required fields to your ASM document at the locations indicated in the errors above.',
+        example: missing.includes('measurement identifier') ? `"measurement identifier": "measurement-1"` : ''
       })
     }
     
@@ -256,7 +253,7 @@ function ValidateASMApp() {
                 </div>
                 <div>
                   <Box variant="awsui-key-label">Validator</Box>
-                  <Box>DVaaS</Box>
+                  <Box>{validation.validator || 'DVaaS'}</Box>
                 </div>
               </ColumnLayout>
 
@@ -367,16 +364,16 @@ function ValidateASMApp() {
           {validation.metrics && (
             <Container header={<Header variant="h2">File Metrics</Header>}>
               <ColumnLayout columns={4} variant="text-grid">
+                {validation.metrics.schema_id && (
+                  <div>
+                    <Box variant="awsui-key-label">Schema</Box>
+                    <Box>{validation.metrics.schema_id.split('/').pop()}</Box>
+                  </div>
+                )}
                 {validation.metrics.technique && (
                   <div>
                     <Box variant="awsui-key-label">Technique</Box>
                     <Box>{validation.metrics.technique}</Box>
-                  </div>
-                )}
-                {validation.metrics.technique_confidence && (
-                  <div>
-                    <Box variant="awsui-key-label">Confidence</Box>
-                    <Box>{validation.metrics.technique_confidence}%</Box>
                   </div>
                 )}
                 {validation.metrics.measurement_count !== undefined && (
@@ -385,12 +382,40 @@ function ValidateASMApp() {
                     <Box>{validation.metrics.measurement_count}</Box>
                   </div>
                 )}
-                {validation.metrics.has_sample_document !== undefined && (
+                {validation.metrics.schema_errors !== undefined && (
                   <div>
-                    <Box variant="awsui-key-label">Sample Document</Box>
-                    <Badge color={validation.metrics.has_sample_document ? "green" : "red"}>
-                      {validation.metrics.has_sample_document ? "Present" : "Missing"}
+                    <Box variant="awsui-key-label">Schema Errors</Box>
+                    <Badge color={validation.metrics.schema_errors > 0 ? "red" : "green"}>
+                      {validation.metrics.schema_errors}
                     </Badge>
+                  </div>
+                )}
+                {validation.metrics.schemas_loaded !== undefined && (
+                  <div>
+                    <Box variant="awsui-key-label">Schemas Loaded</Box>
+                    <Box>{validation.metrics.schemas_loaded}</Box>
+                  </div>
+                )}
+                {validation.metrics.has_calculated_data !== undefined && (
+                  <div>
+                    <Box variant="awsui-key-label">Calculated Data</Box>
+                    <Badge color={validation.metrics.has_calculated_data ? "green" : "grey"}>
+                      {validation.metrics.has_calculated_data ? "Present" : "None"}
+                    </Badge>
+                  </div>
+                )}
+                {validation.metrics.has_data_source_traceability !== undefined && (
+                  <div>
+                    <Box variant="awsui-key-label">Traceability</Box>
+                    <Badge color={validation.metrics.has_data_source_traceability ? "green" : validation.metrics.has_calculated_data ? "red" : "grey"}>
+                      {validation.metrics.has_data_source_traceability ? "Present" : validation.metrics.has_calculated_data ? "Missing" : "N/A"}
+                    </Badge>
+                  </div>
+                )}
+                {validation.metrics.unique_units !== undefined && (
+                  <div>
+                    <Box variant="awsui-key-label">Unique Units</Box>
+                    <Box>{validation.metrics.unique_units}</Box>
                   </div>
                 )}
               </ColumnLayout>

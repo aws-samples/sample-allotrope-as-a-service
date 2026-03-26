@@ -5058,3 +5058,356 @@ Check the render method of `ForwardRef`.
 
 **Last Updated**: March 16, 2026
 **Status**: System fully operational, GitLab needs push, minor dashboard warning, data source traceability fix pending
+
+
+## 🔍 DATA INTEGRITY VERIFICATION - COMPLETE FIELD COVERAGE (March 16, 2026 - Session 12)
+
+### Issue Identified
+
+**Customer Observation**: "Vessel Pressure (psi) doesn't appear in the Data Integrity Verification report"
+
+### Root Cause
+
+The converter-driven `field_mapping` (implemented in Session 11) was missing several CSV columns:
+- `Vessel Pressure (psi)` — numeric field, not in `custom_num_fields`
+- `Vessel ID`, `Batch ID`, `Cell Type`, `Comment` — string metadata, not mapped at all
+- `Tray Location`, `Time In Tray`, `Sample Time` — string metadata, not mapped
+- `Chemistry Dilution Ratio` — mapped to ASM custom info but missing from `field_mapping`
+- `Chemistry/Gas Cartridge/Card Lot Numbers` — mapped to ASM custom info but missing from `field_mapping`
+
+### Design Decision
+
+**Principle**: If the instrument recorded it, the scientist expects to see it in the ASM and in the integrity verification. No silent data loss. A pharma scientist needs every value traceable for regulatory compliance (FDA 21 CFR Part 11).
+
+### Changes Made
+
+**File**: `services/unified-converter/lambda_function.py` — `convert_nova_flex2()` function
+
+**1. Added Vessel Pressure to custom_num_fields:**
+```python
+custom_num_fields = [
+    ('Pre-Dilution Multiplier', '(unitless)'),
+    ('Vessel Pressure (psi)', 'psi'),       # NEW
+    ('Sparging O2%', '%'),
+    ('pH / Gas Flow Time', 'sec'),
+    ('Chemistry Flow Time', 'sec'),
+]
+```
+
+**2. Added Chemistry Dilution Ratio to field_mapping:**
+- Was already in ASM custom info but `field_mapping.append()` was missing
+- Now records source value (e.g., "1:2") in field_mapping
+
+**3. Added string metadata fields to ASM custom info AND field_mapping:**
+```python
+string_meta_fields = [
+    ('Vessel ID', 'Vessel ID'),
+    ('Batch ID', 'Batch ID'),
+    ('Cell Type', 'Cell Type'),
+    ('Comment', 'Comment'),
+    ('Tray Location', 'Tray Location'),
+    ('Time In Tray', 'Time In Tray'),
+    ('Sample Time', 'Sample Time'),
+    ('Chemistry Cartridge Lot Number', ...),
+    ('Chemistry Card Lot Number', ...),
+    ('Gas Cartridge Lot Number', ...),
+    ('Gas Card Lot Number', ...),
+]
+```
+- Previously, lot numbers were added to ASM custom info but NOT to field_mapping
+- Previously, Vessel ID/Batch ID/Cell Type/Comment/Tray Location/Time In Tray/Sample Time were not in ASM or field_mapping at all
+- Now ALL string metadata fields are in both ASM custom info AND field_mapping
+
+**4. Consolidated string field handling:**
+- Removed the old separate loop for lot number strings
+- Replaced with unified `string_meta_fields` loop that handles all string metadata
+- Each field added to both `custom_info` (ASM) and `field_mapping` (integrity report)
+
+### Field Coverage Summary
+
+**Nova FLEX2 CSV has 40 columns. After this fix:**
+
+| Category | Fields | In ASM | In field_mapping |
+|----------|--------|--------|------------------|
+| Blood Gas | PO2, PCO2, O2 Sat, CO2 Sat | ✅ | ✅ |
+| pH | pH, Vessel Temperature | ✅ | ✅ |
+| Osmolality | Osm | ✅ | ✅ |
+| Metabolites | Gln, Glu, Gluc, Lac, NH4+, Na+, K+, Ca++ | ✅ | ✅ |
+| Calculated | pH@Temp, PO2@Temp, PCO2@Temp, HCO3 | ✅ | ✅ |
+| Custom Numeric | Pre-Dilution, Vessel Pressure, Sparging O2%, Flow Times | ✅ | ✅ |
+| Custom String | Chemistry Dilution Ratio | ✅ | ✅ (NEW) |
+| Metadata | Vessel ID, Batch ID, Cell Type, Comment, Tray Location, Time In Tray, Sample Time | ✅ (NEW) | ✅ (NEW) |
+| Lot Numbers | Chemistry/Gas Cartridge/Card Lot Numbers | ✅ | ✅ (NEW) |
+| Identity | Sample ID, Sample Type, Date & Time, Operator | ✅ (in sample/analyst docs) | N/A (structural) |
+
+**Result**: Every CSV column is now either in the ASM output with field_mapping traceability, or used as structural metadata (Sample ID, Date & Time, Operator).
+
+### Deployment
+
+**Service deployed:**
+```bash
+cd services && cdk deploy --require-approval never
+# UnifiedConverterFunction updated successfully
+```
+
+**Dashboard**: No changes needed — dashboard renders whatever field_mapping the API returns.
+
+### Impact
+
+- **No breaking changes** — additive only (more fields in field_mapping)
+- **No dashboard changes** — field_mapping format unchanged, just more entries
+- **No impact to other services** — ATaaS, DVaaS, Multi-Instrument unaffected
+- **Integrity report now comprehensive** — scientists see every instrument value traced
+
+### Files Modified
+
+- `services/unified-converter/lambda_function.py` — Added Vessel Pressure to custom_num_fields, added Chemistry Dilution Ratio to field_mapping, added string_meta_fields loop for all metadata, removed old lot number loop
+
+### Key Insight
+
+**Customer expectation**: "If the instrument recorded it, I need to see it in the integrity report." This is not just a nice-to-have — it's a regulatory requirement. Missing fields in the integrity report look like data was silently dropped, which is exactly what FDA auditors flag.
+
+---
+
+**Last Updated**: March 16, 2026 (Session 12)
+**Status**: Data Integrity Verification now covers ALL Nova FLEX2 CSV columns. No silent data loss. Every instrument value is traceable from source to ASM.
+
+
+## 📄 CUSTOM CONVERTER REQUIREMENTS DOC (March 16, 2026 - Session 12 continued)
+
+### What Was Created
+
+**File**: `docs/CUSTOM-CONVERTER-REQUIREMENTS.md`
+
+Customer-facing requirements document for building custom converters that integrate with our system. Created so the customer can build converters for any instrument and have them work with our Data Integrity Verification.
+
+### Key Requirements Defined
+
+1. **Function signature**: `def convert(file_content)` — accepts string, returns dict. No file path I/O.
+2. **Return format**: `{"success": True, "asm_output": {...}, "field_mapping": [...]}` on success
+3. **field_mapping required**: Every source value must have an entry with source_field, source_value, asm_field, asm_value, unit
+4. **ASM structure**: Must include $asm.manifest, UUID v4 identifiers, ISO 8601 timestamps
+5. **Security**: No eval, exec, os.system, subprocess, filesystem access, or network calls
+6. **Registration API**: POST /register with converter_id, converter_code, vendor, model, instrument_type
+7. **Approval API**: POST /approve with status APPROVED or REJECTED
+8. **Conversion API**: POST to Unified Converter with file_content + manifest — routing is automatic
+9. **Validation checklist**: 13-point checklist for pre-submission verification
+
+### Context
+
+The Agilent Gen5 plate reader converter from the customer (`custom-converter/convert_agilent_gen5_plate_reader.py`) was reviewed and found to fail on 4 checklist items: CLI-style signature, no return dict, no field_mapping, filesystem access. This doc gives them a clear path to fix it.
+
+---
+
+## 🗺️ END-TO-END PROCESS MAP (March 16, 2026 - Session 12 continued)
+
+### What Was Created
+
+**Files**:
+- `docs/ASM-SERVICE-PROCESS-MAP.md` — Full markdown process map
+- `docs/ASM-Service-Process-Map.docx` — Word version for customer sharing
+- `generate_process_map_docx.py` — Script to generate the Word doc
+
+### Document Structure
+
+**Two Entry Points:**
+1. **Convert Instrument File** (Steps 1–5) — full pipeline for raw instrument files
+2. **Validate Existing ASM File** (Standalone) — DVaaS for any ASM file regardless of origin
+
+**Steps 0–5:**
+- Step 0: One-time setup (instrument config, converter registration)
+- Step 1: Upload (instrument file + config)
+- Step 2: Unified Converter routing (Custom Registry → Embedded → Allotropy → AI)
+- Step 3: DVaaS Validation (schema compliance, 3 levels)
+- Step 4: Data Integrity Verification (marked as work in progress, implementation status table)
+- Step 5: Results (ASM, PDF report, integrity report)
+
+**Supporting sections:**
+- Converter lifecycle (how new instruments get supported)
+- DVaaS vs Data Integrity Verification comparison table
+- Service architecture diagram
+- Live endpoints
+- Dashboard tabs
+- FAQ (8 questions)
+
+### Key Decisions
+
+- **DVaaS standalone** explicitly called out as a separate entry point — customer can validate any ASM without converting
+- **Data Integrity Verification** honestly marked as work in progress with rollout plan:
+  1. ✅ Nova FLEX2 (done)
+  2. Next: Enforce field_mapping in registry
+  3. Next: Allotropy wrapper
+  4. Future: Evaluate for AI
+
+---
+
+## 📋 MERCK REVIEW RESPONSE & REMEDIATION PLAN (March 16, 2026 - Session 13)
+
+### Customer Documents Reviewed
+
+**1. Merck ASM Basic Design Principles v33 (2026-03-19)**
+- Their rulebook for building ASM files
+- Covers: hardcoded terms, data hierarchy, term formatting, custom fields, calculated fields, processed data, array ordering, data source linkage
+- Key principle: custom fields must be 1:1 transfer with NO manually added units
+- Key principle: calculated data needs per-calculation data source linkage (not aggregate level)
+- Key principle: processed data aggregate document for instrument-produced transformations (separate from raw measurements)
+
+**2. AWS ASM Conversion Review (2026-03-17)**
+- Their detailed feedback on our Nova FLEX2 ASM output
+- 5 issue categories: [META], [USAGE], [ERROR], [CONFIG], [RULE]
+- 4 validation levels: L1 (schema), L2 (source-to-ASM), L3 (Allotrope principles), L4 (Merck-specific)
+- 3 questions for us to answer
+
+### Response Document Created
+
+**Files**:
+- `docs/AWS-Response-to-Merck-Review.md` — Full markdown response
+- `docs/AWS-Response-to-Merck-Review.docx` — Word version for customer sharing
+- `generate_response_docx.py` — Script to generate the Word doc
+
+### Responses to Customer Questions
+
+**Q1: How to capture instrument-specific metadata (mount path, geography)?**
+- Extend instrument config with `location.timezone` and `location.unc_path`
+- Solves July file timezone issue (European file interpreted as US date format)
+- Greengrass edge client will capture mount path automatically in future
+
+**Q2: Can AI provide confidence levels per mapping?**
+- Custom converters & allotropy: 100% deterministic, no confidence needed
+- ATaaS (AI): Can provide High/Medium/Low per field mapping
+- Recommendation: Use custom converters for production, ATaaS for initial analysis only
+
+**Q3: Which validation levels are you using?**
+- Level 1 (schema): ✅ DVaaS — implemented
+- Level 2 (source-to-ASM): ⚠️ Data Integrity Verification — work in progress (Nova FLEX2 done)
+- Level 3 (Allotrope principles): 🔲 Planned — add as DVaaS rules
+- Level 4 (Merck-specific): 🔲 Planned — configurable per-customer rules
+- Proposed: Tag each finding with L1/L2/L3/L4 labels
+
+### Remediation Plan — 13 Issues Tracked
+
+**Already Fixed (3):**
+- Issue 5: Calculated fields — now in calculated data aggregate document
+- Issue 6: Custom fields — now in custom information aggregate document (all 40 CSV columns)
+- Issue 8: Device Document — device type = "solution analyzer" present
+
+**Phase 1 — High Priority (~5 hours):**
+| # | Issue | Effort |
+|---|-------|--------|
+| 1 | Timezone in instrument config | 1 hour |
+| 2 | Invalid sample type term | 30 min |
+| 9 | UNC path traceability | 1 hour |
+| 10 | Remove manually added units from custom fields | 1 hour |
+| 12 | Per-calculation data source linkage | 1 hour |
+
+**Phase 2 — Medium Priority (~6 hours):**
+| # | Issue | Effort |
+|---|-------|--------|
+| 3 | Processed data (cell counts, dilution factor) | 2 hours |
+| 4 | Dilution factor nesting | 30 min |
+| 11 | @index for array ordering | 1 hour |
+| 13 | Processed data aggregate document layer | 2 hours |
+
+**Phase 3 — Validation Enhancement (~14 hours):**
+- DVaaS Level 3 rules (Allotrope principles) — 4 hours
+- DVaaS Level 4 rules (Merck-specific) — 4 hours
+- Validation level labels on findings — 2 hours
+- ATaaS confidence scores per mapping — 4 hours
+
+### Strategic Positioning
+
+**Data Integrity Verification vs Merck TOSCA Level 2:**
+
+| Aspect | Merck TOSCA | AWS field_mapping |
+|--------|-------------|-------------------|
+| Approach | Post-conversion SQL comparison | Converter emits mapping during conversion |
+| Per-instrument effort | Significant (SQLite, SQL, tolerances) | Zero (built into converter) |
+| Maintenance | Update SQL when converter changes | Automatic with converter |
+
+Key message: Our approach eliminates per-instrument SQL coding. The integrity proof is a byproduct of the conversion itself.
+
+### Alignment Summary
+
+**Aligned today:** Hardcoded terms, data hierarchy, term formatting, custom fields 1:1, calculated fields with traceability, manufacturer lowercase, source file traceability (partial)
+
+**Gaps to close:** Processed data aggregate document, @index ordering, HarmonizingBaseTerms integration, custom field units from source only, per-calculation data source nesting
+
+### Key Insights
+
+- **Their Level 2 validation is exactly our Data Integrity Verification** — and they say it requires "significant instrument-specific coding." Our converter-driven field_mapping eliminates that entirely.
+- **Custom field units rule** — we're adding units (sec, psi) to custom fields where the source CSV doesn't include them. This violates their design principle. Easy fix.
+- **Processed data vs calculated data** — they have a clear 3-tier model (raw → processed → calculated) that we're missing the middle layer for. Phase 2 fix.
+- **Data source nesting** — our known issue (documented in MEMORY.md Session 11) where data source aggregate is at the wrong level. Confirmed by their design principles doc. Phase 1 fix.
+- **HarmonizingBaseTerms** — they have a spreadsheet of standardized terms per instrument. Our instrument config is similar but less formalized. Should accept their spreadsheet as input.
+
+---
+
+**Last Updated**: March 16, 2026 (Session 13)
+**Status**: Customer review response and remediation plan complete. 13 issues tracked (3 fixed, 5 high priority, 4 medium priority, validation enhancement planned). Documents ready for customer sharing in both markdown and Word format.
+
+
+---
+
+## Session 14 - DVaaS Schema Validation Overhaul (March 26, 2026)
+
+### Context
+Customer scientist feedback: "The Anthropic ASM validator reimplements few rules that the standard ASM JSON schemas implement. You can get more coverage if you use a compliant JSON Schema validator and the standard ASM JSON schemas." They referenced MSD's validator which uses `jsonschema-rs` + official Allotrope schemas.
+
+### Decision
+Replace our hand-rolled regex-based validation (~700 lines) with standards-based JSON Schema validation using the same approach the customer recommends. We don't use their validator (IP/dependency concerns) — we implement the same standard ourselves.
+
+### What Changed
+
+#### DVaaS Backend (validate_asm.py)
+- **REPLACED** entire regex-based validator with 3-layer architecture:
+  - **Layer 1**: JSON Schema validation via `jsonschema-rs` (Rust-based) against official Allotrope ASM schemas
+  - **Layer 2**: `$asm`-prefixed attribute validation (ontology terms: sample roles, container types, units)
+  - **Layer 3**: Supplementary checks (traceability, naming conventions, measurement counts)
+- Schemas sourced from https://gitlab.com/allotrope-public/asm (public repo)
+- `$asm.manifest` URI → manifest lookup → schema resolution → validation
+- Uses `retriever` callback for `$ref` resolution across schema files
+- Trimmed to latest REC version only: 113 schemas + 62 manifests = 1.6 MB (fits Lambda)
+- Old file: ~700 lines of regex. New file: ~280 lines of schema-based validation.
+
+#### Lambda Changes
+- DVaaS Lambda runtime: Python 3.9 → **Python 3.12** (required by jsonschema-rs)
+- Memory: 512 MB → **1024 MB** (schema loading)
+- New Lambda layer: `jsonschema-rs` (Rust-based, 3.9 MB)
+- Rebuilt `reportlab` layer for Python 3.12
+- `lambda_function.py` simplified — removed dual-path validation logic
+
+#### Dashboard (ValidateASMApp.jsx)
+- Validator field now shows actual validator name from API (`allotrope-schema-jsonschema-rs`)
+- New metrics displayed: Schema ID, Schema Errors, Schemas Loaded, Calculated Data, Traceability, Unique Units
+- Removed stale `use_allotropy_validator` parameter
+- Updated recommendations to match new schema error patterns (`"X" is a required property`)
+
+#### New Files
+- `fetch_schemas.py` — pulls schemas from Allotrope public GitLab at deploy time
+- `services/dvaas/schemas/` — bundled schemas (gitignored, fetched at deploy)
+- `services/lambda-layers/jsonschema-rs-layer/` — Lambda layer for jsonschema-rs
+
+#### Dependencies
+- `requirements.txt`: `jsonschema` → `jsonschema-rs>=0.20.0`
+
+### Deployment
+- CDK deployed: DVaaS Lambda updated, new layer created, reportlab layer rebuilt
+- Dashboard built and deployed to S3/CloudFront with cache invalidation
+- Live endpoint tested: valid ASM → PASSED, invalid ASM → catches missing required properties
+
+### Test Results
+- Valid plate reader ASM: 0 errors, schema validation PASSED
+- Invalid ASM (missing fields): correctly catches `measurement time`, `plate well count`, `measurement identifier` as required property errors
+- Hyphenated field names still caught by supplementary layer
+
+### Git
+- Commits: `43f3c3a` (backend), `62703fd` (dashboard + CDK)
+- SSH key expired during session — push pending
+
+### Key Insight
+The customer wasn't offering us their validator — they were telling us the *approach*: use a standard JSON Schema validator + official Allotrope schemas. Standards exist to be implemented by everyone, not reimplemented with regex.
+
+---
+
+**Last Updated**: March 26, 2026 (Session 14)
+**Status**: DVaaS now uses official Allotrope JSON schema validation. Deployed to production. Dashboard updated. GitLab push pending (SSH key issue).

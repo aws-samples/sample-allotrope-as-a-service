@@ -10,6 +10,8 @@ import Alert from '@cloudscape-design/components/alert'
 import ProgressBar from '@cloudscape-design/components/progress-bar'
 import ColumnLayout from '@cloudscape-design/components/column-layout'
 import ExpandableSection from '@cloudscape-design/components/expandable-section'
+import Table from '@cloudscape-design/components/table'
+import StatusIndicator from '@cloudscape-design/components/status-indicator'
 
 // Service endpoints
 const ENDPOINTS = {
@@ -26,6 +28,8 @@ function ConvertInstrumentApp() {
   const [asmOutput, setAsmOutput] = useState(null)
   const [validation, setValidation] = useState(null)
   const [error, setError] = useState(null)
+  const [integrityReport, setIntegrityReport] = useState(null)
+  const [fieldMapping, setFieldMapping] = useState(null)
 
   const validateConfig = (config) => {
     const errors = []
@@ -164,6 +168,7 @@ function ConvertInstrumentApp() {
       }
       
       setAsmOutput(asmData)
+      setFieldMapping(convertResult.field_mapping || null)
       setProgress(60)
 
       // Step 2: Validate the generated ASM
@@ -188,6 +193,26 @@ function ConvertInstrumentApp() {
       }
       
       setValidation(validateResult)
+      
+      // Step 3: Data Integrity Verification (from converter's field mapping)
+      if (convertResult.field_mapping && convertResult.field_mapping.length > 0) {
+        const comparisons = convertResult.field_mapping.map(m => ({
+          field: m.source_field,
+          sourceRow: m.source_row || m.row,
+          sourceValue: String(m.source_value),
+          asmValue: String(m.asm_value),
+          asmField: m.asm_path || m.asm_field,
+          unit: m.unit || '',
+          match: String(m.source_value) == String(m.asm_value) || parseFloat(m.source_value) === parseFloat(m.asm_value)
+        }))
+        setIntegrityReport({
+          comparisons,
+          supported: true,
+          summary: convertResult.integrity_summary || null
+        })
+      } else {
+        setIntegrityReport(null)
+      }
       setProgress(100)
 
     } catch (err) {
@@ -419,7 +444,7 @@ function ConvertInstrumentApp() {
                 </div>
                 <div>
                   <Box variant="awsui-key-label">Validator</Box>
-                  <Box>DVaaS</Box>
+                  <Box>{validation.validator || 'DVaaS'}</Box>
                 </div>
               </ColumnLayout>
 
@@ -517,20 +542,117 @@ function ConvertInstrumentApp() {
             </Container>
           )}
 
+          {/* Data Integrity Verification */}
+          {integrityReport && integrityReport.supported && integrityReport.comparisons.length > 0 && (
+            <Container header={
+              <Header variant="h2" 
+                description="Proof that source values are preserved exactly in the ASM output"
+                counter={`(${integrityReport.comparisons.filter(c => c.match).length}/${integrityReport.comparisons.length} matched)`}
+              >
+                Data Integrity Verification
+              </Header>
+            }>
+              <SpaceBetween size="m">
+                {integrityReport.summary && (
+                  <ColumnLayout columns={4} variant="text-grid">
+                    <div>
+                      <Box variant="awsui-key-label">Coverage</Box>
+                      <Box fontSize="heading-xl">{integrityReport.summary.coverage_pct}%</Box>
+                    </div>
+                    <div>
+                      <Box variant="awsui-key-label">Mapped Values</Box>
+                      <Box fontSize="heading-xl">{integrityReport.summary.mapped_to_source}</Box>
+                    </div>
+                    <div>
+                      <Box variant="awsui-key-label">Source Cells</Box>
+                      <Box>{integrityReport.summary.unique_source_cells}</Box>
+                    </div>
+                    <div>
+                      <Box variant="awsui-key-label">Source Rows</Box>
+                      <Box>{integrityReport.summary.source_rows}</Box>
+                    </div>
+                  </ColumnLayout>
+                )}
+
+                {integrityReport.comparisons.every(c => c.match) ? (
+                  <Alert type="success" header="Data Integrity Confirmed">
+                    All mapped source values were preserved exactly in the ASM output. No values were altered, rounded, or lost during conversion.
+                  </Alert>
+                ) : (
+                  <Alert type="info" header="Data Integrity Report">
+                    {integrityReport.comparisons.filter(c => c.match).length} of {integrityReport.comparisons.length} values matched exactly.
+                    Differences may be due to type formatting (e.g. "1.80" → 1.8).
+                  </Alert>
+                )}
+
+                <Table
+                  columnDefinitions={[
+                    {
+                      id: 'field',
+                      header: 'Source Field',
+                      cell: item => <Box fontWeight="bold">{item.field}</Box>
+                    },
+                    {
+                      id: 'row',
+                      header: 'Row',
+                      cell: item => item.sourceRow
+                    },
+                    {
+                      id: 'source',
+                      header: 'Source Value',
+                      cell: item => item.sourceValue
+                    },
+                    {
+                      id: 'asmField',
+                      header: 'ASM Path',
+                      cell: item => {
+                        const parts = (item.asmField || '').split('/')
+                        return parts.slice(-2).join('/')
+                      }
+                    },
+                    {
+                      id: 'asm',
+                      header: 'ASM Value',
+                      cell: item => item.asmValue
+                    },
+                    {
+                      id: 'unit',
+                      header: 'Unit',
+                      cell: item => item.unit
+                    },
+                    {
+                      id: 'status',
+                      header: 'Match',
+                      cell: item => item.match 
+                        ? <StatusIndicator type="success">Match</StatusIndicator>
+                        : <StatusIndicator type="warning">Formatted</StatusIndicator>
+                    }
+                  ]}
+                  items={integrityReport.comparisons.slice(0, 50)}
+                  variant="embedded"
+                  footer={integrityReport.comparisons.length > 50 
+                    ? <Box textAlign="center" color="text-body-secondary">Showing first 50 of {integrityReport.comparisons.length} mappings</Box>
+                    : null
+                  }
+                />
+              </SpaceBetween>
+            </Container>
+          )}
+
           {/* File Metrics */}
           {validation.metrics && (
             <Container header={<Header variant="h2">ASM File Metrics</Header>}>
               <ColumnLayout columns={4} variant="text-grid">
+                {validation.metrics.schema_id && (
+                  <div>
+                    <Box variant="awsui-key-label">Schema</Box>
+                    <Box>{validation.metrics.schema_id.split('/').pop()}</Box>
+                  </div>
+                )}
                 {validation.metrics.technique && (
                   <div>
                     <Box variant="awsui-key-label">Technique</Box>
                     <Box>{validation.metrics.technique}</Box>
-                  </div>
-                )}
-                {validation.metrics.technique_confidence && (
-                  <div>
-                    <Box variant="awsui-key-label">Confidence</Box>
-                    <Box>{validation.metrics.technique_confidence}%</Box>
                   </div>
                 )}
                 {validation.metrics.measurement_count !== undefined && (
@@ -539,11 +661,11 @@ function ConvertInstrumentApp() {
                     <Box>{validation.metrics.measurement_count}</Box>
                   </div>
                 )}
-                {validation.metrics.has_sample_document !== undefined && (
+                {validation.metrics.schema_errors !== undefined && (
                   <div>
-                    <Box variant="awsui-key-label">Sample Document</Box>
-                    <Badge color={validation.metrics.has_sample_document ? "green" : "red"}>
-                      {validation.metrics.has_sample_document ? "Present" : "Missing"}
+                    <Box variant="awsui-key-label">Schema Errors</Box>
+                    <Badge color={validation.metrics.schema_errors > 0 ? "red" : "green"}>
+                      {validation.metrics.schema_errors}
                     </Badge>
                   </div>
                 )}

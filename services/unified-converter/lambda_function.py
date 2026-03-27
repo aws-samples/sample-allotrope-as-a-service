@@ -399,22 +399,23 @@ def convert_nova_flex2(file_content):
             ph_id = str(uuid.uuid4())
             measurement_ids['ph'] = ph_id
             temp = get_float('Vessel Temperature (°C)')
-            measurements.append({
+            ph_measurement = {
                 "measurement identifier": ph_id,
                 "measurement time": iso_timestamp,
                 "device control aggregate document": {
                     "device control document": [{"device type": "pH", "detection type": "sensor"}]
                 },
                 "pH": {"value": ph, "unit": "pH"},
-                "temperature": {"value": temp, "unit": "degC"},
                 "sample document": {
                     "sample identifier": row.get('Sample ID', ''),
                     "description": row.get('Sample Type', '')
                 }
-            })
-            field_mapping.append({"source_field": "pH", "source_value": ph, "asm_field": "pH", "asm_value": ph, "unit": "pH"})
+            }
             if temp is not None:
-                field_mapping.append({"source_field": "Vessel Temperature (°C)", "source_value": temp, "asm_field": "temperature", "asm_value": temp, "unit": "°C"})
+                ph_measurement["temperature"] = {"value": temp, "unit": "degC"}
+                field_mapping.append({"source_field": "Vessel Temperature (°C)", "source_value": temp, "asm_field": "temperature", "asm_value": temp, "unit": "degC"})
+            measurements.append(ph_measurement)
+            field_mapping.append({"source_field": "pH", "source_value": ph, "asm_field": "pH", "asm_value": ph, "unit": "pH"})
         
         # 3. Osmolality
         osm = get_float('Osm')
@@ -533,6 +534,7 @@ def convert_nova_flex2(file_content):
                     "ASM converter version": "1.0.0",
                     "ASM file identifier": f"SampleResults-{idx}.json",
                     "data system instance identifier": "SampleResults.csv",
+                    "UNC path": "SampleResults.csv",
                     "file name": "SampleResults.csv",
                     "software name": "flex2"
                 },

@@ -120,6 +120,7 @@ def lambda_handler(event, context):
                     'method': 'custom-nova-flex2',
                     'converter_used': 'nova_flex2',
                     'asm_output': nova_result['asm_output'],
+                    'field_mapping': nova_result.get('field_mapping', []),
                     'status': 'success',
                     'message': 'Converted using custom Nova FLEX2 converter'
                 }
@@ -147,8 +148,10 @@ def lambda_handler(event, context):
                 'method': 'multi-instrument',
                 'converter_used': multi_instrument_result.get('vendor', 'allotropy'),
                 'asm_output': multi_instrument_result['asm_output'],
+                'field_mapping': multi_instrument_result.get('field_mapping', []),
+                'integrity_summary': multi_instrument_result.get('integrity_summary', {}),
                 'status': 'success',
-                'message': 'Converted using allotropy library'
+                'message': 'Converted using allotropy library with data integrity verification'
             }
         else:
             # Step 2: Fallback to ATaaS (AI-powered)
@@ -186,37 +189,42 @@ def lambda_handler(event, context):
         return error_response(500, f"Error: {str(e)}")
 
 def try_multi_instrument(file_content, file_name):
-    """Try Multi-Instrument Service first"""
-    
+    """Try allotropy conversion locally with data integrity traceability."""
     try:
-        multi_endpoint = os.environ.get('MULTI_INSTRUMENT_ENDPOINT', 
+        from allotropy_wrapper import convert_with_traceability
+        result = convert_with_traceability(file_content, file_name)
+        if result['success']:
+            return {
+                'success': True,
+                'asm_output': result['asm_output'],
+                'field_mapping': result.get('field_mapping', []),
+                'integrity_summary': result.get('integrity_summary', {}),
+                'vendor': result.get('vendor', 'unknown'),
+            }
+        return {'success': False, 'error': result.get('error', 'Unknown error')}
+    except ImportError:
+        pass
+
+    # Fallback: call multi-instrument service remotely
+    try:
+        multi_endpoint = os.environ.get('MULTI_INSTRUMENT_ENDPOINT',
                                        'https://6uogqq4zb5.execute-api.us-east-1.amazonaws.com/prod/convert')
-        
         response = requests.post(
             multi_endpoint,
             json={'file_content': file_content, 'file_name': file_name},
             timeout=30
         )
-        
         if response.status_code == 200:
             result = response.json()
             if result.get('asm_output'):
                 return {
                     'success': True,
                     'asm_output': result['asm_output'],
-                    'vendor': result.get('vendor', 'unknown')
+                    'vendor': result.get('vendor', 'unknown'),
                 }
-        
-        return {
-            'success': False,
-            'error': f"Multi-Instrument failed: {response.text[:200]}"
-        }
-        
+        return {'success': False, 'error': f"Multi-Instrument failed: {response.text[:200]}"}
     except Exception as e:
-        return {
-            'success': False,
-            'error': f"Multi-Instrument error: {str(e)}"
-        }
+        return {'success': False, 'error': f"Multi-Instrument error: {str(e)}"}
 
 def try_ataas(file_content):
     """Fallback to ATaaS AI-powered conversion"""
@@ -353,6 +361,7 @@ def convert_nova_flex2(file_content):
         # Build 4 separate measurements per sample
         measurements = []
         measurement_ids = {}
+        field_mapping = []
         
         # 1. Blood Gas
         po2 = get_float('PO2')
@@ -360,6 +369,8 @@ def convert_nova_flex2(file_content):
         if po2 and pco2:
             gas_id = str(uuid.uuid4())
             measurement_ids['gas'] = gas_id
+            o2_sat = get_float('O2 Saturation')
+            co2_sat = get_float('CO2 Saturation')
             measurements.append({
                 "measurement identifier": gas_id,
                 "measurement time": iso_timestamp,
@@ -368,19 +379,26 @@ def convert_nova_flex2(file_content):
                 },
                 "pO2": {"value": po2, "unit": "mmHg"},
                 "pCO2": {"value": pco2, "unit": "mmHg"},
-                "oxygen saturation": {"value": get_float('O2 Saturation'), "unit": "%"},
-                "carbon dioxide saturation": {"value": get_float('CO2 Saturation'), "unit": "%"},
+                "oxygen saturation": {"value": o2_sat, "unit": "%"},
+                "carbon dioxide saturation": {"value": co2_sat, "unit": "%"},
                 "sample document": {
                     "sample identifier": row.get('Sample ID', ''),
                     "description": row.get('Sample Type', '')
                 }
             })
+            field_mapping.append({"source_field": "PO2", "source_value": po2, "asm_field": "pO2", "asm_value": po2, "unit": "mmHg"})
+            field_mapping.append({"source_field": "PCO2", "source_value": pco2, "asm_field": "pCO2", "asm_value": pco2, "unit": "mmHg"})
+            if o2_sat is not None:
+                field_mapping.append({"source_field": "O2 Saturation", "source_value": o2_sat, "asm_field": "oxygen saturation", "asm_value": o2_sat, "unit": "%"})
+            if co2_sat is not None:
+                field_mapping.append({"source_field": "CO2 Saturation", "source_value": co2_sat, "asm_field": "carbon dioxide saturation", "asm_value": co2_sat, "unit": "%"})
         
         # 2. pH
         ph = get_float('pH')
         if ph:
             ph_id = str(uuid.uuid4())
             measurement_ids['ph'] = ph_id
+            temp = get_float('Vessel Temperature (°C)')
             measurements.append({
                 "measurement identifier": ph_id,
                 "measurement time": iso_timestamp,
@@ -388,12 +406,15 @@ def convert_nova_flex2(file_content):
                     "device control document": [{"device type": "pH", "detection type": "sensor"}]
                 },
                 "pH": {"value": ph, "unit": "pH"},
-                "temperature": {"value": get_float('Vessel Temperature (°C)'), "unit": "degC"},
+                "temperature": {"value": temp, "unit": "degC"},
                 "sample document": {
                     "sample identifier": row.get('Sample ID', ''),
                     "description": row.get('Sample Type', '')
                 }
             })
+            field_mapping.append({"source_field": "pH", "source_value": ph, "asm_field": "pH", "asm_value": ph, "unit": "pH"})
+            if temp is not None:
+                field_mapping.append({"source_field": "Vessel Temperature (°C)", "source_value": temp, "asm_field": "temperature", "asm_value": temp, "unit": "°C"})
         
         # 3. Osmolality
         osm = get_float('Osm')
@@ -410,17 +431,25 @@ def convert_nova_flex2(file_content):
                     "description": row.get('Sample Type', '')
                 }
             })
+            field_mapping.append({"source_field": "Osm", "source_value": osm, "asm_field": "osmolality", "asm_value": osm, "unit": "mOsm/kg"})
         
         # 4. Metabolites
+        analyte_map = [
+            ('Gln', 'glutamine', 'molar concentration', 'mmol/L'),
+            ('Glu', 'glutamate', 'molar concentration', 'mmol/L'),
+            ('Gluc', 'glucose', 'mass concentration', 'g/L'),
+            ('Lac', 'lactate', 'mass concentration', 'g/L'),
+            ('NH4+', 'ammonium', 'molar concentration', 'mmol/L'),
+            ('Na+', 'sodium', 'molar concentration', 'mmol/L'),
+            ('K+', 'potassium', 'molar concentration', 'mmol/L'),
+            ('Ca++', 'calcium', 'molar concentration', 'mmol/L'),
+        ]
         analytes = []
-        if get_float('Gln'): analytes.append({"analyte name": "glutamine", "molar concentration": {"value": get_float('Gln'), "unit": "mmol/L"}})
-        if get_float('Glu'): analytes.append({"analyte name": "glutamate", "molar concentration": {"value": get_float('Glu'), "unit": "mmol/L"}})
-        if get_float('Gluc'): analytes.append({"analyte name": "glucose", "mass concentration": {"value": get_float('Gluc'), "unit": "g/L"}})
-        if get_float('Lac'): analytes.append({"analyte name": "lactate", "mass concentration": {"value": get_float('Lac'), "unit": "g/L"}})
-        if get_float('NH4+'): analytes.append({"analyte name": "ammonium", "molar concentration": {"value": get_float('NH4+'), "unit": "mmol/L"}})
-        if get_float('Na+'): analytes.append({"analyte name": "sodium", "molar concentration": {"value": get_float('Na+'), "unit": "mmol/L"}})
-        if get_float('K+'): analytes.append({"analyte name": "potassium", "molar concentration": {"value": get_float('K+'), "unit": "mmol/L"}})
-        if get_float('Ca++'): analytes.append({"analyte name": "calcium", "molar concentration": {"value": get_float('Ca++'), "unit": "mmol/L"}})
+        for csv_col, name, conc_type, unit in analyte_map:
+            val = get_float(csv_col)
+            if val:
+                analytes.append({"analyte name": name, conc_type: {"value": val, "unit": unit}})
+                field_mapping.append({"source_field": csv_col, "source_value": val, "asm_field": f"{name} ({conc_type})", "asm_value": val, "unit": unit})
         
         if analytes:
             measurements.append({
@@ -437,42 +466,62 @@ def convert_nova_flex2(file_content):
             })
         
         # Calculated data
+        calc_map = [
+            ('pH @ Temp', 'temperature corrected pH', 'pH'),
+            ('PO2 @ Temp', 'temperature corrected pO2', 'mmHg'),
+            ('PCO2 @ Temp', 'temperature corrected pCO2', 'mmHg'),
+            ('HCO3', 'bicarbonate', 'mmol/L'),
+        ]
         calculated_data = []
-        if get_float('pH @ Temp'):
-            calculated_data.append({"calculated data name": "temperature corrected pH", "calculated result": {"value": get_float('pH @ Temp'), "unit": "pH"}})
-        if get_float('PO2 @ Temp'):
-            calculated_data.append({"calculated data name": "temperature corrected pO2", "calculated result": {"value": get_float('PO2 @ Temp'), "unit": "mmHg"}})
-        if get_float('PCO2 @ Temp'):
-            calculated_data.append({"calculated data name": "temperature corrected pCO2", "calculated result": {"value": get_float('PCO2 @ Temp'), "unit": "mmHg"}})
-        if get_float('HCO3'):
-            calculated_data.append({"calculated data name": "bicarbonate", "calculated result": {"value": get_float('HCO3'), "unit": "mmol/L"}})
+        for csv_col, calc_name, unit in calc_map:
+            val = get_float(csv_col)
+            if val:
+                calculated_data.append({"calculated data name": calc_name, "calculated result": {"value": val, "unit": unit}})
+                field_mapping.append({"source_field": csv_col, "source_value": val, "asm_field": f"{calc_name} (calculated)", "asm_value": val, "unit": unit})
         
         # Custom information
         custom_info = []
-        if get_float('Pre-Dilution Multiplier') is not None:
-            custom_info.append({"datum label": "Pre-Dilution Multiplier", "scalar double datum": get_float('Pre-Dilution Multiplier'), "unit": "(unitless)"})
-        if get_float('Sparging O2%') is not None:
-            custom_info.append({"datum label": "Sparging O2%", "scalar double datum": get_float('Sparging O2%'), "unit": "%"})
-        if get_float('pH / Gas Flow Time') is not None:
-            custom_info.append({"datum label": "pH / Gas Flow Time", "scalar double datum": get_float('pH / Gas Flow Time'), "unit": "sec"})
-        if get_float('Chemistry Flow Time') is not None:
-            custom_info.append({"datum label": "Chemistry Flow Time", "scalar double datum": get_float('Chemistry Flow Time'), "unit": "sec"})
+        custom_num_fields = [
+            ('Pre-Dilution Multiplier', '(unitless)'),
+            ('Vessel Pressure (psi)', 'psi'),
+            ('Sparging O2%', '%'),
+            ('pH / Gas Flow Time', 'sec'),
+            ('Chemistry Flow Time', 'sec'),
+        ]
+        for csv_col, unit in custom_num_fields:
+            val = get_float(csv_col)
+            if val is not None:
+                custom_info.append({"datum label": csv_col, "scalar double datum": val, "unit": unit})
+                field_mapping.append({"source_field": csv_col, "source_value": val, "asm_field": f"{csv_col} (custom info)", "asm_value": val, "unit": unit})
         
         ratio = row.get('Chemistry Dilution Ratio', '').strip()
         if ratio and ':' in ratio:
             try:
                 ratio_val = float(ratio.split(':')[1])
                 custom_info.append({"datum label": "Chemistry Dilution Ratio", "scalar double datum": 1.0/ratio_val, "unit": "(unitless)"})
+                field_mapping.append({"source_field": "Chemistry Dilution Ratio", "source_value": ratio, "asm_field": "Chemistry Dilution Ratio (custom info)", "asm_value": ratio, "unit": "(unitless)"})
             except:
                 pass
         
-        for label, key in [("Chemistry Cartridge Lot Number", "Chemistry Cartridge Lot Number"),
-                           ("Chemistry Card Lot Number", "Chemistry Card Lot Number"),
-                           ("Gas Cartridge Lot Number", "Gas Cartridge Lot Number"),
-                           ("Gas Card Lot Number", "Gas Card Lot Number")]:
+        # String metadata fields
+        string_meta_fields = [
+            ('Vessel ID', 'Vessel ID'),
+            ('Batch ID', 'Batch ID'),
+            ('Cell Type', 'Cell Type'),
+            ('Comment', 'Comment'),
+            ('Tray Location', 'Tray Location'),
+            ('Time In Tray', 'Time In Tray'),
+            ('Sample Time', 'Sample Time'),
+            ('Chemistry Cartridge Lot Number', 'Chemistry Cartridge Lot Number'),
+            ('Chemistry Card Lot Number', 'Chemistry Card Lot Number'),
+            ('Gas Cartridge Lot Number', 'Gas Cartridge Lot Number'),
+            ('Gas Card Lot Number', 'Gas Card Lot Number'),
+        ]
+        for label, key in string_meta_fields:
             val = row.get(key, '').strip()
             if val:
                 custom_info.append({"datum label": label, "scalar string datum": val})
+                field_mapping.append({"source_field": key, "source_value": val, "asm_field": f"{label} (custom info)", "asm_value": val, "unit": ""})
         
         # Build ASM
         asm = {
@@ -522,7 +571,7 @@ def convert_nova_flex2(file_content):
                 "custom information document": custom_info
             }
         
-        return {'success': True, 'asm_output': asm}
+        return {'success': True, 'asm_output': asm, 'field_mapping': field_mapping}
         
     except Exception as e:
         return {'success': False, 'error': str(e)}

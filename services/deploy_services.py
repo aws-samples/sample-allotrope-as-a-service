@@ -486,14 +486,23 @@ def lambda_handler(event, context):
             method_responses=[{"statusCode": "200"}]
         )
 
-        # Unified Converter Lambda (tries Multi-Instrument first, then ATaaS)
+        # Lambda Layer for allotropy + dependencies
+        allotropy_layer = _lambda.LayerVersion(
+            self, "AllotropyLayer",
+            code=_lambda.Code.from_asset("lambda-layers/allotropy-layer"),
+            compatible_runtimes=[_lambda.Runtime.PYTHON_3_12],
+            description="Allotropy library for multi-instrument ASM conversion"
+        )
+
+        # Unified Converter Lambda (tries Multi-Instrument first, falls back to ATaaS)
         unified_lambda = _lambda.Function(
             self, "UnifiedConverterFunction",
-            runtime=_lambda.Runtime.PYTHON_3_9,
+            runtime=_lambda.Runtime.PYTHON_3_12,
             handler="lambda_function.lambda_handler",
             code=_lambda.Code.from_asset("unified-converter"),
+            layers=[allotropy_layer],
             timeout=Duration.seconds(300),
-            memory_size=512,
+            memory_size=1024,
             environment={
                 "MULTI_INSTRUMENT_ENDPOINT": multi_instrument_api.url + "convert",
                 "ATAAS_ENDPOINT": ataas_api.url + "convert",

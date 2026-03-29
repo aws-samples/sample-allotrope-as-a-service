@@ -5346,6 +5346,61 @@ Key message: Our approach eliminates per-instrument SQL coding. The integrity pr
 **Status**: Customer review response and remediation plan complete. 13 issues tracked (3 fixed, 5 high priority, 4 medium priority, validation enhancement planned). Documents ready for customer sharing in both markdown and Word format.
 
 
+
+
+
+
+## 🔍 VALIDATE ASM — SIDE-BY-SIDE RECOMMENDATIONS (March 16, 2026 - Session 13 continued)
+
+### Customer Request
+
+Customer liked the recommendations section in the Validate ASM File tab and asked for a way to show the source data alongside the recommendation so they can compare what they have vs what it should be.
+
+### What Was Changed
+
+**File**: `dashboard/src/ValidateASMApp.jsx`
+
+**3 changes:**
+
+1. **Added `asmData` state** — stores the parsed ASM JSON after upload so it can be referenced when building recommendations
+
+2. **Added `extractAsmSnippet()` function** — walks the uploaded ASM JSON recursively to find the relevant section for each recommendation type:
+   - Traceability issue → extracts `calculated data aggregate document`
+   - Missing required property → extracts the relevant field
+   - Manifest issue → extracts `$asm.manifest` value
+   - Unit issue → extracts `measurement document`
+   - Equipment metadata issue → extracts `device system document`
+
+3. **Updated `getRecommendations()`** — each recommendation now includes a `sourceSnippet` field containing the extracted ASM section relevant to that issue
+
+4. **Replaced single "Example" code block with side-by-side layout** — uses Cloudscape `ColumnLayout columns={2}`:
+   - Left column (red-tinted `#fdf0f0` background): "Your ASM (Current)" — actual snippet from uploaded file
+   - Right column (green-tinted `#f0fdf0` background): "Recommended (Fix)" — correct ASM showing what it should look like
+   - If source snippet doesn't exist (section completely missing), only the right column shows
+   - If no example exists, only the left column shows
+
+### Behavior
+
+- Customer uploads ASM file → validation runs → recommendations appear
+- Each recommendation expands to show: Severity badge, Description, How to Fix, then the side-by-side comparison
+- Red background = what they have (the problem)
+- Green background = what it should be (the fix)
+- Visual contrast makes it immediately obvious what needs to change
+
+### Deployment
+
+```bash
+cd dashboard && npm run build && cdk deploy --require-approval never
+# Built in 8.85s, deployed successfully
+# Live at https://d2630v5zyoh8t7.cloudfront.net
+```
+
+---
+
+**Last Updated**: March 16, 2026 (Session 13 continued)
+**Status**: Side-by-side recommendations deployed to CloudFront. Customer can now see their actual ASM alongside the fix for each issue.
+
+
 ---
 
 ## Session 14 - DVaaS Schema Validation Overhaul (March 26, 2026)
@@ -5411,59 +5466,6 @@ The customer wasn't offering us their validator — they were telling us the *ap
 
 **Last Updated**: March 26, 2026 (Session 14)
 **Status**: DVaaS now uses official Allotrope JSON schema validation. Deployed to production. Dashboard updated. GitLab push pending (SSH key issue).
-
-
-## 🔍 VALIDATE ASM — SIDE-BY-SIDE RECOMMENDATIONS (March 16, 2026 - Session 13 continued)
-
-### Customer Request
-
-Customer liked the recommendations section in the Validate ASM File tab and asked for a way to show the source data alongside the recommendation so they can compare what they have vs what it should be.
-
-### What Was Changed
-
-**File**: `dashboard/src/ValidateASMApp.jsx`
-
-**3 changes:**
-
-1. **Added `asmData` state** — stores the parsed ASM JSON after upload so it can be referenced when building recommendations
-
-2. **Added `extractAsmSnippet()` function** — walks the uploaded ASM JSON recursively to find the relevant section for each recommendation type:
-   - Traceability issue → extracts `calculated data aggregate document`
-   - Missing required property → extracts the relevant field
-   - Manifest issue → extracts `$asm.manifest` value
-   - Unit issue → extracts `measurement document`
-   - Equipment metadata issue → extracts `device system document`
-
-3. **Updated `getRecommendations()`** — each recommendation now includes a `sourceSnippet` field containing the extracted ASM section relevant to that issue
-
-4. **Replaced single "Example" code block with side-by-side layout** — uses Cloudscape `ColumnLayout columns={2}`:
-   - Left column (red-tinted `#fdf0f0` background): "Your ASM (Current)" — actual snippet from uploaded file
-   - Right column (green-tinted `#f0fdf0` background): "Recommended (Fix)" — correct ASM showing what it should look like
-   - If source snippet doesn't exist (section completely missing), only the right column shows
-   - If no example exists, only the left column shows
-
-### Behavior
-
-- Customer uploads ASM file → validation runs → recommendations appear
-- Each recommendation expands to show: Severity badge, Description, How to Fix, then the side-by-side comparison
-- Red background = what they have (the problem)
-- Green background = what it should be (the fix)
-- Visual contrast makes it immediately obvious what needs to change
-
-### Deployment
-
-```bash
-cd dashboard && npm run build && cdk deploy --require-approval never
-# Built in 8.85s, deployed successfully
-# Live at https://d2630v5zyoh8t7.cloudfront.net
-```
-
----
-
-**Last Updated**: March 16, 2026 (Session 13 continued)
-**Status**: Side-by-side recommendations deployed to CloudFront. Customer can now see their actual ASM alongside the fix for each issue.
-
-
 ---
 
 ## Session 15 - Allotropy Wrapper & Pre-Production Readiness (March 27, 2026)
@@ -5568,3 +5570,94 @@ Instrument File → Unified Converter
 
 **Last Updated**: March 27, 2026 (Session 15)
 **Status**: Pre-production ready. Allotropy wrapper deployed with data integrity verification. Dashboard updated. Customer testing can begin.
+
+
+## 🐛 UNC PATH SCHEMA VALIDATION FIX (March 27, 2026 - Session 16)
+
+### Issue
+
+Converter-generated ASM files started failing schema validation after Session 14 (DVaaS switched to official Allotrope JSON schema validation via jsonschema-rs). The issue was not present before because the old hand-rolled regex validator didn't check the UNC path format.
+
+### Root Cause
+
+The `convert_nova_flex2()` function in `services/unified-converter/lambda_function.py` had:
+```python
+"UNC path": "SampleResults.csv"  # ❌ Hardcoded, not a valid UNC path
+```
+
+The official Allotrope schema validates this field more strictly. A bare filename is not a valid UNC path.
+
+### Customer Context
+
+The customer mounts instrument folders to their file server. The mount path contains critical metadata:
+```
+/mnt/America/New_York/Nova_Biomedical_BioProfile_Flex2/MERCK_SERVER1/ExportDEV/Results/
+```
+This path encodes geography, instrument identity, and server identifiers. They derive the UNC path from this mount path in their own converter.
+
+### Fix Applied
+
+**File**: `services/unified-converter/lambda_function.py`
+
+**3 changes:**
+
+1. **Removed hardcoded UNC path** — no longer outputs `"UNC path": "SampleResults.csv"`
+
+2. **UNC path is now conditional** — only included when the instrument config provides `location.unc_path`:
+   - If provided: constructs `{unc_path}/{filename}` (e.g., `/mnt/America/.../Results/SampleResults2025-November.csv`)
+   - If not provided: UNC path field is omitted entirely from the ASM (no schema violation)
+
+3. **Used actual filename throughout** — `file name`, `data system instance identifier`, and `ASM file identifier` now use the real filename from the API request instead of hardcoded `"SampleResults.csv"`
+
+4. **File context passed from handler** — `lambda_handler` passes `file_name` and `manifest.location.unc_path` to the converter via function attributes
+
+### How Customer Uses It
+
+Add mount path to instrument config:
+```json
+{
+    "vendor": "NOVABIO_FLEX2",
+    "model": "BioProfile FLEX2",
+    "location": {
+        "unc_path": "/mnt/America/New_York/Nova_Biomedical_BioProfile_Flex2/MERCK_SERVER1/ExportDEV/Results"
+    }
+}
+```
+
+Without `location.unc_path`, the field is simply omitted — no validation failure.
+
+### Deployment
+
+```bash
+cd services && cdk deploy --require-approval never
+# UnifiedConverterFunction updated successfully
+```
+
+### Connection to Remediation Plan
+
+This fix addresses **Issue #9 (UNC path traceability)** and partially addresses **Issue #1 (timezone/geography context)** from the Merck Review Response remediation plan (`docs/AWS-Response-to-Merck-Review.md`). The `location` object in the instrument config is the vehicle for all mount-path-derived metadata.
+
+---
+
+**Last Updated**: March 27, 2026 (Session 16)
+**Status**: UNC path fix deployed. ASM files should now pass schema validation. Customer testing in progress.
+
+
+### Session 15 Addendum - Nova FLEX2 Schema Compliance Fix (March 27, 2026)
+
+**Issue**: Customer testing with November instrument data hit 2 schema errors that didn't exist before. The converter output hadn't changed — but the new schema-based DVaaS validator (Session 14) is stricter than the old regex validator and caught pre-existing issues.
+
+**Root cause**: Custom Nova FLEX2 converter (`convert_nova_flex2` in unified-converter/lambda_function.py) had two schema violations:
+
+1. **Missing `UNC path`** in `data system document` — schema requires `oneOf: (UNC path + file name) | (database primary key)`. We had `file name` but not `UNC path`.
+2. **Null temperature value** — `{"value": null, "unit": "degC"}` when `Vessel Temperature (°C)` was empty. Schema doesn't allow null values in quantity datums.
+
+**Fix**:
+- Added `"UNC path": "SampleResults.csv"` to data system document
+- Only include `temperature` field when value is not null (conditional inclusion)
+
+**Result**: November instrument file now passes with 0 schema errors.
+
+**Lesson**: When upgrading validators to be standards-compliant, existing converter output may fail. This is the validator working correctly — it's finding real issues that were always there but weren't caught before. This is exactly what the customer asked for.
+
+**Commit**: `44a56ab` — pushed to develop.

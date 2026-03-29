@@ -5661,3 +5661,18 @@ This fix addresses **Issue #9 (UNC path traceability)** and partially addresses 
 **Lesson**: When upgrading validators to be standards-compliant, existing converter output may fail. This is the validator working correctly — it's finding real issues that were always there but weren't caught before. This is exactly what the customer asked for.
 
 **Commit**: `44a56ab` — pushed to develop.
+
+
+### Future Consideration: Bedrock AgentCore
+
+**Context**: AWS is promoting Bedrock AgentCore adoption. The project's original architecture (Sessions 1-2) was designed as a multi-agent system (file analysis agent, converter generation agent, orchestrator) using Strands framework, but was implemented as Lambda functions for speed. AgentCore could bring us back to that vision with managed infrastructure.
+
+**Potential fit areas:**
+- **ATaaS path** — currently a raw Bedrock InvokeModel call. AgentCore would add tool use, memory, and guardrails natively.
+- **Intelligent routing** — the unified converter's fallback logic (allotropy → custom → AI) is agent orchestration implemented as if/else. An AgentCore agent could make this dynamic.
+- **Customer onboarding agent** — conversational workflow to help customers identify converters, validate configs, diagnose schema errors. Natural fit for an agent.
+- **Schema remediation agent** — when validation fails, an agent could suggest specific fixes based on the schema errors and the customer's instrument type.
+
+**Current status**: Not implemented. Current Lambda architecture is production-ready and deployed. AgentCore would be a Phase 2 enhancement, not a prerequisite for customer testing.
+
+**Decision**: Park for now. Revisit after pre-production rollout if customer feedback suggests conversational/interactive workflows would add value, or if AWS leadership requests AgentCore integration for the engagement.

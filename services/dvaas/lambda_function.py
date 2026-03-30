@@ -78,6 +78,7 @@ def run_validation(asm_data, validation_level):
 
         result = {
             'valid': validation_result.is_valid(),
+            'schema_compliant': validation_result.is_valid(),
             'validation_level': validation_level,
             'timestamp': datetime.utcnow().isoformat(),
             'errors': validation_result.errors,
@@ -116,7 +117,7 @@ def store_validation_job(result, file_name):
             'conversion_id': f"VALIDATE-{datetime.utcnow().strftime('%Y%m%d%H%M%S')}",
             'type': 'validation',
             'timestamp': result.get('timestamp', datetime.utcnow().isoformat()),
-            'status': 'valid' if result.get('valid') else 'invalid',
+            'status': 'pass' if result.get('valid') else 'fail',
             'file_name': file_name,
             'validation_level': result.get('validation_level', 'basic'),
             'validator': result.get('validator', 'unknown'),

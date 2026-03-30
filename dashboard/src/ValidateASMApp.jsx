@@ -20,6 +20,7 @@ function ValidateASMApp() {
   const [progress, setProgress] = useState(0)
   const [validation, setValidation] = useState(null)
   const [error, setError] = useState(null)
+  const [asmData, setAsmData] = useState(null)
 
   const handleValidate = async () => {
     if (!file.length) return
@@ -35,6 +36,7 @@ function ValidateASMApp() {
       setProgress(30)
       
       const asmData = JSON.parse(fileContent)
+      setAsmData(asmData)
       setProgress(50)
 
       // Validate ASM
@@ -83,16 +85,38 @@ function ValidateASMApp() {
     a.click()
   }
 
+  const extractAsmSnippet = (asm, key) => {
+    if (!asm) return null
+    const search = (obj, target) => {
+      if (!obj || typeof obj !== 'object') return null
+      if (target in obj) return { [target]: obj[target] }
+      for (const v of Object.values(obj)) {
+        const found = search(v, target)
+        if (found) return found
+      }
+      if (Array.isArray(obj)) {
+        for (const item of obj) {
+          const found = search(item, target)
+          if (found) return found
+        }
+      }
+      return null
+    }
+    return search(asm, key)
+  }
+
   const getRecommendations = (errors, warnings) => {
     const recommendations = []
-    
-    // Analyze errors and provide recommendations
+
     if (errors?.some(e => e.includes('data source') || e.includes('traceability'))) {
+      const snippet = extractAsmSnippet(asmData, 'calculated data aggregate document')
+        || extractAsmSnippet(asmData, 'calculated data document')
       recommendations.push({
         issue: 'Missing Data Source Traceability',
         severity: 'high',
         description: 'Calculated values are not linked to their source measurements.',
         fix: 'Add a "data source aggregate document" inside each calculated data document that references the measurement identifiers used in the calculation.',
+        sourceSnippet: snippet,
         example: `"calculated data document": [{
   "calculated data identifier": "calc-1",
   "calculated data name": "temperature corrected pH",
@@ -106,49 +130,58 @@ function ValidateASMApp() {
 }]`
       })
     }
-    
+
     if (errors?.some(e => e.includes('is a required property'))) {
       const missing = errors.filter(e => e.includes('is a required property')).map(e => {
         const match = e.match(/"([^"]+)" is a required property/)
         return match ? match[1] : null
       }).filter(Boolean)
+      const snippet = missing.length > 0 ? extractAsmSnippet(asmData, missing[0]) : null
       recommendations.push({
         issue: 'Missing Required Properties',
         severity: 'high',
         description: `The Allotrope schema requires these fields: ${missing.join(', ')}`,
         fix: 'Add the missing required fields to your ASM document at the locations indicated in the errors above.',
+        sourceSnippet: snippet,
         example: missing.includes('measurement identifier') ? `"measurement identifier": "measurement-1"` : ''
       })
     }
-    
+
     if (errors?.some(e => e.includes('manifest'))) {
+      const snippet = asmData ? { '$asm.manifest': asmData['$asm.manifest'] || '(missing)' } : null
       recommendations.push({
         issue: 'Invalid or Missing Manifest',
         severity: 'high',
         description: 'The $asm.manifest field is missing or points to an invalid schema.',
         fix: 'Add a valid Allotrope manifest URL that matches your instrument type.',
+        sourceSnippet: snippet,
         example: `"$asm.manifest": "http://purl.allotrope.org/manifests/solution-analyzer/REC/2025/06/solution-analyzer.manifest"`
       })
     }
-    
+
     if (warnings?.some(w => w.includes('unit') || w.includes('Unit'))) {
+      const snippet = extractAsmSnippet(asmData, 'measurement document')
       recommendations.push({
         issue: 'Unknown or Non-Standard Units',
         severity: 'medium',
         description: 'Some measurement units are not recognized by the Allotrope standard.',
         fix: 'Use standard SI units or Allotrope-approved unit codes. Common units: pH, mmHg, mmol/L, g/L, mOsm/kg.',
+        sourceSnippet: snippet,
         example: `"pH": {"value": 7.183, "unit": "pH"}
 "pO2": {"value": 94.5, "unit": "mmHg"}
 "glucose": {"value": 2.5, "unit": "g/L"}`
       })
     }
-    
+
     if (warnings?.some(w => w.includes('serial') || w.includes('software'))) {
+      const snippet = extractAsmSnippet(asmData, 'device system document')
+        || extractAsmSnippet(asmData, 'device identifier')
       recommendations.push({
         issue: 'Missing Equipment Metadata',
         severity: 'low',
         description: 'Equipment serial number or software version is missing.',
         fix: 'Add device serial number and software version to the device system document for full regulatory compliance.',
+        sourceSnippet: snippet,
         example: `"device system document": {
   "device identifier": "FLEX2-2023-001",
   "equipment serial number": "FLEX2-2023-001",
@@ -156,18 +189,18 @@ function ValidateASMApp() {
 }`
       })
     }
-    
-    // If no specific recommendations, provide general guidance
+
     if (recommendations.length === 0 && (errors?.length > 0 || warnings?.length > 0)) {
       recommendations.push({
         issue: 'General ASM Compliance Issues',
         severity: 'medium',
         description: 'Your ASM file has validation issues that need attention.',
         fix: 'Review the errors and warnings below. Ensure your ASM file follows the Allotrope Simple Model schema for your instrument type.',
+        sourceSnippet: null,
         example: 'Refer to Allotrope documentation at http://purl.allotrope.org/'
       })
     }
-    
+
     return recommendations
   }
 
@@ -234,9 +267,9 @@ function ValidateASMApp() {
             <SpaceBetween size="m">
               <ColumnLayout columns={4} variant="text-grid">
                 <div>
-                  <Box variant="awsui-key-label">Status</Box>
+                  <Box variant="awsui-key-label">Schema</Box>
                   <Badge color={validation.valid ? "green" : "red"} size="large">
-                    {validation.valid ? "VALID" : "INVALID"}
+                    {validation.valid ? "PASS" : "FAIL"}
                   </Badge>
                 </div>
                 <div>
@@ -258,13 +291,12 @@ function ValidateASMApp() {
               </ColumnLayout>
 
               {validation.valid ? (
-                <Alert type="success" header="ASM File is Valid">
-                  Your ASM file meets Allotrope standards and is ready for use. You can download the validation report below.
+                <Alert type="success" header="Schema Validation Passed">
+                  Your ASM file passes Allotrope schema validation.{validation.warnings?.length > 0 ? ` There are ${validation.warnings.length} compliance recommendation(s) below.` : ''}
                 </Alert>
               ) : (
-                <Alert type="error" header="ASM File Has Issues">
-                  Your ASM file has {validation.errors?.length || 0} error(s) and {validation.warnings?.length || 0} warning(s). 
-                  Please review the details below and fix the issues.
+                <Alert type="error" header="Schema Validation Failed">
+                  Your ASM file has {validation.errors?.length || 0} schema error(s). These must be fixed for the file to conform to Allotrope standards.
                 </Alert>
               )}
             </SpaceBetween>
@@ -285,7 +317,7 @@ function ValidateASMApp() {
 
           {/* Warnings */}
           {validation.warnings?.length > 0 && (
-            <Container header={<Header variant="h2" description="Issues that should be addressed for full compliance">Warnings ({validation.warnings.length})</Header>}>
+            <Container header={<Header variant="h2" description="Issues that should be addressed for full compliance">Compliance Recommendations ({validation.warnings.length})</Header>}>
               <SpaceBetween size="s">
                 {validation.warnings.map((warn, i) => (
                   <Alert key={i} type="warning" header={`Warning ${i + 1}`}>
@@ -325,15 +357,29 @@ function ValidateASMApp() {
                         <Box>{rec.fix}</Box>
                       </div>
                       
-                      {rec.example && (
-                        <div>
-                          <Box variant="awsui-key-label">Example</Box>
-                          <Box variant="code">
-                            <pre style={{ margin: 0, whiteSpace: 'pre-wrap', wordBreak: 'break-word' }}>
-                              {rec.example}
-                            </pre>
-                          </Box>
-                        </div>
+                      {(rec.sourceSnippet || rec.example) && (
+                        <ColumnLayout columns={rec.sourceSnippet && rec.example ? 2 : 1}>
+                          {rec.sourceSnippet && (
+                            <div>
+                              <Box variant="awsui-key-label">Your ASM (Current)</Box>
+                              <Box variant="code">
+                                <pre style={{ margin: 0, whiteSpace: 'pre-wrap', wordBreak: 'break-word', background: '#fdf0f0', padding: '8px', borderRadius: '4px', fontSize: '12px' }}>
+                                  {JSON.stringify(rec.sourceSnippet, null, 2)}
+                                </pre>
+                              </Box>
+                            </div>
+                          )}
+                          {rec.example && (
+                            <div>
+                              <Box variant="awsui-key-label">Recommended (Fix)</Box>
+                              <Box variant="code">
+                                <pre style={{ margin: 0, whiteSpace: 'pre-wrap', wordBreak: 'break-word', background: '#f0fdf0', padding: '8px', borderRadius: '4px', fontSize: '12px' }}>
+                                  {rec.example}
+                                </pre>
+                              </Box>
+                            </div>
+                          )}
+                        </ColumnLayout>
                       )}
                     </SpaceBetween>
                   </ExpandableSection>

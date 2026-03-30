@@ -349,9 +349,9 @@ def validate_supplementary(asm: Dict, content_str: str, result: ValidationResult
     result.metrics["has_data_source_traceability"] = has_data_source
 
     if has_calculated and not has_data_source:
-        result.add_error(
+        result.add_warning(
             "Calculated data found without data source aggregate document - "
-            "traceability required for regulatory compliance"
+            "recommended for regulatory compliance (FDA 21 CFR Part 11)"
         )
 
     # Measurement count

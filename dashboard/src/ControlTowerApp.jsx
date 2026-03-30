@@ -54,8 +54,8 @@ function ControlTowerApp() {
 
   // KPIs
   const totalJobs = jobs.length
-  const completed = jobs.filter(j => j.status === 'completed' || j.status === 'valid').length
-  const failed = jobs.filter(j => j.status === 'failed' || j.status === 'invalid').length
+  const completed = jobs.filter(j => ['completed', 'valid', 'pass'].includes(j.status)).length
+  const failed = jobs.filter(j => ['failed', 'invalid', 'fail'].includes(j.status)).length
   const successRate = totalJobs > 0 ? ((completed / totalJobs) * 100).toFixed(1) : 0
 
   // Type breakdown
@@ -193,8 +193,8 @@ function ControlTowerApp() {
             id: 'status',
             header: 'Status',
             cell: item => {
-              if (item.status === 'completed' || item.status === 'valid') return <StatusIndicator type="success">{item.status}</StatusIndicator>
-              if (item.status === 'failed' || item.status === 'invalid') return <StatusIndicator type="error">{item.status}</StatusIndicator>
+              if (['completed', 'valid', 'pass'].includes(item.status)) return <StatusIndicator type="success">{item.status}</StatusIndicator>
+              if (['failed', 'invalid', 'fail'].includes(item.status)) return <StatusIndicator type="error">{item.status}</StatusIndicator>
               return <StatusIndicator type="pending">{item.status}</StatusIndicator>
             },
             sortingField: 'status',

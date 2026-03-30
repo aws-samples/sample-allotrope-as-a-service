@@ -112,6 +112,9 @@ def lambda_handler(event, context):
         
         # Check if it's Nova FLEX2 - use embedded custom converter
         if is_nova_flex2(file_content, file_name):
+            # Pass file context to converter
+            convert_nova_flex2._file_name = file_name
+            convert_nova_flex2._unc_path = manifest.get('location', {}).get('unc_path', '') if manifest else ''
             nova_result = convert_nova_flex2(file_content)
             if nova_result['success']:
                 response = {
@@ -525,6 +528,13 @@ def convert_nova_flex2(file_content):
                 field_mapping.append({"source_field": key, "source_value": val, "asm_field": f"{label} (custom info)", "asm_value": val, "unit": ""})
         
         # Build ASM
+        # Use actual filename from request context (passed via closure or default)
+        source_file_name = file_content.split('\n')[0]  # fallback
+        # The caller should pass file_name; for now derive from content or use default
+        actual_file_name = getattr(convert_nova_flex2, '_file_name', 'SampleResults.csv')
+        unc_base = getattr(convert_nova_flex2, '_unc_path', '')
+        unc_path = (unc_base.rstrip('/\\') + '/' + actual_file_name) if unc_base else actual_file_name
+
         asm = {
             "$asm.manifest": "http://purl.allotrope.org/manifests/solution-analyzer/REC/2025/06/solution-analyzer.manifest",
             "solution analyzer aggregate document": {
@@ -532,10 +542,10 @@ def convert_nova_flex2(file_content):
                     "ASM conversion time": datetime.utcnow().isoformat() + '+00:00',
                     "ASM converter name": "aws-asm-service",
                     "ASM converter version": "1.0.0",
-                    "ASM file identifier": f"SampleResults-{idx}.json",
-                    "data system instance identifier": "SampleResults.csv",
-                    "UNC path": "SampleResults.csv",
-                    "file name": "SampleResults.csv",
+                    "ASM file identifier": f"{actual_file_name}-{idx}.json",
+                    "data system instance identifier": actual_file_name,
+                    "file name": actual_file_name,
+                    "UNC path": unc_path,
                     "software name": "flex2"
                 },
                 "device system document": {

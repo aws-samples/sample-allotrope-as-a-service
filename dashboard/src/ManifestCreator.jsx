@@ -20,6 +20,8 @@ export default function ManifestCreator() {
   const [serialNumber, setSerialNumber] = useState('')
   const [softwareVersion, setSoftwareVersion] = useState('')
   const [location, setLocation] = useState('')
+  const [uncPath, setUncPath] = useState('')
+  const [timezone, setTimezone] = useState('')
   const [contact, setContact] = useState('')
   const [customerAlias, setCustomerAlias] = useState('')
   const [fileFormat, setFileFormat] = useState({ label: 'CSV', value: 'csv' })
@@ -74,7 +76,11 @@ export default function ManifestCreator() {
     file_format: fileFormat.value,
     ...(serialNumber && { serial_number: serialNumber }),
     ...(softwareVersion && { software_version: softwareVersion }),
-    ...(location && { location: location }),
+    ...((location || uncPath || timezone) && { location: {
+      ...(location && { description: location }),
+      ...(uncPath && { unc_path: uncPath }),
+      ...(timezone && { timezone: timezone })
+    }}),
     ...(contact && { contact: contact }),
     ...(customerAlias && { customer_alias: customerAlias })
   } : null
@@ -186,7 +192,7 @@ export default function ManifestCreator() {
         </Container>
       )}
 
-      {(instrument || (isCustom && customManufacturer && customModel)) && (
+      {(instrument || isCustom) && (
         <>
           <Container header={<Header variant="h2">Your Instrument Details</Header>}>
             <SpaceBetween size="m">
@@ -235,6 +241,30 @@ export default function ManifestCreator() {
               </FormField>
 
               <FormField 
+                key="unc-path"
+                label="Source File Path (Optional)" 
+                description="Mount path or UNC path where instrument writes output files. Used for traceability back to the original source."
+              >
+                <Input
+                  value={uncPath}
+                  onChange={({ detail }) => setUncPath(detail.value)}
+                  placeholder="e.g., /mnt/America/New_York/Nova_Biomedical_BioProfile_Flex2/MERCK_SERVER1/ExportDEV/Results"
+                />
+              </FormField>
+
+              <FormField 
+                key="timezone"
+                label="Timezone (Optional)" 
+                description="IANA timezone of the instrument location. Used to correctly interpret timestamps in the source file."
+              >
+                <Input
+                  value={timezone}
+                  onChange={({ detail }) => setTimezone(detail.value)}
+                  placeholder="e.g., America/New_York"
+                />
+              </FormField>
+
+              <FormField 
                 key="contact"
                 label="Contact (Optional)" 
                 description="Responsible person or team"
@@ -278,7 +308,7 @@ export default function ManifestCreator() {
                   {JSON.stringify(manifest, null, 2)}
                 </pre>
               </Box>
-              <Button key="download-button" variant="primary" onClick={downloadManifest}>
+              <Button key="download-button" variant="primary" onClick={downloadManifest} disabled={isCustom && (!customManufacturer || !customModel)}>
                 Download instrument_config.json
               </Button>
             </SpaceBetween>

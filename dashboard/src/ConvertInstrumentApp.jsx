@@ -142,7 +142,8 @@ function ConvertInstrumentApp() {
         body: JSON.stringify({
           file_content: fileContent,
           file_name: instrumentFile[0].name,
-          manifest: config
+          manifest: config,
+          store_results: true
         })
       })
       

@@ -543,6 +543,58 @@ def lambda_handler(event, context):
             }]
         )
 
+        # History endpoint for Control Tower
+        history_lambda = _lambda.Function(
+            self, "ConversionHistoryFunction",
+            runtime=_lambda.Runtime.PYTHON_3_9,
+            handler="index.lambda_handler",
+            code=_lambda.Code.from_inline("""
+import json
+import boto3
+import os
+from decimal import Decimal
+
+dynamodb = boto3.resource('dynamodb')
+
+class DecimalEncoder(json.JSONEncoder):
+    def default(self, o):
+        if isinstance(o, Decimal):
+            return float(o)
+        return super().default(o)
+
+def lambda_handler(event, context):
+    try:
+        table = dynamodb.Table(os.environ['CONVERSION_HISTORY_TABLE'])
+        response = table.scan()
+        items = response.get('Items', [])
+        items.sort(key=lambda x: x.get('timestamp', ''), reverse=True)
+        return {
+            'statusCode': 200,
+            'headers': {'Access-Control-Allow-Origin': '*', 'Content-Type': 'application/json'},
+            'body': json.dumps({'jobs': items[:100]}, cls=DecimalEncoder)
+        }
+    except Exception as e:
+        return {
+            'statusCode': 500,
+            'headers': {'Access-Control-Allow-Origin': '*'},
+            'body': json.dumps({'error': str(e)})
+        }
+"""),
+            timeout=Duration.seconds(30),
+            memory_size=256,
+            environment={
+                "CONVERSION_HISTORY_TABLE": conversion_history_table.table_name
+            }
+        )
+        conversion_history_table.grant_read_data(history_lambda)
+
+        history_resource = unified_api.root.add_resource("history")
+        history_resource.add_method(
+            "GET",
+            apigateway.LambdaIntegration(history_lambda),
+            method_responses=[{"statusCode": "200"}]
+        )
+
         # Output the API endpoints
         cdk.CfnOutput(
             self, "DVaaSAPIEndpoint",

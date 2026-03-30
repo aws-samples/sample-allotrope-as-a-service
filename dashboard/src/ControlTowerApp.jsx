@@ -8,278 +8,82 @@ import Button from '@cloudscape-design/components/button'
 import Table from '@cloudscape-design/components/table'
 import ColumnLayout from '@cloudscape-design/components/column-layout'
 import StatusIndicator from '@cloudscape-design/components/status-indicator'
-import Link from '@cloudscape-design/components/link'
 import TextFilter from '@cloudscape-design/components/text-filter'
 import Pagination from '@cloudscape-design/components/pagination'
-import CollectionPreferences from '@cloudscape-design/components/collection-preferences'
+import Alert from '@cloudscape-design/components/alert'
+
+const HISTORY_ENDPOINT = 'https://tqzatn5bse.execute-api.us-east-1.amazonaws.com/prod/history'
 
 function ControlTowerApp() {
   const [jobs, setJobs] = useState([])
   const [loading, setLoading] = useState(false)
+  const [error, setError] = useState(null)
   const [filteringText, setFilteringText] = useState('')
   const [currentPageIndex, setCurrentPageIndex] = useState(1)
-  const [pageSize, setPageSize] = useState(10)
-  const [selectedItems, setSelectedItems] = useState([])
+  const pageSize = 10
 
-  // Mock data - in production, this would come from an API
-  useEffect(() => {
-    // Generate mock job data
-    const mockJobs = [
-      {
-        id: 'job-001',
-        fileName: 'SampleResults2025-November.csv',
-        instrument: 'Nova BioProfile FLEX2',
-        type: 'Conversion',
-        status: 'Success',
-        startTime: '2025-01-30 09:15:23',
-        duration: '0.8s',
-        measurements: 27,
-        errors: 0,
-        warnings: 2,
-        validationStatus: 'VALID'
-      },
-      {
-        id: 'job-002',
-        fileName: 'EndoScanV-Export-20230713.xml',
-        instrument: 'Charles River EndoScan-V',
-        type: 'Conversion',
-        status: 'Success',
-        startTime: '2025-01-30 09:18:45',
-        duration: '1.2s',
-        measurements: 48,
-        errors: 0,
-        warnings: 3,
-        validationStatus: 'VALID'
-      },
-      {
-        id: 'job-003',
-        fileName: 'customer_asm_file.json',
-        instrument: 'N/A',
-        type: 'Validation',
-        status: 'Failed',
-        startTime: '2025-01-30 09:22:10',
-        duration: '0.3s',
-        measurements: 4,
-        errors: 1,
-        warnings: 2,
-        validationStatus: 'INVALID'
-      },
-      {
-        id: 'job-004',
-        fileName: 'PlateReader-Results-Jan.csv',
-        instrument: 'Molecular Devices SoftMax Pro',
-        type: 'Conversion',
-        status: 'Success',
-        startTime: '2025-01-30 09:25:33',
-        duration: '0.9s',
-        measurements: 96,
-        errors: 0,
-        warnings: 1,
-        validationStatus: 'VALID'
-      },
-      {
-        id: 'job-005',
-        fileName: 'CellCount-Batch-05.xlsx',
-        instrument: 'Beckman Vi-CELL BLU',
-        type: 'Conversion',
-        status: 'In Progress',
-        startTime: '2025-01-30 09:28:15',
-        duration: '-',
-        measurements: '-',
-        errors: '-',
-        warnings: '-',
-        validationStatus: 'Pending'
-      },
-      {
-        id: 'job-006',
-        fileName: 'QC-Sample-2025-01.json',
-        instrument: 'N/A',
-        type: 'Validation',
-        status: 'Success',
-        startTime: '2025-01-30 09:30:42',
-        duration: '0.2s',
-        measurements: 12,
-        errors: 0,
-        warnings: 0,
-        validationStatus: 'VALID'
-      },
-      {
-        id: 'job-007',
-        fileName: 'Unknown-Format.dat',
-        instrument: 'Custom Instrument',
-        type: 'Conversion',
-        status: 'Failed',
-        startTime: '2025-01-30 09:32:18',
-        duration: '2.1s',
-        measurements: 0,
-        errors: 1,
-        warnings: 0,
-        validationStatus: 'INVALID'
-      },
-      {
-        id: 'job-008',
-        fileName: 'Spectro-UV-Vis-Data.csv',
-        instrument: 'Thermo NanoDrop Eight',
-        type: 'Conversion',
-        status: 'Success',
-        startTime: '2025-01-30 09:35:55',
-        duration: '0.7s',
-        measurements: 8,
-        errors: 0,
-        warnings: 1,
-        validationStatus: 'VALID'
+  const fetchJobs = async () => {
+    setLoading(true)
+    setError(null)
+    try {
+      const resp = await fetch(HISTORY_ENDPOINT)
+      const data = await resp.json()
+      if (data.jobs) {
+        setJobs(data.jobs.map(j => ({
+          id: j.conversion_id || j.id,
+          method: j.method || j.conversion_method || j.source || '-',
+          status: j.status || 'unknown',
+          timestamp: j.timestamp || '-',
+          instrumentType: (j.instrument_type || '-').replace(/_/g, ' '),
+          vendor: j.vendor || '-',
+          s3Key: j.asm_s3_key || '-',
+        })))
       }
-    ]
-    setJobs(mockJobs)
-  }, [])
+    } catch (e) {
+      setError(e.message)
+    } finally {
+      setLoading(false)
+    }
+  }
 
-  // Calculate KPIs
+  useEffect(() => { fetchJobs() }, [])
+
+  // KPIs
   const totalJobs = jobs.length
-  const successfulJobs = jobs.filter(j => j.status === 'Success').length
-  const failedJobs = jobs.filter(j => j.status === 'Failed').length
-  const inProgressJobs = jobs.filter(j => j.status === 'In Progress').length
-  const successRate = totalJobs > 0 ? ((successfulJobs / totalJobs) * 100).toFixed(1) : 0
-  const totalMeasurements = jobs.reduce((sum, j) => sum + (typeof j.measurements === 'number' ? j.measurements : 0), 0)
-  const avgDuration = jobs
-    .filter(j => j.duration !== '-')
-    .reduce((sum, j, _, arr) => sum + parseFloat(j.duration) / arr.length, 0)
-    .toFixed(2)
+  const completed = jobs.filter(j => j.status === 'completed').length
+  const failed = jobs.filter(j => j.status === 'failed').length
+  const successRate = totalJobs > 0 ? ((completed / totalJobs) * 100).toFixed(1) : 0
 
-  // Filter jobs
-  const filteredJobs = jobs.filter(job =>
-    job.fileName.toLowerCase().includes(filteringText.toLowerCase()) ||
-    job.instrument.toLowerCase().includes(filteringText.toLowerCase()) ||
-    job.type.toLowerCase().includes(filteringText.toLowerCase()) ||
-    job.status.toLowerCase().includes(filteringText.toLowerCase())
+  // Unique instruments
+  const instruments = [...new Set(jobs.map(j => j.instrumentType).filter(t => t !== '-'))]
+
+  // Method breakdown
+  const methods = jobs.reduce((acc, j) => {
+    const m = j.method
+    acc[m] = (acc[m] || 0) + 1
+    return acc
+  }, {})
+
+  // Filter
+  const filtered = jobs.filter(j =>
+    j.id.toLowerCase().includes(filteringText.toLowerCase()) ||
+    j.instrumentType.toLowerCase().includes(filteringText.toLowerCase()) ||
+    j.vendor.toLowerCase().includes(filteringText.toLowerCase()) ||
+    j.method.toLowerCase().includes(filteringText.toLowerCase())
   )
 
-  // Paginate
-  const paginatedJobs = filteredJobs.slice(
+  const paginated = filtered.slice(
     (currentPageIndex - 1) * pageSize,
     currentPageIndex * pageSize
   )
-
-  const getStatusIndicator = (status) => {
-    switch (status) {
-      case 'Success':
-        return <StatusIndicator type="success">Success</StatusIndicator>
-      case 'Failed':
-        return <StatusIndicator type="error">Failed</StatusIndicator>
-      case 'In Progress':
-        return <StatusIndicator type="in-progress">In Progress</StatusIndicator>
-      default:
-        return <StatusIndicator type="pending">Pending</StatusIndicator>
-    }
-  }
-
-  const getValidationBadge = (status) => {
-    switch (status) {
-      case 'VALID':
-        return <Badge color="green">VALID</Badge>
-      case 'INVALID':
-        return <Badge color="red">INVALID</Badge>
-      case 'Pending':
-        return <Badge color="grey">Pending</Badge>
-      default:
-        return <Badge>Unknown</Badge>
-    }
-  }
-
-  const columnDefinitions = [
-    {
-      id: 'id',
-      header: 'Job ID',
-      cell: item => <Link href="#">{item.id}</Link>,
-      sortingField: 'id',
-      width: 100
-    },
-    {
-      id: 'fileName',
-      header: 'File Name',
-      cell: item => item.fileName,
-      sortingField: 'fileName',
-      width: 250
-    },
-    {
-      id: 'instrument',
-      header: 'Instrument',
-      cell: item => item.instrument,
-      sortingField: 'instrument',
-      width: 200
-    },
-    {
-      id: 'type',
-      header: 'Type',
-      cell: item => <Badge color={item.type === 'Conversion' ? 'blue' : 'grey'}>{item.type}</Badge>,
-      sortingField: 'type',
-      width: 120
-    },
-    {
-      id: 'status',
-      header: 'Status',
-      cell: item => getStatusIndicator(item.status),
-      sortingField: 'status',
-      width: 120
-    },
-    {
-      id: 'startTime',
-      header: 'Start Time',
-      cell: item => item.startTime,
-      sortingField: 'startTime',
-      width: 180
-    },
-    {
-      id: 'duration',
-      header: 'Duration',
-      cell: item => item.duration,
-      sortingField: 'duration',
-      width: 100
-    },
-    {
-      id: 'measurements',
-      header: 'Measurements',
-      cell: item => item.measurements,
-      sortingField: 'measurements',
-      width: 120
-    },
-    {
-      id: 'errors',
-      header: 'Errors',
-      cell: item => (
-        <Box color={item.errors > 0 ? 'text-status-error' : 'text-status-success'}>
-          {item.errors}
-        </Box>
-      ),
-      sortingField: 'errors',
-      width: 80
-    },
-    {
-      id: 'warnings',
-      header: 'Warnings',
-      cell: item => (
-        <Box color={item.warnings > 0 ? 'text-status-warning' : 'text-status-success'}>
-          {item.warnings}
-        </Box>
-      ),
-      sortingField: 'warnings',
-      width: 100
-    },
-    {
-      id: 'validationStatus',
-      header: 'Validation',
-      cell: item => getValidationBadge(item.validationStatus),
-      sortingField: 'validationStatus',
-      width: 120
-    }
-  ]
 
   return (
     <SpaceBetween size="l">
       <Header
         variant="h1"
-        description="Monitor all conversion and validation jobs across the system"
+        description="Real-time view of all conversion and validation jobs"
         actions={
-          <Button iconName="refresh" onClick={() => setLoading(true)}>
+          <Button iconName="refresh" onClick={fetchJobs} loading={loading}>
             Refresh
           </Button>
         }
@@ -287,17 +91,16 @@ function ControlTowerApp() {
         Control Tower
       </Header>
 
+      {error && (
+        <Alert type="error" header="Failed to load job history">{error}</Alert>
+      )}
+
       {/* KPI Cards */}
       <Container>
         <ColumnLayout columns={4} variant="text-grid">
           <div>
             <Box variant="awsui-key-label">Total Jobs</Box>
-            <Box fontSize="display-l" fontWeight="bold">
-              {totalJobs}
-            </Box>
-            <Box variant="small" color="text-status-inactive">
-              All time
-            </Box>
+            <Box fontSize="display-l" fontWeight="bold">{totalJobs}</Box>
           </div>
           <div>
             <Box variant="awsui-key-label">Success Rate</Box>
@@ -305,123 +108,118 @@ function ControlTowerApp() {
               {successRate}%
             </Box>
             <Box variant="small" color="text-status-inactive">
-              {successfulJobs} successful / {failedJobs} failed
+              {completed} completed / {failed} failed
             </Box>
           </div>
           <div>
-            <Box variant="awsui-key-label">Total Measurements</Box>
-            <Box fontSize="display-l" fontWeight="bold">
-              {totalMeasurements}
-            </Box>
+            <Box variant="awsui-key-label">Instrument Types</Box>
+            <Box fontSize="display-l" fontWeight="bold">{instruments.length}</Box>
             <Box variant="small" color="text-status-inactive">
-              Across all jobs
+              {instruments.slice(0, 3).join(', ')}{instruments.length > 3 ? '...' : ''}
             </Box>
           </div>
           <div>
-            <Box variant="awsui-key-label">Avg Duration</Box>
-            <Box fontSize="display-l" fontWeight="bold">
-              {avgDuration}s
-            </Box>
-            <Box variant="small" color="text-status-inactive">
-              Per job
-            </Box>
-          </div>
-        </ColumnLayout>
-      </Container>
-
-      {/* Status Summary */}
-      <Container header={<Header variant="h2">Status Summary</Header>}>
-        <ColumnLayout columns={3} variant="text-grid">
-          <div>
-            <StatusIndicator type="success">Successful</StatusIndicator>
-            <Box fontSize="heading-xl" padding={{ top: 'xs' }}>
-              {successfulJobs}
-            </Box>
-          </div>
-          <div>
-            <StatusIndicator type="error">Failed</StatusIndicator>
-            <Box fontSize="heading-xl" padding={{ top: 'xs' }}>
-              {failedJobs}
-            </Box>
-          </div>
-          <div>
-            <StatusIndicator type="in-progress">In Progress</StatusIndicator>
-            <Box fontSize="heading-xl" padding={{ top: 'xs' }}>
-              {inProgressJobs}
-            </Box>
+            <Box variant="awsui-key-label">Conversion Methods</Box>
+            <SpaceBetween size="xs">
+              {Object.entries(methods).map(([m, count]) => (
+                <Box key={m} variant="small">{m}: {count}</Box>
+              ))}
+            </SpaceBetween>
           </div>
         </ColumnLayout>
       </Container>
 
       {/* Jobs Table */}
       <Table
-        columnDefinitions={columnDefinitions}
-        items={paginatedJobs}
+        columnDefinitions={[
+          {
+            id: 'id',
+            header: 'Conversion ID',
+            cell: item => <Box fontWeight="bold">{item.id}</Box>,
+            sortingField: 'id',
+            width: 220
+          },
+          {
+            id: 'timestamp',
+            header: 'Timestamp',
+            cell: item => item.timestamp !== '-' ? new Date(item.timestamp).toLocaleString() : '-',
+            sortingField: 'timestamp',
+            width: 180
+          },
+          {
+            id: 'instrumentType',
+            header: 'Instrument Type',
+            cell: item => item.instrumentType,
+            sortingField: 'instrumentType',
+            width: 160
+          },
+          {
+            id: 'vendor',
+            header: 'Vendor',
+            cell: item => item.vendor,
+            sortingField: 'vendor',
+            width: 150
+          },
+          {
+            id: 'method',
+            header: 'Method',
+            cell: item => {
+              const colors = {
+                'custom-nova-flex2': 'blue',
+                'multi-instrument': 'green',
+                'ataas-ai': 'grey',
+                'custom-converter': 'blue',
+              }
+              return <Badge color={colors[item.method] || 'grey'}>{item.method}</Badge>
+            },
+            sortingField: 'method',
+            width: 180
+          },
+          {
+            id: 'status',
+            header: 'Status',
+            cell: item => {
+              if (item.status === 'completed') return <StatusIndicator type="success">Completed</StatusIndicator>
+              if (item.status === 'failed') return <StatusIndicator type="error">Failed</StatusIndicator>
+              return <StatusIndicator type="pending">{item.status}</StatusIndicator>
+            },
+            sortingField: 'status',
+            width: 130
+          },
+          {
+            id: 's3Key',
+            header: 'S3 Location',
+            cell: item => <Box variant="small" color="text-status-inactive">{item.s3Key}</Box>,
+            width: 250
+          }
+        ]}
+        items={paginated}
         loading={loading}
-        loadingText="Loading jobs..."
-        selectionType="multi"
-        selectedItems={selectedItems}
-        onSelectionChange={({ detail }) => setSelectedItems(detail.selectedItems)}
+        loadingText="Loading job history..."
         header={
-          <Header
-            variant="h2"
-            counter={`(${filteredJobs.length})`}
-            actions={
-              <SpaceBetween direction="horizontal" size="xs">
-                <Button disabled={selectedItems.length === 0}>
-                  View Details
-                </Button>
-                <Button disabled={selectedItems.length === 0}>
-                  Download Reports
-                </Button>
-                <Button disabled={selectedItems.length === 0}>
-                  Retry Failed
-                </Button>
-              </SpaceBetween>
-            }
-          >
+          <Header variant="h2" counter={`(${filtered.length})`}>
             Job History
           </Header>
         }
         filter={
           <TextFilter
             filteringText={filteringText}
-            filteringPlaceholder="Search jobs..."
-            onChange={({ detail }) => setFilteringText(detail.filteringText)}
+            filteringPlaceholder="Search by ID, instrument, vendor, method..."
+            onChange={({ detail }) => { setFilteringText(detail.filteringText); setCurrentPageIndex(1) }}
           />
         }
         pagination={
           <Pagination
             currentPageIndex={currentPageIndex}
-            pagesCount={Math.ceil(filteredJobs.length / pageSize)}
+            pagesCount={Math.ceil(filtered.length / pageSize)}
             onChange={({ detail }) => setCurrentPageIndex(detail.currentPageIndex)}
           />
         }
-        preferences={
-          <CollectionPreferences
-            title="Preferences"
-            confirmLabel="Confirm"
-            cancelLabel="Cancel"
-            preferences={{
-              pageSize: pageSize
-            }}
-            pageSizePreference={{
-              title: 'Page size',
-              options: [
-                { value: 10, label: '10 jobs' },
-                { value: 20, label: '20 jobs' },
-                { value: 50, label: '50 jobs' }
-              ]
-            }}
-            onConfirm={({ detail }) => setPageSize(detail.pageSize)}
-          />
-        }
         empty={
-          <Box textAlign="center" color="inherit">
-            <Box padding={{ bottom: 's' }} variant="p" color="inherit">
-              No jobs found
+          <Box textAlign="center" color="inherit" padding="l">
+            <Box variant="p" color="inherit">
+              {loading ? 'Loading...' : 'No conversion jobs found. Run a conversion from the Convert tab to see data here.'}
             </Box>
-            <Button>Start a conversion</Button>
           </Box>
         }
       />

@@ -31,11 +31,15 @@ function ControlTowerApp() {
       if (data.jobs) {
         setJobs(data.jobs.map(j => ({
           id: j.conversion_id || j.id,
+          type: j.type || (j.conversion_id?.startsWith('VALIDATE') ? 'validation' : 'conversion'),
           method: j.method || j.conversion_method || j.source || '-',
           status: j.status || 'unknown',
           timestamp: j.timestamp || '-',
-          instrumentType: (j.instrument_type || '-').replace(/_/g, ' '),
-          vendor: j.vendor || '-',
+          instrumentType: (j.instrument_type || j.technique || '-').replace(/_/g, ' '),
+          vendor: j.vendor || j.converter_used || '-',
+          fileName: j.file_name || '-',
+          errorCount: j.error_count ?? '-',
+          warningCount: j.warning_count ?? '-',
           s3Key: j.asm_s3_key || '-',
         })))
       }
@@ -50,9 +54,13 @@ function ControlTowerApp() {
 
   // KPIs
   const totalJobs = jobs.length
-  const completed = jobs.filter(j => j.status === 'completed').length
-  const failed = jobs.filter(j => j.status === 'failed').length
+  const completed = jobs.filter(j => j.status === 'completed' || j.status === 'valid').length
+  const failed = jobs.filter(j => j.status === 'failed' || j.status === 'invalid').length
   const successRate = totalJobs > 0 ? ((completed / totalJobs) * 100).toFixed(1) : 0
+
+  // Type breakdown
+  const conversions = jobs.filter(j => j.type === 'conversion').length
+  const validations = jobs.filter(j => j.type === 'validation').length
 
   // Unique instruments
   const instruments = [...new Set(jobs.map(j => j.instrumentType).filter(t => t !== '-'))]
@@ -119,11 +127,10 @@ function ControlTowerApp() {
             </Box>
           </div>
           <div>
-            <Box variant="awsui-key-label">Conversion Methods</Box>
+            <Box variant="awsui-key-label">Jobs by Type</Box>
             <SpaceBetween size="xs">
-              {Object.entries(methods).map(([m, count]) => (
-                <Box key={m} variant="small">{m}: {count}</Box>
-              ))}
+              <Box variant="small">Conversions: {conversions}</Box>
+              <Box variant="small">Validations: {validations}</Box>
             </SpaceBetween>
           </div>
         </ColumnLayout>
@@ -145,6 +152,13 @@ function ControlTowerApp() {
             cell: item => item.timestamp !== '-' ? new Date(item.timestamp).toLocaleString() : '-',
             sortingField: 'timestamp',
             width: 180
+          },
+          {
+            id: 'type',
+            header: 'Type',
+            cell: item => <Badge color={item.type === 'validation' ? 'grey' : 'blue'}>{item.type}</Badge>,
+            sortingField: 'type',
+            width: 120
           },
           {
             id: 'instrumentType',
@@ -179,12 +193,28 @@ function ControlTowerApp() {
             id: 'status',
             header: 'Status',
             cell: item => {
-              if (item.status === 'completed') return <StatusIndicator type="success">Completed</StatusIndicator>
-              if (item.status === 'failed') return <StatusIndicator type="error">Failed</StatusIndicator>
+              if (item.status === 'completed' || item.status === 'valid') return <StatusIndicator type="success">{item.status}</StatusIndicator>
+              if (item.status === 'failed' || item.status === 'invalid') return <StatusIndicator type="error">{item.status}</StatusIndicator>
               return <StatusIndicator type="pending">{item.status}</StatusIndicator>
             },
             sortingField: 'status',
             width: 130
+          },
+          {
+            id: 'errors',
+            header: 'Errors',
+            cell: item => item.errorCount !== '-' ? (
+              <Box color={item.errorCount > 0 ? 'text-status-error' : 'text-status-success'}>{item.errorCount}</Box>
+            ) : '-',
+            width: 80
+          },
+          {
+            id: 'warnings',
+            header: 'Warnings',
+            cell: item => item.warningCount !== '-' ? (
+              <Box color={item.warningCount > 0 ? 'text-status-warning' : 'text-status-success'}>{item.warningCount}</Box>
+            ) : '-',
+            width: 90
           },
           {
             id: 's3Key',

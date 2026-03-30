@@ -46,7 +46,8 @@ class AutonomousServicesStack(Stack):
             timeout=Duration.seconds(300),
             memory_size=1024,
             environment={
-                "SERVICE_NAME": "DVaaS"
+                "SERVICE_NAME": "DVaaS",
+                "CONVERSION_HISTORY_TABLE": "ConversionHistory"
             }
         )
 
@@ -115,6 +116,9 @@ class AutonomousServicesStack(Stack):
         asm_files_bucket.grant_read_write(ataas_lambda)
         validation_results_bucket.grant_read_write(ataas_lambda)
         conversion_history_table.grant_read_write_data(ataas_lambda)
+
+        # Grant DVaaS write access to store validation jobs
+        conversion_history_table.grant_write_data(dvaas_lambda)
 
         # Multi-Instrument Lambda Function
         multi_instrument_lambda = _lambda.Function(

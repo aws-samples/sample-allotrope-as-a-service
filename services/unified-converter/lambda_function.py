@@ -287,10 +287,13 @@ def store_conversion(conversion_data):
         table.put_item(
             Item={
                 'conversion_id': conversion_id,
+                'type': 'conversion',
                 'timestamp': conversion_data['timestamp'],
                 'method': conversion_data['method'],
+                'converter_used': conversion_data.get('converter_used', '-'),
                 'asm_s3_key': asm_key,
-                'status': 'completed'
+                'status': 'completed',
+                'source': 'unified-converter',
             }
         )
         

@@ -30,6 +30,9 @@ def lambda_handler(event, context):
         # Always use schema-based validation
         result = run_validation(asm_data, validation_level)
 
+        # Store validation job in history
+        store_validation_job(result, asm_file_name)
+
         # Generate certification report if requested
         if generate_report:
             try:
@@ -99,6 +102,32 @@ def run_validation(asm_data, validation_level):
     finally:
         if os.path.exists(temp_path):
             os.unlink(temp_path)
+
+
+def store_validation_job(result, file_name):
+    """Store validation job in ConversionHistory for Control Tower."""
+    try:
+        import boto3
+        table_name = os.environ.get('CONVERSION_HISTORY_TABLE')
+        if not table_name:
+            return
+        table = boto3.resource('dynamodb').Table(table_name)
+        table.put_item(Item={
+            'conversion_id': f"VALIDATE-{datetime.utcnow().strftime('%Y%m%d%H%M%S')}",
+            'type': 'validation',
+            'timestamp': result.get('timestamp', datetime.utcnow().isoformat()),
+            'status': 'valid' if result.get('valid') else 'invalid',
+            'file_name': file_name,
+            'validation_level': result.get('validation_level', 'basic'),
+            'validator': result.get('validator', 'unknown'),
+            'error_count': len(result.get('errors', [])),
+            'warning_count': len(result.get('warnings', [])),
+            'technique': result.get('metrics', {}).get('technique', '-'),
+            'schema_id': result.get('metrics', {}).get('schema_id', '-'),
+            'source': 'dvaas',
+        })
+    except Exception:
+        pass  # Don't fail validation if storage fails
 
 
 def error_response(status_code, message):

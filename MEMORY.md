@@ -5676,3 +5676,64 @@ This fix addresses **Issue #9 (UNC path traceability)** and partially addresses 
 **Current status**: Not implemented. Current Lambda architecture is production-ready and deployed. AgentCore would be a Phase 2 enhancement, not a prerequisite for customer testing.
 
 **Decision**: Park for now. Revisit after pre-production rollout if customer feedback suggests conversational/interactive workflows would add value, or if AWS leadership requests AgentCore integration for the engagement.
+
+
+---
+
+## Session 16 - Pre-Production Fixes & Control Tower (March 30-31, 2026)
+
+### Customer Testing Feedback & Fixes
+
+**ManifestCreator custom instrument fields**: Custom instruments only showed 3 fields (type, manufacturer, model) while standard instruments showed all fields. Fix: show all fields (serial number, software version, location, UNC path, timezone, contact, alias, file format) immediately when custom is selected. Download button disabled until manufacturer + model filled.
+
+**UNC path schema error**: Customer's November file failed with `data system document` `oneOf` error. Root cause: `UNC path` was conditionally included only when config file had `location.unc_path`. The Allotrope schema requires either `(UNC path + file name)` or `(database primary key)`. Fix: always include `UNC path`, defaulting to filename when no path configured.
+
+**PASS/FAIL vs VALID/INVALID terminology**: Customer validated their November ASM and got "INVALID" due to missing traceability. But the ASM was schema-compliant — traceability is a compliance recommendation, not a schema requirement. Verified against official schema: `data source aggregate document` is a property of `calculated data document` but is **NOT in the required array**.
+
+Changes:
+- Traceability check downgraded from ERROR to WARNING
+- Dashboard terminology: "VALID"/"INVALID" → **"PASS"/"FAIL"** (based on schema only)
+- Warnings section renamed to **"Compliance Recommendations"**
+- Side-by-side before/after now triggers on warnings too (was only checking errors)
+- DVaaS stores validation status as `pass`/`fail` in DynamoDB
+
+### Control Tower — Real Data
+
+Replaced all mock data with live DynamoDB queries.
+
+**New `/history` endpoint**: `GET /prod/history` on unified converter API. Scans `ConversionHistory` table, returns up to 100 most recent jobs sorted by timestamp.
+
+**Validation job tracking**: DVaaS now stores every validation to `ConversionHistory` table with:
+- `conversion_id`: `VALIDATE-YYYYMMDDHHMMSS`
+- `type`: `validation`
+- `status`: `pass` or `fail`
+- `file_name`, `validation_level`, `validator`, `technique`, `schema_id`
+- `error_count`, `warning_count`
+
+**Conversion job tracking**: Unified converter now stores with `type: conversion`, `converter_used`. Dashboard passes `store_results: true` on every conversion.
+
+**Control Tower dashboard shows**:
+- Real job data from DynamoDB (60+ existing records + new ones)
+- KPIs: total jobs, success rate, instrument types, jobs by type (conversions vs validations)
+- Type column: blue badge for conversions, grey for validations
+- Errors/Warnings columns for validation jobs
+- Status handles: `completed`, `pass`, `valid` (success) and `failed`, `fail`, `invalid` (error)
+- Searchable, filterable, paginated
+
+### CDK Changes
+- DVaaS Lambda: added `CONVERSION_HISTORY_TABLE` env var + DynamoDB write permission
+- New `ConversionHistoryFunction` Lambda (inline) for `/history` GET endpoint
+- Unified converter `store_conversion` now includes `type: 'conversion'` field
+
+### Git Commits (all pushed to develop)
+- `379331d` — ManifestCreator custom instrument fields fix
+- `9503d0a` — Always include UNC path
+- `c6883f1` — Control Tower real data + /history endpoint + store_results
+- `8b4367c` — Validation job tracking in Control Tower
+- `99c7419` — PASS/FAIL terminology, traceability as warning
+- `2ed7c57` — Side-by-side recommendations for compliance warnings
+
+---
+
+**Last Updated**: March 31, 2026 (Session 16)
+**Status**: Pre-production ready. All customer-reported issues fixed. Control Tower showing real data. Dashboard deployed. GitLab up to date.

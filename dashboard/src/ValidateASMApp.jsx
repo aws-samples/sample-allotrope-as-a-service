@@ -108,7 +108,8 @@ function ValidateASMApp() {
   const getRecommendations = (errors, warnings) => {
     const recommendations = []
 
-    if (errors?.some(e => e.includes('data source') || e.includes('traceability'))) {
+    if (errors?.some(e => e.includes('data source') || e.includes('traceability')) ||
+        warnings?.some(w => w.includes('data source') || w.includes('traceability'))) {
       const snippet = extractAsmSnippet(asmData, 'calculated data aggregate document')
         || extractAsmSnippet(asmData, 'calculated data document')
       recommendations.push({

@@ -5,10 +5,8 @@ import Tabs from '@cloudscape-design/components/tabs'
 import '@cloudscape-design/global-styles/index.css'
 
 // Import all components
-import ValidationApp from './ValidationApp'
 import ValidateASMApp from './ValidateASMApp'
 import ConvertInstrumentApp from './ConvertInstrumentApp'
-import VisualizationApp from './VisualizationApp'
 import ControlTowerApp from './ControlTowerApp'
 import ManifestCreator from './ManifestCreator'
 import InstrumentRegistry from './InstrumentRegistry'
@@ -54,18 +52,6 @@ function CombinedApp() {
       label: 'Converter Management',
       content: <ConverterManagementApp />,
       visible: true
-    },
-    {
-      id: 'validation',
-      label: 'Compare & Certify',
-      content: <ValidationApp />,
-      visible: false
-    },
-    {
-      id: 'visualization',
-      label: 'Data Visualization',
-      content: <VisualizationApp />,
-      visible: false
     }
   ]
 
@@ -90,39 +76,14 @@ function CombinedApp() {
           {
             type: 'button',
             text: 'Documentation',
-            href: 'https://github.com/aws-samples/asm-transformation-service'
-          },
-          {
-            type: 'menu-dropdown',
-            text: 'More Tools',
-            items: [
-              { 
-                id: 'compare', 
-                text: 'Compare & Certify', 
-                href: '#',
-                onFollow: (e) => {
-                  e.preventDefault();
-                  setActiveTab('validation');
-                }
-              },
-              { 
-                id: 'visualization', 
-                text: 'Data Visualization', 
-                href: '#',
-                onFollow: (e) => {
-                  e.preventDefault();
-                  setActiveTab('visualization');
-                }
-              }
-            ]
+            href: '/docs/user-guide.html'
           },
           {
             type: 'menu-dropdown',
             text: 'Resources',
             items: [
-              { id: 'api', text: 'API Documentation', href: '#' },
-              { id: 'support', text: 'Support', href: '#' },
-              { id: 'github', text: 'GitHub', href: 'https://github.com/aws-samples/asm-transformation-service' }
+              { id: 'user-guide', text: 'User Guide', href: '/docs/user-guide.html' },
+              { id: 'api', text: 'API & Technical Guide', href: '/docs/api-guide.html' }
             ]
           }
         ]}

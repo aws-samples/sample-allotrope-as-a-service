@@ -1,0 +1,110 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>ASM Transformation Service - User Guide</title>
+  <style>
+    body { font-family: 'Amazon Ember', 'Helvetica Neue', Arial, sans-serif; max-width: 900px; margin: 0 auto; padding: 40px 20px; color: #16191f; line-height: 1.6; }
+    h1 { color: #0972d3; border-bottom: 2px solid #0972d3; padding-bottom: 8px; }
+    h2 { color: #232f3e; margin-top: 32px; }
+    h3 { color: #545b64; }
+    table { border-collapse: collapse; width: 100%; margin: 16px 0; }
+    th, td { border: 1px solid #d5dbdb; padding: 8px 12px; text-align: left; }
+    th { background: #232f3e; color: white; }
+    tr:nth-child(even) { background: #f2f3f3; }
+    code { background: #f2f3f3; padding: 2px 6px; border-radius: 3px; font-size: 14px; }
+    pre { background: #232f3e; color: #d5dbdb; padding: 16px; border-radius: 4px; overflow-x: auto; }
+    pre code { background: none; color: inherit; }
+    .nav { background: #232f3e; color: white; padding: 12px 20px; margin: -40px -20px 30px; display: flex; justify-content: space-between; align-items: center; }
+    .nav a { color: #0972d3; text-decoration: none; margin-left: 16px; }
+    .nav a:hover { text-decoration: underline; }
+    .btn { display: inline-block; background: #0972d3; color: white; padding: 8px 16px; border-radius: 4px; text-decoration: none; margin: 8px 4px 8px 0; }
+    .btn:hover { background: #065299; }
+    @media print { .nav, .btn { display: none; } body { max-width: 100%; } }
+  </style>
+</head>
+<body>
+  <div class="nav">
+    <strong>ASM Transformation Service</strong>
+    <div>
+      <a href="/docs/user-guide.html">User Guide</a>
+      <a href="/docs/api-guide.html">API Guide</a>
+      <a href="/">Dashboard</a>
+    </div>
+  </div>
+
+  <h1>User Guide</h1>
+  <p><a class="btn" href="javascript:window.print()">Export to PDF</a></p>
+
+  <h2>Overview</h2>
+  <p>The ASM Transformation Service converts laboratory instrument output files to Allotrope Simple Model (ASM) format with built-in validation and data integrity verification.</p>
+
+  <h2>Dashboard Tabs</h2>
+  <table>
+    <tr><th>Tab</th><th>Purpose</th><th>When to Use</th></tr>
+    <tr><td>Validate ASM File</td><td>Validate an existing ASM file against Allotrope standards</td><td>You already have an ASM file and want to check compliance</td></tr>
+    <tr><td>Convert Instrument File</td><td>Convert a raw instrument file to ASM with validation</td><td>You have a raw file and need ASM output</td></tr>
+    <tr><td>Control Tower</td><td>Monitor all conversion and validation jobs</td><td>Operational monitoring and troubleshooting</td></tr>
+    <tr><td>Instrument Config Creator</td><td>Create instrument configuration JSON files</td><td>One-time setup per instrument</td></tr>
+    <tr><td>Instrument Registry</td><td>Browse all supported instruments</td><td>Check if your instrument is supported</td></tr>
+    <tr><td>Converter Management</td><td>Register and approve custom converters</td><td>Adding support for new instruments</td></tr>
+  </table>
+
+  <h2>Getting Started</h2>
+
+  <h3>Step 1: Create an Instrument Config</h3>
+  <p>Go to the <strong>Instrument Config Creator</strong> tab. Select your instrument from the dropdown or choose "Custom Instrument" for unlisted instruments. Fill in your instrument details (serial number, software version, location, source file path, timezone). Download the generated JSON file. You only need to do this once per instrument.</p>
+
+  <h3>Step 2: Convert an Instrument File</h3>
+  <p>Go to the <strong>Convert Instrument File</strong> tab. Upload your raw instrument output file and the instrument config JSON. Click "Convert to ASM &amp; Validate". The service will convert your file, validate the ASM output, and show a data integrity verification report.</p>
+
+  <h3>Step 3: Review Results</h3>
+  <p>After conversion you will see:</p>
+  <ul>
+    <li><strong>Validation status</strong> — VALID or INVALID with error and warning counts</li>
+    <li><strong>Data Integrity Verification</strong> — field-by-field proof that source values were preserved</li>
+    <li><strong>Download options</strong> — ASM file (JSON) and validation report (PDF)</li>
+  </ul>
+
+  <h2>Validating an Existing ASM File</h2>
+  <p>If you already have an ASM file and want to check compliance, use the <strong>Validate ASM File</strong> tab. Upload your ASM JSON file and click "Validate ASM File". The service checks schema compliance, required fields, data traceability, and provides recommendations with side-by-side comparisons showing what to fix.</p>
+
+  <h2>Registering a Custom Converter</h2>
+  <p>If your instrument is not supported or you need a converter that follows your organization's specific design principles:</p>
+  <ol>
+    <li>Build a converter following the <a href="/docs/api-guide.html#converter-requirements">Custom Converter Requirements</a></li>
+    <li>Go to the <strong>Converter Management</strong> tab</li>
+    <li>Click "Register New Converter" and upload your Python file</li>
+    <li>A reviewer will approve or reject the converter</li>
+    <li>Once approved, the converter is automatically used for matching instruments</li>
+  </ol>
+
+  <h2>Instrument Config Fields</h2>
+  <table>
+    <tr><th>Field</th><th>Required</th><th>Description</th></tr>
+    <tr><td>Vendor</td><td>Yes</td><td>Vendor identifier (e.g., NOVABIO_FLEX2)</td></tr>
+    <tr><td>Instrument Type</td><td>Yes</td><td>Type of instrument (e.g., solution_analyzer)</td></tr>
+    <tr><td>Manufacturer</td><td>Yes</td><td>Full manufacturer name</td></tr>
+    <tr><td>Model</td><td>Yes</td><td>Instrument model name</td></tr>
+    <tr><td>File Format</td><td>Yes</td><td>Format of output files (e.g., csv, xml)</td></tr>
+    <tr><td>Serial Number</td><td>No</td><td>Instrument serial number (recommended for regulatory compliance)</td></tr>
+    <tr><td>Software Version</td><td>No</td><td>Instrument software version</td></tr>
+    <tr><td>Location</td><td>No</td><td>Physical location of the instrument</td></tr>
+    <tr><td>Source File Path</td><td>No</td><td>Mount path or UNC path where instrument writes output files</td></tr>
+    <tr><td>Timezone</td><td>No</td><td>IANA timezone for correct timestamp interpretation</td></tr>
+  </table>
+
+  <h2>Data Integrity Verification</h2>
+  <p>When a converter supports it, the service provides field-by-field proof that every value from the source instrument file was preserved exactly in the ASM output. This is critical for FDA 21 CFR Part 11 and EMA Annex 11 compliance.</p>
+  <p>The integrity report shows: source field name, source value, ASM field name, ASM value, unit, and match status for every mapped field.</p>
+
+  <h2>Validation Levels</h2>
+  <table>
+    <tr><th>Level</th><th>Use Case</th><th>Strictness</th></tr>
+    <tr><td>Basic</td><td>Quick structural check</td><td>Low</td></tr>
+    <tr><td>Comprehensive</td><td>Production use</td><td>Medium — recommended for routine use</td></tr>
+    <tr><td>Certification</td><td>Regulatory submission</td><td>High — requires full equipment metadata</td></tr>
+  </table>
+</body>
+</html>

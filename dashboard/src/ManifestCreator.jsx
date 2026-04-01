@@ -45,7 +45,11 @@ export default function ManifestCreator() {
     { label: 'Plate Reader', value: 'plate_reader' },
     { label: 'Spectrophotometer', value: 'spectrophotometer' },
     { label: 'qPCR', value: 'qpcr' },
-    { label: 'dPCR', value: 'dpcr' }
+    { label: 'dPCR', value: 'dpcr' },
+    { label: 'Chromatography', value: 'chromatography' },
+    { label: 'Endotoxin Testing', value: 'endotoxin_testing' },
+    { label: 'Electrophoresis', value: 'electrophoresis' },
+    { label: 'Light Obscuration', value: 'light_obscuration' }
   ]
 
   const fileFormatOptions = [
@@ -53,14 +57,16 @@ export default function ManifestCreator() {
     { label: 'TSV', value: 'tsv' },
     { label: 'XML', value: 'xml' },
     { label: 'JSON', value: 'json' },
-    { label: 'XLSX', value: 'xlsx' }
+    { label: 'XLSX', value: 'xlsx' },
+    { label: 'XLS', value: 'xls' },
+    { label: 'TXT', value: 'txt' },
+    { label: 'DAT', value: 'dat' },
+    { label: 'ASC', value: 'asc' }
   ]
 
   const handleInstrumentSelect = (option) => {
-    console.log('Selected:', option)
     setSelectedInstrument(option)
     const custom = option.value === 'CUSTOM'
-    console.log('Is custom:', custom)
     setIsCustom(custom)
   }
 
@@ -98,7 +104,6 @@ export default function ManifestCreator() {
     URL.revokeObjectURL(url)
   }
 
-  console.log('Rendering - isCustom:', isCustom, 'selectedInstrument:', selectedInstrument)
 
   return (
     <SpaceBetween size="l">

@@ -1,4 +1,4 @@
-import { useState } from 'react'
+import { useState, useEffect } from 'react'
 import Container from '@cloudscape-design/components/container'
 import Header from '@cloudscape-design/components/header'
 import SpaceBetween from '@cloudscape-design/components/space-between'
@@ -11,9 +11,11 @@ import Button from '@cloudscape-design/components/button'
 import Modal from '@cloudscape-design/components/modal'
 import FormField from '@cloudscape-design/components/form-field'
 import Alert from '@cloudscape-design/components/alert'
+import { ENDPOINTS } from './config'
 import instrumentsData from './data/instruments.json'
 
 export default function InstrumentRegistry() {
+  const [allInstruments, setAllInstruments] = useState(instrumentsData)
   const [searchTerm, setSearchTerm] = useState('')
   const [typeFilter, setTypeFilter] = useState({ label: 'All Types', value: 'all' })
   const [selectedInstrument, setSelectedInstrument] = useState(null)
@@ -32,10 +34,42 @@ export default function InstrumentRegistry() {
     { label: 'Plate Reader', value: 'plate_reader' },
     { label: 'Spectrophotometer', value: 'spectrophotometer' },
     { label: 'qPCR', value: 'qpcr' },
-    { label: 'dPCR', value: 'dpcr' }
+    { label: 'dPCR', value: 'dpcr' },
+    { label: 'Chromatography', value: 'chromatography' },
+    { label: 'Endotoxin Testing', value: 'endotoxin_testing' },
+    { label: 'Electrophoresis', value: 'electrophoresis' },
+    { label: 'Light Obscuration', value: 'light_obscuration' }
   ]
 
-  const filteredInstruments = instrumentsData.filter(inst => {
+  useEffect(() => {
+    const fetchRegistered = async () => {
+      try {
+        const resp = await fetch(`${ENDPOINTS.customConverter}/list`)
+        const data = await resp.json()
+        const registered = (data.converters || []).map(c => ({
+          canonical_id: `registered-${c.converter_id}`,
+          vendor_id: c.vendor || '',
+          name: c.model || c.converter_id,
+          manufacturer: c.vendor || '',
+          instrument_type: c.instrument_type || 'unknown',
+          allotropy_supported: false,
+          converter_type: 'custom',
+          aliases: [],
+          registry_status: c.status,
+          source: 'registered'
+        }))
+        // Merge: static instruments + registered (avoid duplicates by vendor_id)
+        const staticIds = new Set(instrumentsData.map(i => i.vendor_id))
+        const unique = registered.filter(r => !staticIds.has(r.vendor_id))
+        setAllInstruments([...instrumentsData, ...unique])
+      } catch (e) {
+        // If fetch fails, just use static data
+      }
+    }
+    fetchRegistered()
+  }, [])
+
+  const filteredInstruments = allInstruments.filter(inst => {
     const matchesSearch = searchTerm === '' || 
       inst.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
       inst.manufacturer.toLowerCase().includes(searchTerm.toLowerCase()) ||
@@ -120,9 +154,17 @@ export default function InstrumentRegistry() {
               {
                 id: 'converter',
                 header: 'Converter Type',
-                cell: item => item.allotropy_supported 
-                  ? <Badge color="green">Allotropy</Badge>
-                  : <Badge color="blue">Custom</Badge>
+                cell: item => {
+                  if (item.source === 'registered') {
+                    return <SpaceBetween direction="horizontal" size="xs">
+                      <Badge color="blue">Custom</Badge>
+                      <Badge color={item.registry_status === 'APPROVED' ? 'green' : 'grey'}>{item.registry_status}</Badge>
+                    </SpaceBetween>
+                  }
+                  return item.allotropy_supported 
+                    ? <Badge color="green">Allotropy</Badge>
+                    : <Badge color="blue">Custom</Badge>
+                }
               }
             ]}
             items={filteredInstruments}
@@ -191,9 +233,6 @@ export default function InstrumentRegistry() {
             <SpaceBetween direction="horizontal" size="xs">
               <Button onClick={() => setShowAliasModal(true)}>
                 Add Your Alias
-              </Button>
-              <Button variant="primary">
-                Create Manifest
               </Button>
             </SpaceBetween>
           </SpaceBetween>

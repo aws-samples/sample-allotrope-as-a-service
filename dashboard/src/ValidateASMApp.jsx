@@ -10,9 +10,10 @@ import Alert from '@cloudscape-design/components/alert'
 import ProgressBar from '@cloudscape-design/components/progress-bar'
 import ColumnLayout from '@cloudscape-design/components/column-layout'
 import ExpandableSection from '@cloudscape-design/components/expandable-section'
+import FormField from '@cloudscape-design/components/form-field'
+import Select from '@cloudscape-design/components/select'
 
-// Service endpoint
-const VALIDATE_ENDPOINT = 'https://4ndgjn16zd.execute-api.us-east-1.amazonaws.com/prod/validate'
+import { ENDPOINTS } from './config'
 
 function ValidateASMApp() {
   const [file, setFile] = useState([])
@@ -21,6 +22,7 @@ function ValidateASMApp() {
   const [validation, setValidation] = useState(null)
   const [error, setError] = useState(null)
   const [asmData, setAsmData] = useState(null)
+  const [validationLevel, setValidationLevel] = useState({ label: 'Comprehensive', value: 'comprehensive', description: 'Schema + supplementary checks (recommended)' })
 
   const handleValidate = async () => {
     if (!file.length) return
@@ -40,19 +42,18 @@ function ValidateASMApp() {
       setProgress(50)
 
       // Validate ASM
-      const response = await fetch(VALIDATE_ENDPOINT, {
+      const response = await fetch(`${ENDPOINTS.dvaas}/validate`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
           asm_data: asmData,
-          validation_level: 'comprehensive',
+          validation_level: validationLevel.value,
           generate_report: true,
           file_name: file[0].name
         })
       })
       
       const result = await response.json()
-      console.log('Validation result:', result)
       
       if (!response.ok) {
         throw new Error(result.error || 'Validation failed')
@@ -235,6 +236,21 @@ function ValidateASMApp() {
             constraintText="ASM file in JSON format (.json)"
             accept=".json"
           />
+
+          <FormField
+            label="Validation Level"
+            description="Choose the strictness of validation"
+          >
+            <Select
+              selectedOption={validationLevel}
+              onChange={({ detail }) => setValidationLevel(detail.selectedOption)}
+              options={[
+                { label: 'Basic', value: 'basic', description: 'Schema validation only' },
+                { label: 'Comprehensive', value: 'comprehensive', description: 'Schema + supplementary checks (recommended)' },
+                { label: 'Certification', value: 'certification', description: 'Strict mode — warnings become errors, issues certificate if passed' }
+              ]}
+            />
+          </FormField>
           
           <Button
             variant="primary"

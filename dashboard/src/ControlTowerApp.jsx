@@ -12,7 +12,7 @@ import TextFilter from '@cloudscape-design/components/text-filter'
 import Pagination from '@cloudscape-design/components/pagination'
 import Alert from '@cloudscape-design/components/alert'
 
-const HISTORY_ENDPOINT = 'https://tqzatn5bse.execute-api.us-east-1.amazonaws.com/prod/history'
+import { ENDPOINTS } from './config'
 
 function ControlTowerApp() {
   const [jobs, setJobs] = useState([])
@@ -26,7 +26,7 @@ function ControlTowerApp() {
     setLoading(true)
     setError(null)
     try {
-      const resp = await fetch(HISTORY_ENDPOINT)
+      const resp = await fetch(`${ENDPOINTS.unifiedConverter}/history`)
       const data = await resp.json()
       if (data.jobs) {
         setJobs(data.jobs.map(j => ({

@@ -1,0 +1,27 @@
+DVaaS (Validation Service) — checks if the ASM output is structurally correct:
+
+Does it follow the Allotrope schema?
+
+Are required fields present (manifest, measurements, sample documents)?
+
+Are measurement identifiers UUIDs?
+
+Is there data source traceability for calculated values?
+
+It knows nothing about the source file — it only sees the ASM
+
+Data Integrity Verification (field_mapping) — checks if the ASM output matches the source file:
+
+Was pH 7.183 in the CSV preserved as 7.183 in the ASM?
+
+Was every column from the instrument file carried over?
+
+Was anything silently dropped, rounded, or altered during conversion?
+
+It compares source values to ASM values field by field
+
+In short:
+
+DVaaS answers: "Is this valid ASM?"
+
+field_mapping answers: "Is this faithful ASM?"

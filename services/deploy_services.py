@@ -414,22 +414,27 @@ def lambda_handler(event, context):
         body = json.loads(event['body']) if isinstance(event['body'], str) else event['body']
         converter_id = body.get('converter_id')
         approved_by = body.get('approved_by', 'system')
+        status = body.get('status', 'APPROVED')
+        comments = body.get('comments', '')
         
         if not converter_id:
             return {'statusCode': 400, 'body': json.dumps({'error': 'converter_id required'})}
         
+        if status not in ('APPROVED', 'REJECTED'):
+            return {'statusCode': 400, 'body': json.dumps({'error': 'status must be APPROVED or REJECTED'})}
+        
         table = dynamodb.Table(os.environ['CONVERTER_REGISTRY_TABLE'])
         table.update_item(
             Key={'converter_id': converter_id},
-            UpdateExpression='SET #status = :status, approved_by = :approved_by',
+            UpdateExpression='SET #status = :status, approved_by = :approved_by, comments = :comments',
             ExpressionAttributeNames={'#status': 'status'},
-            ExpressionAttributeValues={':status': 'APPROVED', ':approved_by': approved_by}
+            ExpressionAttributeValues={':status': status, ':approved_by': approved_by, ':comments': comments}
         )
         
         return {
             'statusCode': 200,
             'headers': {'Access-Control-Allow-Origin': '*'},
-            'body': json.dumps({'converter_id': converter_id, 'status': 'APPROVED'})
+            'body': json.dumps({'converter_id': converter_id, 'status': status})
         }
     except Exception as e:
         return {'statusCode': 500, 'body': json.dumps({'error': str(e)})}

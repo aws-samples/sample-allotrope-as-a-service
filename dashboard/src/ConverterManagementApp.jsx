@@ -17,7 +17,9 @@ import {
   StatusIndicator
 } from '@cloudscape-design/components';
 
-const CUSTOM_CONVERTER_API = 'https://tfv79s08rl.execute-api.us-east-1.amazonaws.com/prod';
+import { ENDPOINTS } from './config';
+
+const CUSTOM_CONVERTER_API = ENDPOINTS.customConverter;
 
 export default function ConverterManagementApp() {
   const [converters, setConverters] = useState([]);
@@ -41,6 +43,7 @@ export default function ConverterManagementApp() {
   // Approval form state
   const [approvalComments, setApprovalComments] = useState('');
   const [approvalDecision, setApprovalDecision] = useState('approve');
+  const [reviewerEmail, setReviewerEmail] = useState('');
 
   const loadConverters = async () => {
     setLoading(true);
@@ -73,15 +76,14 @@ export default function ConverterManagementApp() {
       
       // Check for convert function
       if (!content.includes('def convert')) {
-        errors.push('Converter must contain a convert function');
+        errors.push('Converter must contain a "convert" function');
       } else {
         // Check function signature
         const convertMatch = content.match(/def convert\s*\(([^)]*)\)/);
         if (convertMatch) {
           const params = convertMatch[1];
-          // Warn if it looks like CLI-style (file paths) instead of API-style (file content)
           if (params.includes('input_path') || params.includes('output_path')) {
-            warnings.push('Function signature looks like CLI-style (input_path, output_path). API expects convert(file_content) or similar.');
+            errors.push('CLI-style signature detected (input_path/output_path). Must use convert(file_content) — see Custom Converter Requirements');
           }
           if (!params.includes('content') && !params.includes('data') && !params.includes('text')) {
             warnings.push('Function should accept file content as parameter (e.g., file_content, data, text)');
@@ -89,12 +91,53 @@ export default function ConverterManagementApp() {
         }
       }
       
+      // Security: dangerous functions
       const dangerousPatterns = ['eval(', 'exec(', '__import__', 'os.system', 'subprocess'];
       for (const pattern of dangerousPatterns) {
         if (content.includes(pattern)) {
           errors.push(`Security risk: Code contains ${pattern}`);
         }
       }
+
+      // Security: filesystem access
+      const fsPatterns = ["open(", "Path(", "os.path", ".read_text", ".write_text", ".read_bytes", ".write_bytes"];
+      for (const pattern of fsPatterns) {
+        if (content.includes(pattern)) {
+          errors.push(`Filesystem access not allowed: Code contains ${pattern} — converter must use file_content string parameter, not read files directly`);
+          break;
+        }
+      }
+
+      // Security: network calls
+      const netPatterns = ["requests.", "urllib", "http.client", "socket."];
+      for (const pattern of netPatterns) {
+        if (content.includes(pattern)) {
+          errors.push(`Network access not allowed: Code contains ${pattern}`);
+          break;
+        }
+      }
+
+      // Return format: check for success/asm_output/field_mapping
+      if (!content.includes('success')) {
+        warnings.push('Return format should include "success" key (True/False) — see Custom Converter Requirements');
+      }
+      if (!content.includes('asm_output')) {
+        warnings.push('Return format should include "asm_output" key with the ASM JSON — see Custom Converter Requirements');
+      }
+      if (!content.includes('field_mapping')) {
+        warnings.push('Return format should include "field_mapping" array for Data Integrity Verification — see Custom Converter Requirements');
+      }
+
+      // ASM structure: check for manifest
+      if (!content.includes('asm.manifest')) {
+        warnings.push('ASM output should include "$asm.manifest" with the Allotrope manifest URL');
+      }
+
+      // Best practices: UUID for measurement identifiers
+      if (!content.includes('uuid')) {
+        warnings.push('Measurement identifiers should use UUID v4 — consider importing uuid module');
+      }
+
     } catch (err) {
       errors.push('Unable to read file content');
     }
@@ -120,7 +163,6 @@ export default function ConverterManagementApp() {
       
       if (errors.length > 0) {
         setValidationErrors(errors);
-        setAlert({ type: 'error', message: 'Validation failed. Please fix the issues.' });
         setLoading(false);
         return;
       }
@@ -172,7 +214,7 @@ export default function ConverterManagementApp() {
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
           converter_id: selectedConverter.converter_id,
-          approved_by: 'dashboard-user@example.com',
+          approved_by: reviewerEmail,
           comments: approvalComments,
           status: decision === 'approve' ? 'APPROVED' : 'REJECTED'
         })
@@ -187,6 +229,7 @@ export default function ConverterManagementApp() {
       });
       setShowApprovalModal(false);
       setApprovalComments('');
+      setReviewerEmail('');
       loadConverters();
     } catch (error) {
       setAlert({ type: 'error', message: `Action failed: ${error.message}` });
@@ -343,7 +386,6 @@ export default function ConverterManagementApp() {
             To review the converter code offline:
             <ol>
               <li>Open AWS Console → S3</li>
-              <li>Navigate to bucket: <code>custom-converters-550129454303-us-east-1</code></li>
               <li>Download: <code>{selectedConverter?.s3_location || 'converters/' + selectedConverter?.converter_id + '.py'}</code></li>
             </ol>
           </Alert>
@@ -374,6 +416,7 @@ export default function ConverterManagementApp() {
               <Button
                 onClick={() => approveConverter('reject')}
                 loading={loading}
+                disabled={!reviewerEmail}
               >
                 Reject
               </Button>
@@ -381,6 +424,7 @@ export default function ConverterManagementApp() {
                 variant="primary"
                 onClick={() => approveConverter('approve')}
                 loading={loading}
+                disabled={!reviewerEmail}
               >
                 Approve
               </Button>
@@ -413,6 +457,19 @@ export default function ConverterManagementApp() {
           </Box>
 
           <FormField
+            label="Your Email"
+            description="Required for audit trail — identifies who approved or rejected this converter"
+            constraintText="Required"
+          >
+            <Input
+              value={reviewerEmail}
+              onChange={({ detail }) => setReviewerEmail(detail.value)}
+              placeholder="reviewer@company.com"
+              type="email"
+            />
+          </FormField>
+
+          <FormField
             label="Review Comments"
             description="Add comments about your review (required for rejection, optional for approval)"
           >
@@ -433,6 +490,7 @@ export default function ConverterManagementApp() {
           setShowRegisterModal(false);
           setValidationErrors([]);
           setValidationWarnings([]);
+          setAlert(null);
         }}
         header="Register New Converter"
         size="large"
@@ -445,6 +503,7 @@ export default function ConverterManagementApp() {
                   setShowRegisterModal(false);
                   setValidationErrors([]);
                   setValidationWarnings([]);
+                  setAlert(null);
                 }}
               >
                 Cancel
@@ -511,8 +570,16 @@ export default function ConverterManagementApp() {
                 { value: 'plate_reader', label: 'Plate Reader' },
                 { value: 'cell_counter', label: 'Cell Counter' },
                 { value: 'spectrophotometer', label: 'Spectrophotometer' },
-                { value: 'chromatography', label: 'Chromatography' }
+                { value: 'chromatography', label: 'Chromatography' },
+                { value: 'qpcr', label: 'qPCR' },
+                { value: 'dpcr', label: 'dPCR' },
+                { value: 'endotoxin_testing', label: 'Endotoxin Testing' },
+                { value: 'electrophoresis', label: 'Electrophoresis' },
+                { value: 'light_obscuration', label: 'Light Obscuration' }
               ]}
+              filteringType="auto"
+              placeholder="Select or type instrument type"
+              empty="No match found — type your own"
             />
           </FormField>
 

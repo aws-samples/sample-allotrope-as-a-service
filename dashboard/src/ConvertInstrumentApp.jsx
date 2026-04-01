@@ -13,11 +13,7 @@ import ExpandableSection from '@cloudscape-design/components/expandable-section'
 import Table from '@cloudscape-design/components/table'
 import StatusIndicator from '@cloudscape-design/components/status-indicator'
 
-// Service endpoints
-const ENDPOINTS = {
-  convert: 'https://tqzatn5bse.execute-api.us-east-1.amazonaws.com/prod/convert',
-  validate: 'https://4ndgjn16zd.execute-api.us-east-1.amazonaws.com/prod/validate'
-}
+import { ENDPOINTS } from './config'
 
 function ConvertInstrumentApp() {
   const [instrumentFile, setInstrumentFile] = useState([])
@@ -63,16 +59,17 @@ function ConvertInstrumentApp() {
     // Valid instrument types
     const validTypes = [
       'solution_analyzer', 'cell_counter', 'plate_reader', 
-      'spectrophotometer', 'qpcr', 'dpcr', 'chromatography'
+      'spectrophotometer', 'qpcr', 'dpcr', 'chromatography',
+      'endotoxin_testing', 'electrophoresis', 'light_obscuration'
     ]
     if (config.instrument_type && !validTypes.includes(config.instrument_type)) {
       warnings.push(`Instrument type "${config.instrument_type}" may not be recognized. Valid types: ${validTypes.join(', ')}`)
     }
     
     // Valid file formats
-    const validFormats = ['csv', 'tsv', 'xml', 'json', 'xlsx', 'txt']
+    const validFormats = ['csv', 'tsv', 'xml', 'json', 'xlsx', 'txt', 'xls', 'dat', 'raw', 'bin', 'asc']
     if (config.file_format && !validFormats.includes(config.file_format.toLowerCase())) {
-      warnings.push(`File format "${config.file_format}" may not be supported. Common formats: ${validFormats.join(', ')}`)
+      warnings.push(`File format "${config.file_format}" is not a common format. Ensure your custom converter supports it.`)
     }
     
     return { errors, warnings }
@@ -132,11 +129,8 @@ function ConvertInstrumentApp() {
         console.warn('Config file warnings:', validation.warnings)
       }
       
-      setProgress(30)
-
       // Step 1: Convert instrument file to ASM
-      console.log('Converting instrument file...')
-      const convertResponse = await fetch(ENDPOINTS.convert, {
+      const convertResponse = await fetch(`${ENDPOINTS.unifiedConverter}/convert`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
@@ -155,7 +149,6 @@ function ConvertInstrumentApp() {
       }
       
       const convertResult = await convertResponse.json()
-      console.log('Convert result:', convertResult)
       
       if (!convertResponse.ok) {
         throw new Error(convertResult.error || 'Conversion failed')
@@ -173,8 +166,7 @@ function ConvertInstrumentApp() {
       setProgress(60)
 
       // Step 2: Validate the generated ASM
-      console.log('Validating ASM output...')
-      const validateResponse = await fetch(ENDPOINTS.validate, {
+      const validateResponse = await fetch(`${ENDPOINTS.dvaas}/validate`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
@@ -187,7 +179,6 @@ function ConvertInstrumentApp() {
       })
       
       const validateResult = await validateResponse.json()
-      console.log('Validation result:', validateResult)
       
       if (!validateResponse.ok) {
         throw new Error(validateResult.error || 'Validation failed')
@@ -322,7 +313,7 @@ function ConvertInstrumentApp() {
               showFileSize
               showFileThumbnail
               tokenLimit={1}
-              constraintText="Raw instrument output file (CSV, XML, JSON, TXT)"
+              constraintText="Raw instrument output file"
             />
           </div>
 

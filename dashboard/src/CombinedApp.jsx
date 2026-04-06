@@ -65,7 +65,7 @@ function CombinedApp() {
       id: 'generate-converter',
       label: 'AI Converter Generator',
       content: <GenerateConverterApp />,
-      visible: true
+      visible: false
     }
   ]
 
@@ -91,6 +91,16 @@ function CombinedApp() {
             type: 'button',
             text: 'Documentation',
             href: '/docs/user-guide.html'
+          },
+          {
+            type: 'menu-dropdown',
+            text: 'Tools',
+            onItemClick: ({ detail }) => {
+              if (detail.id === 'ai-generator') setActiveTab('generate-converter')
+            },
+            items: [
+              { id: 'ai-generator', text: 'AI Converter Generator' }
+            ]
           },
           {
             type: 'menu-dropdown',

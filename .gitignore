@@ -59,7 +59,7 @@ tmp/
 # OS
 Thumbs.db
 
-.kiro/steering
+.kiro/
 
 # Backups and snapshots
 *.zip

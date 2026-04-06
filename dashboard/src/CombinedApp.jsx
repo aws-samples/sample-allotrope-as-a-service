@@ -2,6 +2,8 @@ import { useState } from 'react'
 import AppLayout from '@cloudscape-design/components/app-layout'
 import TopNavigation from '@cloudscape-design/components/top-navigation'
 import Tabs from '@cloudscape-design/components/tabs'
+import Button from '@cloudscape-design/components/button'
+import SpaceBetween from '@cloudscape-design/components/space-between'
 import '@cloudscape-design/global-styles/index.css'
 
 // Import all components
@@ -81,6 +83,7 @@ function CombinedApp() {
         identity={{
           href: '#',
           title: 'ASM Transformation Service',
+          onFollow: (e) => { e.preventDefault(); setActiveTab('validate-asm') },
           logo: {
             src: 'data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iNDAiIGhlaWdodD0iNDAiIHZpZXdCb3g9IjAgMCA0MCA0MCIgeG1sbnM9Imh0dHA6Ly93d3cudzMub3JnLzIwMDAvc3ZnIj48cmVjdCB3aWR0aD0iNDAiIGhlaWdodD0iNDAiIGZpbGw9IiMxYTU0OTAiLz48dGV4dCB4PSI1MCUiIHk9IjUwJSIgZm9udC1mYW1pbHk9IkFyaWFsIiBmb250LXNpemU9IjI0IiBmaWxsPSJ3aGl0ZSIgdGV4dC1hbmNob3I9Im1pZGRsZSIgZHk9Ii4zZW0iPkE8L3RleHQ+PC9zdmc+',
             alt: 'ASM'
@@ -124,7 +127,10 @@ function CombinedApp() {
               tabs={visibleTabs}
             />
           ) : (
-            currentTab?.content
+            <SpaceBetween size="l">
+              <Button variant="link" iconName="arrow-left" onClick={() => setActiveTab('validate-asm')}>Back to Dashboard</Button>
+              {currentTab?.content}
+            </SpaceBetween>
           )
         }
       />

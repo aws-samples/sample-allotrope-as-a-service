@@ -83,3 +83,87 @@ generate_*.py
 
 # Archived components
 *.archived
+
+# Removed from repo (Session 21 cleanup)
+# Obsolete folders
+approval-system/
+claude/
+deploy/
+greengrass/
+src/
+storage-service/
+strands-tutorial/
+generated_converters/
+logs/
+
+# Root-level scripts and test files
+test_*.py
+test_*.json
+test_*.txt
+test-strands-*
+*_converter.py
+*_test_data_*.py
+*_test_data_*.json
+*_test_data_*.csv
+
+# Root-level output/temp files
+*.pdf
+*.jpg
+*.txt
+!README.md
+!DEPLOYMENT.md
+converted_output.json
+unified_response.json
+unified_test_payload.json
+endoscan_validation_result.json
+ataas_ai_test_result.json
+
+# Obsolete markdown (kept locally, removed from repo)
+ALLOTROPY-INTEGRATION.md
+ARCHITECTURE*.md
+CERTIFICATION-REPORT-FEATURE.md
+CONVERSION-EXPLANATION.md
+CUSTOM-CONVERTER-*.md
+CUSTOMER-*.md
+DEMO-GUIDE.md
+DEPLOYMENT-COMPLETE.md
+DVAAS-FIX-SUMMARY.md
+GIT-SETUP.md
+HUMAN-IN-THE-LOOP-INTEGRATION.md
+IMPLEMENTATION-SUMMARY.md
+INSTRUMENT-*.md
+MANIFEST-*.md
+MERCK-*.md
+NOVA-FLEX2-*.md
+PHASE*-COMPLETE.md
+PRE-PUSH-CHECKLIST.md
+PRESS-RELEASE.md
+PROJECT-STRUCTURE.md
+Project-status-report-*.md
+SUPPORTED-INSTRUMENTS.md
+SYSTEM-STATUS.md
+USER-GUIDE*.md
+todo-list.md
+complete-system.md
+format-detection-analysis.md
+how-*.md
+allotropy-utility-*.md
+asm-data-source-*.md
+aws-asm-generator-*.md
+claude-validate-*.md
+custom-converter-*.md
+
+# Root-level misc
+package.json
+tsconfig.json
+*.csv
+analyze_*.py
+compare_*.py
+convert_*.py
+demo_*.py
+explain_*.py
+extract_*.py
+fetch_*.py
+merck_*.py
+run_*.py
+verify_*.py

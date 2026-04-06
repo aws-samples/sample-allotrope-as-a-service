@@ -92,6 +92,18 @@ class AutonomousServicesStack(Stack):
             removal_policy=RemovalPolicy.DESTROY
         )
 
+        # Validation Rule Sets table
+        rule_sets_table = dynamodb.Table(
+            self, "ValidationRuleSets",
+            table_name="ValidationRuleSets",
+            partition_key=dynamodb.Attribute(
+                name="rule_set_id",
+                type=dynamodb.AttributeType.STRING
+            ),
+            billing_mode=dynamodb.BillingMode.PAY_PER_REQUEST,
+            removal_policy=RemovalPolicy.DESTROY
+        )
+
         # Custom Converter Registry table
         converter_registry_table = dynamodb.Table(
             self, "CustomConverterRegistry",
@@ -533,6 +545,122 @@ def lambda_handler(event, context):
             apigateway.LambdaIntegration(list_lambda),
             method_responses=[{"statusCode": "200"}]
         )
+
+        # --- Validation Rule Sets CRUD ---
+        rule_sets_resource = custom_converter_api.root.add_resource("rule-sets")
+
+        # Save/update rule set
+        save_rule_set_lambda = _lambda.Function(
+            self, "SaveRuleSetFunction",
+            runtime=_lambda.Runtime.PYTHON_3_12,
+            handler="index.lambda_handler",
+            code=_lambda.Code.from_inline("""
+import json
+import boto3
+import os
+from datetime import datetime
+from decimal import Decimal
+
+dynamodb = boto3.resource('dynamodb')
+
+def lambda_handler(event, context):
+    try:
+        body = json.loads(event['body']) if isinstance(event['body'], str) else event['body']
+        rule_set_id = body.get('rule_set_id')
+        if not rule_set_id:
+            return {'statusCode': 400, 'headers': {'Access-Control-Allow-Origin': '*'}, 'body': json.dumps({'error': 'rule_set_id required'})}
+        body['updated_at'] = datetime.utcnow().isoformat()
+        # DynamoDB doesn't accept float, convert to Decimal
+        item = json.loads(json.dumps(body), parse_float=Decimal)
+        table = dynamodb.Table(os.environ['RULE_SETS_TABLE'])
+        table.put_item(Item=item)
+        return {
+            'statusCode': 200,
+            'headers': {'Access-Control-Allow-Origin': '*'},
+            'body': json.dumps({'rule_set_id': rule_set_id, 'status': 'saved'})
+        }
+    except Exception as e:
+        return {'statusCode': 500, 'headers': {'Access-Control-Allow-Origin': '*'}, 'body': json.dumps({'error': str(e)})}
+"""),
+            timeout=Duration.seconds(30),
+            memory_size=256,
+            environment={"RULE_SETS_TABLE": rule_sets_table.table_name}
+        )
+        rule_sets_table.grant_write_data(save_rule_set_lambda)
+        rule_sets_resource.add_method("PUT", apigateway.LambdaIntegration(save_rule_set_lambda), method_responses=[{"statusCode": "200"}])
+
+        # List rule sets
+        list_rule_sets_lambda = _lambda.Function(
+            self, "ListRuleSetsFunction",
+            runtime=_lambda.Runtime.PYTHON_3_12,
+            handler="index.lambda_handler",
+            code=_lambda.Code.from_inline("""
+import json
+import boto3
+import os
+from decimal import Decimal
+
+dynamodb = boto3.resource('dynamodb')
+
+class DecimalEncoder(json.JSONEncoder):
+    def default(self, o):
+        if isinstance(o, Decimal):
+            return float(o)
+        return super().default(o)
+
+def lambda_handler(event, context):
+    try:
+        table = dynamodb.Table(os.environ['RULE_SETS_TABLE'])
+        response = table.scan()
+        return {
+            'statusCode': 200,
+            'headers': {'Access-Control-Allow-Origin': '*'},
+            'body': json.dumps({'rule_sets': response.get('Items', [])}, cls=DecimalEncoder)
+        }
+    except Exception as e:
+        return {'statusCode': 500, 'headers': {'Access-Control-Allow-Origin': '*'}, 'body': json.dumps({'error': str(e)})}
+"""),
+            timeout=Duration.seconds(30),
+            memory_size=256,
+            environment={"RULE_SETS_TABLE": rule_sets_table.table_name}
+        )
+        rule_sets_table.grant_read_data(list_rule_sets_lambda)
+        rule_sets_resource.add_method("GET", apigateway.LambdaIntegration(list_rule_sets_lambda), method_responses=[{"statusCode": "200"}])
+
+        # Delete rule set
+        delete_rule_set_lambda = _lambda.Function(
+            self, "DeleteRuleSetFunction",
+            runtime=_lambda.Runtime.PYTHON_3_12,
+            handler="index.lambda_handler",
+            code=_lambda.Code.from_inline("""
+import json
+import boto3
+import os
+
+dynamodb = boto3.resource('dynamodb')
+
+def lambda_handler(event, context):
+    try:
+        body = json.loads(event['body']) if isinstance(event['body'], str) else event['body']
+        rule_set_id = body.get('rule_set_id')
+        if not rule_set_id:
+            return {'statusCode': 400, 'headers': {'Access-Control-Allow-Origin': '*'}, 'body': json.dumps({'error': 'rule_set_id required'})}
+        table = dynamodb.Table(os.environ['RULE_SETS_TABLE'])
+        table.delete_item(Key={'rule_set_id': rule_set_id})
+        return {
+            'statusCode': 200,
+            'headers': {'Access-Control-Allow-Origin': '*'},
+            'body': json.dumps({'rule_set_id': rule_set_id, 'status': 'deleted'})
+        }
+    except Exception as e:
+        return {'statusCode': 500, 'headers': {'Access-Control-Allow-Origin': '*'}, 'body': json.dumps({'error': str(e)})}
+"""),
+            timeout=Duration.seconds(30),
+            memory_size=256,
+            environment={"RULE_SETS_TABLE": rule_sets_table.table_name}
+        )
+        rule_sets_table.grant_write_data(delete_rule_set_lambda)
+        rule_sets_resource.add_method("DELETE", apigateway.LambdaIntegration(delete_rule_set_lambda), method_responses=[{"statusCode": "200"}])
 
         # Lambda Layer for allotropy + dependencies
         allotropy_layer = _lambda.LayerVersion(

@@ -1,4 +1,4 @@
-import { useState } from 'react'
+import { useState, useEffect } from 'react'
 import Container from '@cloudscape-design/components/container'
 import Header from '@cloudscape-design/components/header'
 import SpaceBetween from '@cloudscape-design/components/space-between'
@@ -24,6 +24,16 @@ function ValidateASMApp() {
   const [asmData, setAsmData] = useState(null)
   const [validationLevel, setValidationLevel] = useState({ label: 'Comprehensive', value: 'comprehensive', description: 'Schema + supplementary checks (recommended)' })
 
+  const [enabledRuleSets, setEnabledRuleSets] = useState([])
+
+  // Fetch enabled rule sets from API on mount
+  useEffect(() => {
+    fetch(`${ENDPOINTS.customConverter}/rule-sets`)
+      .then(r => r.json())
+      .then(data => setEnabledRuleSets((data.rule_sets || []).filter(rs => rs.enabled)))
+      .catch(() => {})
+  }, [])
+
   const handleValidate = async () => {
     if (!file.length) return
     
@@ -41,9 +51,8 @@ function ValidateASMApp() {
       setAsmData(asmData)
       setProgress(50)
 
-      // Get enabled rule sets from localStorage
-      const savedRuleSets = JSON.parse(localStorage.getItem('validationRuleSets') || '[]')
-      const enabledRuleSets = savedRuleSets.filter(rs => rs.enabled)
+      // Use rule sets fetched from API
+      const enabledForRequest = enabledRuleSets
 
       // Validate ASM
       const response = await fetch(`${ENDPOINTS.dvaas}/validate`, {
@@ -52,7 +61,7 @@ function ValidateASMApp() {
         body: JSON.stringify({
           asm_data: asmData,
           validation_level: validationLevel.value,
-          rule_sets: enabledRuleSets.length > 0 ? enabledRuleSets : [],
+          rule_sets: enabledForRequest.length > 0 ? enabledForRequest : [],
           generate_report: true,
           file_name: file[0].name
         })
@@ -258,13 +267,11 @@ function ValidateASMApp() {
           </FormField>
 
           {(() => {
-            const saved = JSON.parse(localStorage.getItem('validationRuleSets') || '[]')
-            const enabled = saved.filter(rs => rs.enabled)
-            if (enabled.length > 0) {
+            if (enabledRuleSets.length > 0) {
               return (
                 <Alert type="info">
-                  <strong>{enabled.length} plugin rule set{enabled.length > 1 ? 's' : ''} enabled:</strong>{' '}
-                  {enabled.map(rs => rs.name).join(', ')}.
+                  <strong>{enabledRuleSets.length} plugin rule set{enabledRuleSets.length > 1 ? 's' : ''} enabled:</strong>{' '}
+                  {enabledRuleSets.map(rs => rs.name).join(', ')}.
                   These will run in addition to core validation. Manage rule sets on the Validation Rules tab.
                 </Alert>
               )

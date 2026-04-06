@@ -31,6 +31,7 @@ function ConvertInstrumentApp() {
   const [converterOverride, setConverterOverride] = useState(null)
   const [availableConverters, setAvailableConverters] = useState([])
   const [parsedConfig, setParsedConfig] = useState(null)
+  const [enabledRuleSets, setEnabledRuleSets] = useState([])
 
   // Fetch all approved converters on mount
   useState(() => {
@@ -42,6 +43,14 @@ function ConvertInstrumentApp() {
       })
       .catch(() => {})
   })
+
+  // Fetch enabled rule sets from API on mount
+  useEffect(() => {
+    fetch(`${ENDPOINTS.customConverter}/rule-sets`)
+      .then(r => r.json())
+      .then(data => setEnabledRuleSets((data.rule_sets || []).filter(rs => rs.enabled)))
+      .catch(() => {})
+  }, [])
 
   const validateConfig = (config) => {
     const errors = []
@@ -211,9 +220,7 @@ function ConvertInstrumentApp() {
       setProgress(60)
 
       // Step 2: Validate the generated ASM
-      // Get enabled rule sets from localStorage
-      const savedRuleSets = JSON.parse(localStorage.getItem('validationRuleSets') || '[]')
-      const enabledRuleSets = savedRuleSets.filter(rs => rs.enabled)
+      // Use rule sets fetched from API
 
       const validateResponse = await fetch(`${ENDPOINTS.dvaas}/validate`, {
         method: 'POST',

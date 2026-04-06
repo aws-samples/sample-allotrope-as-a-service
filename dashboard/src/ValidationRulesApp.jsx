@@ -19,6 +19,7 @@ import ColumnLayout from '@cloudscape-design/components/column-layout'
 import ExpandableSection from '@cloudscape-design/components/expandable-section'
 import StatusIndicator from '@cloudscape-design/components/status-indicator'
 
+import { ENDPOINTS } from './config'
 import TEMPLATE from '../public/docs/asm-validation-template-v1.json'
 
 const LEVEL_COLORS = { L1: 'red', L2: 'blue', L3: 'green', L4: 'grey' }
@@ -59,17 +60,48 @@ function ValidationRulesApp() {
     note: ''
   })
 
-  // Load saved rule sets from localStorage
+  const [loading, setLoading] = useState(true)
+
+  // Load rule sets from API
   useEffect(() => {
-    const saved = localStorage.getItem('validationRuleSets')
-    if (saved) {
-      setRuleSets(JSON.parse(saved))
-    }
+    fetchRuleSets()
   }, [])
 
-  const saveRuleSets = (updated) => {
-    setRuleSets(updated)
-    localStorage.setItem('validationRuleSets', JSON.stringify(updated))
+  const fetchRuleSets = async () => {
+    try {
+      setLoading(true)
+      const resp = await fetch(`${ENDPOINTS.customConverter}/rule-sets`)
+      const data = await resp.json()
+      setRuleSets(data.rule_sets || [])
+    } catch (e) {
+      setAlert({ type: 'error', message: `Failed to load rule sets: ${e.message}` })
+    } finally {
+      setLoading(false)
+    }
+  }
+
+  const saveRuleSetToAPI = async (ruleSet) => {
+    try {
+      await fetch(`${ENDPOINTS.customConverter}/rule-sets`, {
+        method: 'PUT',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(ruleSet)
+      })
+    } catch (e) {
+      setAlert({ type: 'error', message: `Failed to save rule set: ${e.message}` })
+    }
+  }
+
+  const deleteRuleSetFromAPI = async (ruleSetId) => {
+    try {
+      await fetch(`${ENDPOINTS.customConverter}/rule-sets`, {
+        method: 'DELETE',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ rule_set_id: ruleSetId })
+      })
+    } catch (e) {
+      setAlert({ type: 'error', message: `Failed to delete rule set: ${e.message}` })
+    }
   }
 
   const loadTemplate = () => {
@@ -99,34 +131,31 @@ function ValidationRulesApp() {
     }
   }
 
-  const saveRuleSet = () => {
+  const saveRuleSet = async () => {
     if (!editingRuleSet) return
     if (!editingRuleSet.rule_set_id || !editingRuleSet.name) {
       setAlert({ type: 'error', message: 'Rule set must have an ID and name.' })
       return
     }
-    const existing = ruleSets.findIndex(r => r.rule_set_id === editingRuleSet.rule_set_id)
-    let updated
-    if (existing >= 0) {
-      updated = [...ruleSets]
-      updated[existing] = { ...editingRuleSet, enabled: ruleSets[existing].enabled }
-    } else {
-      updated = [...ruleSets, { ...editingRuleSet, enabled: true }]
-    }
-    saveRuleSets(updated)
+    const existing = ruleSets.find(r => r.rule_set_id === editingRuleSet.rule_set_id)
+    const toSave = { ...editingRuleSet, enabled: existing ? existing.enabled : true }
+    await saveRuleSetToAPI(toSave)
+    await fetchRuleSets()
     setAlert({ type: 'success', message: `Rule set "${editingRuleSet.name}" saved with ${editingRuleSet.rules.length} rules.` })
   }
 
-  const toggleRuleSet = (id) => {
-    const updated = ruleSets.map(r =>
-      r.rule_set_id === id ? { ...r, enabled: !r.enabled } : r
-    )
-    saveRuleSets(updated)
+  const toggleRuleSet = async (id) => {
+    const rs = ruleSets.find(r => r.rule_set_id === id)
+    if (rs) {
+      await saveRuleSetToAPI({ ...rs, enabled: !rs.enabled })
+      await fetchRuleSets()
+    }
   }
 
-  const deleteRuleSet = (id) => {
-    saveRuleSets(ruleSets.filter(r => r.rule_set_id !== id))
+  const deleteRuleSet = async (id) => {
+    await deleteRuleSetFromAPI(id)
     if (editingRuleSet?.rule_set_id === id) setEditingRuleSet(null)
+    await fetchRuleSets()
     setAlert({ type: 'info', message: 'Rule set deleted.' })
   }
 

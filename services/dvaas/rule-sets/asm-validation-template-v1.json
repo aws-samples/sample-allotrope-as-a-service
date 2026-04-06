@@ -1,0 +1,291 @@
+{
+  "rule_set_id": "asm-validation-template-v1",
+  "name": "ASM Validation Rule Set Template",
+  "version": "1.1",
+  "description": "Supplementary validation rules that go BEYOND the official Allotrope JSON schema. The Allotrope schema (validated automatically by the core engine via jsonschema-rs) checks document structure, required fields, and type conformance. These rules add checks the schema does not enforce: value format validation, naming conventions, traceability requirements, and organization-specific rules.",
+  "author": "AWS ASM Transformation Service",
+  "levels": {
+    "L1": "Supplementary schema checks (beyond what jsonschema-rs enforces)",
+    "L2": "Data quality — handled separately by Data Integrity Verification (field_mapping)",
+    "L3": "Allotrope ASM building principles",
+    "L4": "Organization-specific rules"
+  },
+  "note": "The Allotrope JSON schema already validates: $asm.manifest presence, measurement identifier and measurement time as required fields, device type in device control documents, field types, and detector schema conformance. Those checks are NOT duplicated here.",
+  "rules": [
+    {
+      "rule_id": "L1-001",
+      "name": "Measurement identifiers must be UUID",
+      "level": "L1",
+      "check": "value_matches_pattern",
+      "path": "**.measurement identifier",
+      "pattern": "^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$",
+      "severity": "error",
+      "message": "Measurement identifier '{value}' is not a valid UUID format. Schema only checks it's a string — this rule enforces UUID v4.",
+      "reference": "Allotrope ASM best practice"
+    },
+    {
+      "rule_id": "L1-002",
+      "name": "Measurement time must be ISO 8601 with timezone",
+      "level": "L1",
+      "check": "value_matches_pattern",
+      "path": "**.measurement time",
+      "pattern": "^\\d{4}-\\d{2}-\\d{2}T\\d{2}:\\d{2}:\\d{2}.*[Z+\\-]",
+      "severity": "error",
+      "message": "Measurement time '{value}' must be ISO 8601 format with timezone offset. Schema only checks it's a string.",
+      "reference": "Allotrope ASM best practice"
+    },
+    {
+      "rule_id": "L1-003",
+      "name": "Valid unit symbols (QUDT)",
+      "level": "L1",
+      "check": "value_in_list",
+      "path": "**.unit",
+      "list_source": "qudt-unit-symbols.json",
+      "severity": "error",
+      "message": "Unit '{value}' is not a recognized QUDT unit symbol. Schema checks unit field exists but not its value.",
+      "reference": "QUDT ontology"
+    },
+    {
+      "rule_id": "L1-004",
+      "name": "Sample identifier required in sample documents",
+      "level": "L1",
+      "check": "field_required",
+      "path": "**.sample document",
+      "field": "sample identifier",
+      "severity": "error",
+      "message": "Sample document must include a sample identifier. Not always enforced by the schema.",
+      "reference": "Allotrope ASM best practice"
+    },
+    {
+      "rule_id": "L1-005",
+      "name": "Quantity values must have units",
+      "level": "L1",
+      "check": "conditional_required",
+      "if_field": "value",
+      "then_field": "unit",
+      "path": "**.pO2|**.pCO2|**.pH|**.osmolality|**.temperature|**.molar concentration|**.mass concentration",
+      "severity": "error",
+      "message": "Measurement value must include a unit field. Safety net for cases where detector schemas may not enforce this.",
+      "reference": "Allotrope ASM specification — quantity datum pattern"
+    },
+
+    {
+      "rule_id": "L3-001",
+      "name": "Analyst field required",
+      "level": "L3",
+      "check": "field_required",
+      "path": "**.solution analyzer document[*]",
+      "field": "analyst",
+      "severity": "error",
+      "message": "The 'analyst' field is required to identify who performed the measurement. Optional in schema but required by building principles.",
+      "reference": "ASM Building Principles — Instrument Hardcoded Terms"
+    },
+    {
+      "rule_id": "L3-002",
+      "name": "Calculated data must have traceability",
+      "level": "L3",
+      "check": "conditional_required",
+      "if_path": "**.calculated data document",
+      "then_path": "**.calculated data document[*].data source aggregate document",
+      "severity": "error",
+      "message": "Calculated data must include data source aggregate document for traceability back to source measurements.",
+      "reference": "ASM Building Principles — Best Practices for Linking Calculated Data"
+    },
+    {
+      "rule_id": "L3-003",
+      "name": "Data source must reference measurement identifiers",
+      "level": "L3",
+      "check": "field_required",
+      "path": "**.data source document[*]",
+      "field": "data source identifier",
+      "severity": "error",
+      "message": "Data source document must include data source identifier referencing a measurement.",
+      "reference": "ASM Building Principles — Best Practices for Linking Calculated Data"
+    },
+    {
+      "rule_id": "L3-004",
+      "name": "Data source must specify feature",
+      "level": "L3",
+      "check": "field_required",
+      "path": "**.data source document[*]",
+      "field": "data source feature",
+      "severity": "error",
+      "message": "Data source document must include data source feature identifying which field was used in the calculation.",
+      "reference": "ASM Building Principles — Best Practices for Linking Calculated Data"
+    },
+    {
+      "rule_id": "L3-005",
+      "name": "No hyphenated field names",
+      "level": "L3",
+      "check": "key_not_matches_pattern",
+      "path": "**",
+      "pattern": "^[a-z]+-[a-z]",
+      "exclude": ["$asm.manifest", "$asm.type", "$asm.pattern"],
+      "severity": "warning",
+      "message": "ASM field names should use spaces, not hyphens: '{key}'",
+      "reference": "ASM Building Principles — ASM Terms and Values Formatting"
+    },
+    {
+      "rule_id": "L3-006",
+      "name": "Custom fields must not be empty strings",
+      "level": "L3",
+      "check": "field_not_empty",
+      "path": "**.custom information document[*].scalar string datum",
+      "severity": "error",
+      "message": "Custom field string values must not be empty. If no value exists, omit the field entirely.",
+      "reference": "ASM Building Principles — Custom Fields"
+    },
+    {
+      "rule_id": "L3-007",
+      "name": "Calculated data must have units",
+      "level": "L3",
+      "check": "field_required",
+      "path": "**.calculated data document[*].calculated result",
+      "field": "unit",
+      "severity": "error",
+      "message": "Calculated data results must include units. If units are not available, move the field to custom information aggregate document.",
+      "reference": "ASM Building Principles — Calculated Fields"
+    },
+    {
+      "rule_id": "L3-008",
+      "name": "Manufacturer in lowercase",
+      "level": "L3",
+      "check": "value_matches_pattern",
+      "path": "**.product manufacturer",
+      "pattern": "^[a-z][a-z0-9 ]*$",
+      "severity": "warning",
+      "message": "Product manufacturer should be written in lowercase: '{value}'",
+      "reference": "ASM Building Principles — ASM Terms and Values Formatting (Special cases)"
+    },
+    {
+      "rule_id": "L3-009",
+      "name": "Device system document required",
+      "level": "L3",
+      "check": "path_exists",
+      "path": "**.device system document",
+      "severity": "error",
+      "message": "ASM must include a device system document with device identifier and product manufacturer.",
+      "reference": "ASM Building Principles — Instrument Hardcoded Terms"
+    },
+    {
+      "rule_id": "L3-010",
+      "name": "Data system document required",
+      "level": "L3",
+      "check": "path_exists",
+      "path": "**.data system document",
+      "severity": "error",
+      "message": "ASM must include a data system document with converter name, version, and file information.",
+      "reference": "ASM Building Principles — Instrument Hardcoded Terms"
+    },
+    {
+      "rule_id": "L3-011",
+      "name": "File name in data system document",
+      "level": "L3",
+      "check": "field_required",
+      "path": "**.data system document",
+      "field": "file name",
+      "severity": "error",
+      "message": "Data system document must include the source file name for traceability.",
+      "reference": "ASM Building Principles — Source File Formats"
+    },
+    {
+      "rule_id": "L3-012",
+      "name": "At least one measurement required",
+      "level": "L3",
+      "check": "count_min",
+      "path": "**.measurement document",
+      "min": 1,
+      "severity": "error",
+      "message": "ASM must contain at least one measurement document.",
+      "reference": "ASM Building Principles — Data Hierarchical Structure"
+    },
+    {
+      "rule_id": "L3-013",
+      "name": "Device type in device system document",
+      "level": "L3",
+      "check": "field_required",
+      "path": "**.device document[*]",
+      "field": "device type",
+      "severity": "error",
+      "message": "Device document must include device type (e.g., 'solution analyzer').",
+      "reference": "ASM Building Principles — Terms in Multiple Locations"
+    },
+
+    {
+      "rule_id": "L4-001",
+      "name": "UNC path for source traceability",
+      "level": "L4",
+      "check": "field_required",
+      "path": "**.data system document",
+      "field": "UNC path",
+      "severity": "warning",
+      "message": "Data system document should include UNC path for traceability to the original source file on the file server.",
+      "reference": "Organization-specific: Source file traceability via mount path",
+      "note": "CUSTOMIZE: Remove this rule if your organization does not use UNC paths"
+    },
+    {
+      "rule_id": "L4-002",
+      "name": "Batch identifier in sample document",
+      "level": "L4",
+      "check": "field_required",
+      "path": "**.sample document",
+      "field": "batch identifier",
+      "severity": "warning",
+      "message": "Sample document should include batch identifier for batch traceability.",
+      "reference": "Organization-specific: Batch tracking requirement",
+      "note": "CUSTOMIZE: Remove this rule if batch tracking is not required"
+    },
+    {
+      "rule_id": "L4-003",
+      "name": "ASM file identifier format",
+      "level": "L4",
+      "check": "value_matches_pattern",
+      "path": "**.ASM file identifier",
+      "pattern": "^.+\\-\\d+\\.json$",
+      "severity": "warning",
+      "message": "ASM file identifier should follow the pattern: filename-rownumber.json (e.g., MockData1-1.json).",
+      "reference": "Organization-specific: Output filename convention",
+      "note": "CUSTOMIZE: Adjust pattern to match your naming convention"
+    },
+    {
+      "rule_id": "L4-004",
+      "name": "Data system instance identifier required",
+      "level": "L4",
+      "check": "field_required",
+      "path": "**.data system document",
+      "field": "data system instance identifier",
+      "severity": "warning",
+      "message": "Data system document should include data system instance identifier (server name).",
+      "reference": "Organization-specific: Server identification for multi-site deployments",
+      "note": "CUSTOMIZE: Remove if not applicable to your infrastructure"
+    },
+    {
+      "rule_id": "L4-005",
+      "name": "Converter version tracking",
+      "level": "L4",
+      "check": "field_required",
+      "path": "**.data system document",
+      "field": "ASM converter version",
+      "severity": "warning",
+      "message": "Data system document should include ASM converter version for change tracking.",
+      "reference": "Organization-specific: Converter version management",
+      "note": "CUSTOMIZE: Adjust severity to 'error' if version tracking is mandatory"
+    }
+  ],
+  "reference_data": {
+    "qudt-unit-symbols.json": "List of valid QUDT unit symbols. Download from QUDT ontology or use the provided file.",
+    "allotrope-vocabulary.json": "Allotrope Foundation ontology terms. Download from gitlab.com/allotrope-public/asm"
+  },
+  "customization_guide": {
+    "how_to_customize": [
+      "1. Review all rules and remove any that don't apply to your organization",
+      "2. Rules marked with 'note: CUSTOMIZE' are organization-specific — review first",
+      "3. Adjust severity levels: 'error' blocks certification, 'warning' is informational",
+      "4. Add your own L4 rules for organization-specific requirements",
+      "5. Update rule_set_id and author fields to identify your organization",
+      "6. Upload the customized rule set via the dashboard or API"
+    ],
+    "adding_rules": "Copy an existing rule as a template. Each rule needs: rule_id (unique), name, level, check (type), path (JSON path pattern), severity, and message.",
+    "path_syntax": "Use ** for recursive descent, [*] for array items, | for alternatives. Example: **.measurement document[*].sample document"
+  }
+}

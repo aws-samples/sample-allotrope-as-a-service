@@ -23,12 +23,39 @@ def lambda_handler(event, context):
         validation_level = body.get('validation_level', 'basic')
         generate_report = body.get('generate_report', False)
         asm_file_name = body.get('file_name', 'unknown.json')
+        rule_sets_input = body.get('rule_sets', [])
 
         if not asm_data:
             return error_response(400, "Missing asm_data in request")
 
         # Always use schema-based validation
         result = run_validation(asm_data, validation_level)
+
+        # Run plugin rule sets if provided
+        if rule_sets_input:
+            try:
+                from rule_engine import evaluate_rule_sets
+                plugin_findings = evaluate_rule_sets(asm_data, rule_sets_input)
+                
+                # Separate into errors and warnings
+                plugin_errors = [f for f in plugin_findings if f['severity'] == 'error']
+                plugin_warnings = [f for f in plugin_findings if f['severity'] in ('warning', 'info')]
+                
+                # Format as strings for backward compatibility + keep structured data
+                for f in plugin_errors:
+                    result['errors'].append(f"[{f['rule_set']}:{f['rule_id']}] {f['message']}")
+                for f in plugin_warnings:
+                    result['warnings'].append(f"[{f['rule_set']}:{f['rule_id']}] {f['message']}")
+                
+                # Add structured findings
+                result['plugin_findings'] = plugin_findings
+                result['rule_sets_applied'] = list(set(rs.get('rule_set_id', 'unknown') for rs in rule_sets_input))
+                
+                # Recalculate validity — plugin errors make it invalid
+                if plugin_errors:
+                    result['valid'] = False
+            except Exception as e:
+                result['warnings'].append(f"WARNING: Plugin rule evaluation failed: {str(e)}")
 
         # Store validation job in history
         store_validation_job(result, asm_file_name)

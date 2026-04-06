@@ -1,4 +1,4 @@
-import { useState } from 'react'
+import { useState, useEffect } from 'react'
 import Container from '@cloudscape-design/components/container'
 import Header from '@cloudscape-design/components/header'
 import SpaceBetween from '@cloudscape-design/components/space-between'
@@ -12,6 +12,8 @@ import ColumnLayout from '@cloudscape-design/components/column-layout'
 import ExpandableSection from '@cloudscape-design/components/expandable-section'
 import Table from '@cloudscape-design/components/table'
 import StatusIndicator from '@cloudscape-design/components/status-indicator'
+import Select from '@cloudscape-design/components/select'
+import FormField from '@cloudscape-design/components/form-field'
 
 import { ENDPOINTS } from './config'
 
@@ -26,6 +28,9 @@ function ConvertInstrumentApp() {
   const [error, setError] = useState(null)
   const [integrityReport, setIntegrityReport] = useState(null)
   const [fieldMapping, setFieldMapping] = useState(null)
+  const [converterOverride, setConverterOverride] = useState(null)
+  const [availableConverters, setAvailableConverters] = useState([])
+  const [parsedConfig, setParsedConfig] = useState(null)
 
   const validateConfig = (config) => {
     const errors = []
@@ -78,6 +83,9 @@ function ConvertInstrumentApp() {
   const handleConfigFileChange = async (files) => {
     setConfigFile(files)
     setConfigValidation(null)
+    setParsedConfig(null)
+    setConverterOverride(null)
+    setAvailableConverters([])
     
     if (files.length === 0) return
     
@@ -86,6 +94,28 @@ function ConvertInstrumentApp() {
       const config = JSON.parse(content)
       const validation = validateConfig(config)
       setConfigValidation(validation)
+      setParsedConfig(config)
+
+      // Fetch available converters for this vendor+model
+      if (config.vendor && config.model) {
+        try {
+          const resp = await fetch(`${ENDPOINTS.customConverter}/list`)
+          const data = await resp.json()
+          const matching = (data.converters || []).filter(c =>
+            c.status === 'APPROVED' && (c.vendor === config.vendor || c.model === config.model)
+          )
+          setAvailableConverters(matching)
+          // Pre-select from config if converter_id is specified
+          if (config.converter_id) {
+            const found = matching.find(c => c.converter_id === config.converter_id)
+            if (found) {
+              setConverterOverride({ label: `${found.converter_id}`, value: found.converter_id, description: found.description || '' })
+            }
+          }
+        } catch (e) {
+          setAvailableConverters([])
+        }
+      }
     } catch (err) {
       setConfigValidation({
         errors: [`Invalid JSON file: ${err.message}`],
@@ -129,6 +159,12 @@ function ConvertInstrumentApp() {
         console.warn('Config file warnings:', validation.warnings)
       }
       
+      // Build manifest with optional converter_id override
+      const manifest = { ...config }
+      if (converterOverride && converterOverride.value) {
+        manifest.converter_id = converterOverride.value
+      }
+
       // Step 1: Convert instrument file to ASM
       const convertResponse = await fetch(`${ENDPOINTS.unifiedConverter}/convert`, {
         method: 'POST',
@@ -136,7 +172,7 @@ function ConvertInstrumentApp() {
         body: JSON.stringify({
           file_content: fileContent,
           file_name: instrumentFile[0].name,
-          manifest: config,
+          manifest: manifest,
           store_results: true
         })
       })
@@ -378,6 +414,27 @@ function ConvertInstrumentApp() {
                 </Alert>
               )}
             </>
+          )}
+
+          {availableConverters.length > 0 && (
+            <FormField
+              label="Converter (Optional Override)"
+              description={`${availableConverters.length} approved converter${availableConverters.length > 1 ? 's' : ''} available for this instrument. ${parsedConfig?.converter_id ? `Config file specifies: ${parsedConfig.converter_id}` : 'Select to override auto-selection.'}`}
+            >
+              <Select
+                selectedOption={converterOverride}
+                onChange={({ detail }) => setConverterOverride(detail.selectedOption)}
+                options={[
+                  { label: 'Auto-select (system chooses best converter)', value: '' },
+                  ...availableConverters.map(c => ({
+                    label: c.converter_id,
+                    value: c.converter_id,
+                    description: c.description || `${c.vendor} / ${c.model}`
+                  }))
+                ]}
+                placeholder="Auto-select"
+              />
+            </FormField>
           )}
         </SpaceBetween>
       </Container>

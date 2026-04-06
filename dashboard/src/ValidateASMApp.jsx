@@ -41,6 +41,10 @@ function ValidateASMApp() {
       setAsmData(asmData)
       setProgress(50)
 
+      // Get enabled rule sets from localStorage
+      const savedRuleSets = JSON.parse(localStorage.getItem('validationRuleSets') || '[]')
+      const enabledRuleSets = savedRuleSets.filter(rs => rs.enabled)
+
       // Validate ASM
       const response = await fetch(`${ENDPOINTS.dvaas}/validate`, {
         method: 'POST',
@@ -48,6 +52,7 @@ function ValidateASMApp() {
         body: JSON.stringify({
           asm_data: asmData,
           validation_level: validationLevel.value,
+          rule_sets: enabledRuleSets.length > 0 ? enabledRuleSets : [],
           generate_report: true,
           file_name: file[0].name
         })
@@ -251,6 +256,21 @@ function ValidateASMApp() {
               ]}
             />
           </FormField>
+
+          {(() => {
+            const saved = JSON.parse(localStorage.getItem('validationRuleSets') || '[]')
+            const enabled = saved.filter(rs => rs.enabled)
+            if (enabled.length > 0) {
+              return (
+                <Alert type="info">
+                  <strong>{enabled.length} plugin rule set{enabled.length > 1 ? 's' : ''} enabled:</strong>{' '}
+                  {enabled.map(rs => rs.name).join(', ')}.
+                  These will run in addition to core validation. Manage rule sets on the Validation Rules tab.
+                </Alert>
+              )
+            }
+            return null
+          })()}
           
           <Button
             variant="primary"
@@ -310,10 +330,12 @@ function ValidateASMApp() {
               {validation.valid ? (
                 <Alert type="success" header="Schema Validation Passed">
                   Your ASM file passes Allotrope schema validation.{validation.warnings?.length > 0 ? ` There are ${validation.warnings.length} compliance recommendation(s) below.` : ''}
+                  {validation.rule_sets_applied?.length > 0 && ` Plugin rule sets applied: ${validation.rule_sets_applied.join(', ')}.`}
                 </Alert>
               ) : (
-                <Alert type="error" header="Schema Validation Failed">
-                  Your ASM file has {validation.errors?.length || 0} schema error(s). These must be fixed for the file to conform to Allotrope standards.
+                <Alert type="error" header="Validation Failed">
+                  Your ASM file has {validation.errors?.length || 0} error(s). These must be fixed for the file to conform to standards.
+                  {validation.rule_sets_applied?.length > 0 && ` Plugin rule sets applied: ${validation.rule_sets_applied.join(', ')}.`}
                 </Alert>
               )}
             </SpaceBetween>

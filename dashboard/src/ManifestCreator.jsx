@@ -9,6 +9,7 @@ import Button from '@cloudscape-design/components/button'
 import Box from '@cloudscape-design/components/box'
 import Alert from '@cloudscape-design/components/alert'
 
+import { ENDPOINTS } from './config'
 import instrumentsData from './data/instruments.json'
 
 export default function ManifestCreator() {
@@ -25,6 +26,8 @@ export default function ManifestCreator() {
   const [contact, setContact] = useState('')
   const [customerAlias, setCustomerAlias] = useState('')
   const [fileFormat, setFileFormat] = useState({ label: 'CSV', value: 'csv' })
+  const [converterId, setConverterId] = useState('')
+  const [availableConverters, setAvailableConverters] = useState([])
 
   const instrumentOptions = [
     ...instrumentsData.map(inst => ({
@@ -68,6 +71,25 @@ export default function ManifestCreator() {
     setSelectedInstrument(option)
     const custom = option.value === 'CUSTOM'
     setIsCustom(custom)
+    setConverterId('')
+    // Fetch available converters for this instrument
+    if (!custom) {
+      const inst = instrumentsData.find(i => i.canonical_id === option.value)
+      if (inst) fetchConverters(inst.vendor_id, inst.name)
+    }
+  }
+
+  const fetchConverters = async (vendor, model) => {
+    try {
+      const resp = await fetch(`${ENDPOINTS.customConverter}/list`)
+      const data = await resp.json()
+      const matching = (data.converters || []).filter(c =>
+        c.status === 'APPROVED' && (c.vendor === vendor || c.model === model)
+      )
+      setAvailableConverters(matching)
+    } catch (e) {
+      setAvailableConverters([])
+    }
   }
 
   const instrument = selectedInstrument && !isCustom
@@ -88,7 +110,8 @@ export default function ManifestCreator() {
       ...(timezone && { timezone: timezone })
     }}),
     ...(contact && { contact: contact }),
-    ...(customerAlias && { customer_alias: customerAlias })
+    ...(customerAlias && { customer_alias: customerAlias }),
+    ...(converterId && { converter_id: converterId })
   } : null
 
   const downloadManifest = () => {
@@ -292,6 +315,28 @@ export default function ManifestCreator() {
                   placeholder="e.g., Lab 3 FLEX2"
                 />
               </FormField>
+
+              {availableConverters.length > 0 && (
+                <FormField 
+                  key="converter-id"
+                  label="Preferred Converter (Optional)" 
+                  description="Select a specific converter for this instrument. If not set, the system auto-selects the best available converter."
+                >
+                  <Select
+                    selectedOption={converterId ? { label: converterId, value: converterId } : null}
+                    onChange={({ detail }) => setConverterId(detail.selectedOption?.value || '')}
+                    options={[
+                      { label: 'Auto-select (recommended)', value: '' },
+                      ...availableConverters.map(c => ({
+                        label: `${c.converter_id} (${c.instrument_type})`,
+                        value: c.converter_id,
+                        description: c.description || ''
+                      }))
+                    ]}
+                    placeholder="Auto-select"
+                  />
+                </FormField>
+              )}
             </SpaceBetween>
           </Container>
 

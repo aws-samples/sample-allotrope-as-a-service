@@ -11,6 +11,7 @@ import ControlTowerApp from './ControlTowerApp'
 import ManifestCreator from './ManifestCreator'
 import InstrumentRegistry from './InstrumentRegistry'
 import ConverterManagementApp from './ConverterManagementApp'
+import ValidationRulesApp from './ValidationRulesApp'
 
 function CombinedApp() {
   const [activeTab, setActiveTab] = useState('validate-asm')
@@ -51,6 +52,12 @@ function CombinedApp() {
       id: 'converters',
       label: 'Converter Management',
       content: <ConverterManagementApp />,
+      visible: true
+    },
+    {
+      id: 'validation-rules',
+      label: 'Validation Rules',
+      content: <ValidationRulesApp />,
       visible: true
     }
   ]

@@ -1,0 +1,10 @@
+We can support multiple converters per instrument. To help us implement this correctly, can you describe your use case? For example:
+
+
+Different versions of the same converter (v1 vs v2)?
+
+Different labs producing different export formats from the same instrument?
+
+Different customers needing different field mappings?
+
+Our proposed approach: add an optional converter_id field to the instrument config so you explicitly control which converter is used. Without it, the system picks the latest approved converter for that vendor+model."

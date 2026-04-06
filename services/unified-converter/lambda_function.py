@@ -14,6 +14,40 @@ from datetime import datetime
 
 dynamodb = boto3.resource('dynamodb')
 
+def try_custom_converter_by_id(converter_id, file_content):
+    """Try a specific custom converter by ID"""
+    try:
+        registry_table = dynamodb.Table(os.environ.get('CONVERTER_REGISTRY_TABLE'))
+        response = registry_table.get_item(Key={'converter_id': converter_id})
+        
+        if 'Item' not in response:
+            return {'success': False, 'error': f'Converter {converter_id} not found'}
+        
+        converter = response['Item']
+        if converter.get('status') != 'APPROVED':
+            return {'success': False, 'error': f'Converter {converter_id} not approved'}
+        
+        custom_endpoint = os.environ.get('CUSTOM_CONVERTER_ENDPOINT')
+        result = requests.post(
+            custom_endpoint,
+            json={'converter_id': converter_id, 'file_content': file_content},
+            timeout=60
+        )
+        
+        if result.status_code == 200:
+            data = result.json()
+            return {
+                'success': True,
+                'converter_id': converter_id,
+                'asm_output': data.get('asm_output'),
+                'field_mapping': data.get('field_mapping', [])
+            }
+        
+        return {'success': False, 'error': f'Converter failed: {result.text[:200]}'}
+    except Exception as e:
+        return {'success': False, 'error': f'Converter error: {str(e)}'}
+
+
 def try_custom_converter(vendor, model, file_content):
     """Try custom converter from registry"""
     
@@ -80,11 +114,44 @@ def lambda_handler(event, context):
         
         conversion_id = f"UNIFIED-{datetime.utcnow().strftime('%Y%m%d%H%M%S')}"
         
-        # Step 1: Check Custom Converter Registry (if manifest provided)
+        # Step 1: Check for explicit converter_id in manifest
         if manifest:
+            converter_id_override = manifest.get('converter_id', '')
             vendor = manifest.get('vendor', '')
             model = manifest.get('model', '')
             
+            # If converter_id specified, use that exact converter
+            if converter_id_override:
+                custom_result = try_custom_converter_by_id(converter_id_override, file_content)
+                if custom_result['success']:
+                    response = {
+                        'conversion_id': conversion_id,
+                        'timestamp': datetime.utcnow().isoformat(),
+                        'method': 'custom-converter',
+                        'converter_used': converter_id_override,
+                        'asm_output': custom_result['asm_output'],
+                        'field_mapping': custom_result.get('field_mapping', []),
+                        'status': 'success',
+                        'message': f'Converted using specified converter: {converter_id_override}',
+                        'file_name': file_name,
+                        'instrument_type': manifest.get('instrument_type', '-'),
+                        'instrument_model': manifest.get('model', '-'),
+                    }
+                    
+                    if store_results:
+                        storage_result = store_conversion(response)
+                        response['storage'] = storage_result
+                    
+                    return {
+                        'statusCode': 200,
+                        'headers': {
+                            'Content-Type': 'application/json',
+                            'Access-Control-Allow-Origin': '*'
+                        },
+                        'body': json.dumps(response)
+                    }
+            
+            # Otherwise, try by vendor+model
             custom_result = try_custom_converter(vendor, model, file_content)
             if custom_result['success']:
                 response = {
@@ -94,7 +161,10 @@ def lambda_handler(event, context):
                     'converter_used': custom_result.get('converter_id'),
                     'asm_output': custom_result['asm_output'],
                     'status': 'success',
-                    'message': 'Converted using custom converter'
+                    'message': 'Converted using custom converter',
+                    'file_name': file_name,
+                    'instrument_type': manifest.get('instrument_type', '-'),
+                    'instrument_model': manifest.get('model', '-'),
                 }
                 
                 if store_results:
@@ -125,7 +195,10 @@ def lambda_handler(event, context):
                     'asm_output': nova_result['asm_output'],
                     'field_mapping': nova_result.get('field_mapping', []),
                     'status': 'success',
-                    'message': 'Converted using custom Nova FLEX2 converter'
+                    'message': 'Converted using custom Nova FLEX2 converter',
+                    'file_name': file_name,
+                    'instrument_type': 'solution_analyzer',
+                    'instrument_model': 'BioProfile FLEX2',
                 }
                 
                 if store_results:
@@ -154,7 +227,10 @@ def lambda_handler(event, context):
                 'field_mapping': multi_instrument_result.get('field_mapping', []),
                 'integrity_summary': multi_instrument_result.get('integrity_summary', {}),
                 'status': 'success',
-                'message': 'Converted using allotropy library with data integrity verification'
+                'message': 'Converted using allotropy library with data integrity verification',
+                'file_name': file_name,
+                'instrument_type': manifest.get('instrument_type', '-') if manifest else '-',
+                'instrument_model': manifest.get('model', '-') if manifest else '-',
             }
         else:
             # Step 2: Fallback to ATaaS (AI-powered)
@@ -169,7 +245,10 @@ def lambda_handler(event, context):
                     'asm_output': ataas_result['asm_output'],
                     'converter_code': ataas_result.get('converter_code', {}),
                     'status': 'success',
-                    'message': 'Converted using AI (Bedrock Claude)'
+                    'message': 'Converted using AI (Bedrock Claude)',
+                    'file_name': file_name,
+                    'instrument_type': manifest.get('instrument_type', '-') if manifest else '-',
+                    'instrument_model': manifest.get('model', '-') if manifest else '-',
                 }
             else:
                 return error_response(500, f"Both conversion methods failed. Multi-Instrument: {multi_instrument_result.get('error')}. ATaaS: {ataas_result.get('error')}")
@@ -294,6 +373,9 @@ def store_conversion(conversion_data):
                 'asm_s3_key': asm_key,
                 'status': 'completed',
                 'source': 'unified-converter',
+                'file_name': conversion_data.get('file_name', '-'),
+                'instrument_type': conversion_data.get('instrument_type', '-'),
+                'instrument_model': conversion_data.get('instrument_model', '-'),
             }
         )
         

@@ -68,3 +68,18 @@ MEMORY-*.md
 # Allotrope schemas (fetched at deploy time)
 services/dvaas/schemas/
 temp-asm-schemas/
+
+# Project memory (internal only)
+MEMORY.md
+
+# Customer-specific files
+merck/
+demo-samples/
+custom-converter/
+
+# Internal tracking documents
+PRODUCTION-READINESS-FIXES.md
+generate_*.py
+
+# Archived components
+*.archived

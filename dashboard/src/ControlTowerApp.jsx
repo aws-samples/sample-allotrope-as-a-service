@@ -12,6 +12,10 @@ import TextFilter from '@cloudscape-design/components/text-filter'
 import Pagination from '@cloudscape-design/components/pagination'
 import Alert from '@cloudscape-design/components/alert'
 
+import Select from '@cloudscape-design/components/select'
+import DateRangePicker from '@cloudscape-design/components/date-range-picker'
+import FormField from '@cloudscape-design/components/form-field'
+
 import { ENDPOINTS } from './config'
 
 function ControlTowerApp() {
@@ -19,6 +23,8 @@ function ControlTowerApp() {
   const [loading, setLoading] = useState(false)
   const [error, setError] = useState(null)
   const [filteringText, setFilteringText] = useState('')
+  const [instrumentFilter, setInstrumentFilter] = useState({ label: 'All Instruments', value: 'all' })
+  const [dateRange, setDateRange] = useState(null)
   const [currentPageIndex, setCurrentPageIndex] = useState(1)
   const pageSize = 10
 
@@ -36,6 +42,7 @@ function ControlTowerApp() {
           status: j.status || 'unknown',
           timestamp: j.timestamp || '-',
           instrumentType: (j.instrument_type || j.technique || '-').replace(/_/g, ' '),
+          instrumentModel: j.instrument_model || j.model || '-',
           vendor: j.vendor || j.converter_used || '-',
           fileName: j.file_name || '-',
           errorCount: j.error_count ?? '-',
@@ -72,13 +79,47 @@ function ControlTowerApp() {
     return acc
   }, {})
 
+  // Unique instrument models for filter dropdown
+  const instrumentModels = [...new Set(jobs.map(j => j.instrumentModel).filter(m => m !== '-'))]
+  const instrumentFilterOptions = [
+    { label: 'All Instruments', value: 'all' },
+    ...instrumentModels.map(m => ({ label: m, value: m }))
+  ]
+
   // Filter
-  const filtered = jobs.filter(j =>
-    j.id.toLowerCase().includes(filteringText.toLowerCase()) ||
-    j.instrumentType.toLowerCase().includes(filteringText.toLowerCase()) ||
-    j.vendor.toLowerCase().includes(filteringText.toLowerCase()) ||
-    j.method.toLowerCase().includes(filteringText.toLowerCase())
-  )
+  const filtered = jobs.filter(j => {
+    const matchesText = !filteringText ||
+      j.id.toLowerCase().includes(filteringText.toLowerCase()) ||
+      j.instrumentType.toLowerCase().includes(filteringText.toLowerCase()) ||
+      j.instrumentModel.toLowerCase().includes(filteringText.toLowerCase()) ||
+      j.vendor.toLowerCase().includes(filteringText.toLowerCase()) ||
+      j.method.toLowerCase().includes(filteringText.toLowerCase())
+
+    const matchesInstrument = instrumentFilter.value === 'all' ||
+      j.instrumentModel === instrumentFilter.value
+
+    let matchesDate = true
+    if (dateRange && j.timestamp !== '-') {
+      const jobDate = new Date(j.timestamp)
+      if (dateRange.type === 'absolute') {
+        const start = new Date(dateRange.startDate)
+        const end = new Date(dateRange.endDate)
+        end.setHours(23, 59, 59, 999)
+        matchesDate = jobDate >= start && jobDate <= end
+      } else if (dateRange.type === 'relative') {
+        const now = new Date()
+        const amount = dateRange.amount
+        const unit = dateRange.unit
+        const cutoff = new Date(now)
+        if (unit === 'day') cutoff.setDate(cutoff.getDate() - amount)
+        else if (unit === 'week') cutoff.setDate(cutoff.getDate() - amount * 7)
+        else if (unit === 'month') cutoff.setMonth(cutoff.getMonth() - amount)
+        matchesDate = jobDate >= cutoff
+      }
+    }
+
+    return matchesText && matchesInstrument && matchesDate
+  })
 
   const paginated = filtered.slice(
     (currentPageIndex - 1) * pageSize,
@@ -161,6 +202,13 @@ function ControlTowerApp() {
             width: 120
           },
           {
+            id: 'instrumentModel',
+            header: 'Instrument',
+            cell: item => item.instrumentModel,
+            sortingField: 'instrumentModel',
+            width: 160
+          },
+          {
             id: 'instrumentType',
             header: 'Instrument Type',
             cell: item => item.instrumentType,
@@ -232,11 +280,62 @@ function ControlTowerApp() {
           </Header>
         }
         filter={
-          <TextFilter
-            filteringText={filteringText}
-            filteringPlaceholder="Search by ID, instrument, vendor, method..."
-            onChange={({ detail }) => { setFilteringText(detail.filteringText); setCurrentPageIndex(1) }}
-          />
+          <SpaceBetween direction="horizontal" size="m">
+            <TextFilter
+              filteringText={filteringText}
+              filteringPlaceholder="Search by ID, vendor, method..."
+              onChange={({ detail }) => { setFilteringText(detail.filteringText); setCurrentPageIndex(1) }}
+            />
+            <Select
+              selectedOption={instrumentFilter}
+              onChange={({ detail }) => { setInstrumentFilter(detail.selectedOption); setCurrentPageIndex(1) }}
+              options={instrumentFilterOptions}
+              placeholder="Filter by instrument"
+            />
+            <DateRangePicker
+              value={dateRange}
+              onChange={({ detail }) => { setDateRange(detail.value); setCurrentPageIndex(1) }}
+              placeholder="Filter by date"
+              relativeOptions={[
+                { key: 'today', amount: 1, unit: 'day', type: 'relative' },
+                { key: 'week', amount: 1, unit: 'week', type: 'relative' },
+                { key: 'month', amount: 1, unit: 'month', type: 'relative' },
+                { key: '3months', amount: 3, unit: 'month', type: 'relative' },
+              ]}
+              i18nStrings={{
+                todayAriaLabel: 'Today',
+                nextMonthAriaLabel: 'Next month',
+                previousMonthAriaLabel: 'Previous month',
+                customRelativeRangeDurationLabel: 'Duration',
+                customRelativeRangeDurationPlaceholder: 'Enter duration',
+                customRelativeRangeOptionLabel: 'Custom range',
+                customRelativeRangeOptionDescription: 'Set a custom range in the past',
+                customRelativeRangeUnitLabel: 'Unit of time',
+                formatRelativeRange: (e) => {
+                  const unit = e.amount === 1 ? e.unit : `${e.unit}s`
+                  return `Last ${e.amount} ${unit}`
+                },
+                formatUnit: (unit, value) => value === 1 ? unit : `${unit}s`,
+                relativeModeTitle: 'Relative range',
+                absoluteModeTitle: 'Absolute range',
+                relativeRangeSelectionHeading: 'Choose a range',
+                startDateLabel: 'Start date',
+                startTimeLabel: 'Start time',
+                endDateLabel: 'End date',
+                endTimeLabel: 'End time',
+                dateTimeConstraintText: '',
+                clearButtonLabel: 'Clear',
+                cancelButtonLabel: 'Cancel',
+                applyButtonLabel: 'Apply',
+              }}
+              isValidRange={(range) => {
+                if (range.type === 'absolute' && (!range.startDate || !range.endDate)) {
+                  return { valid: false, errorMessage: 'Select start and end dates' }
+                }
+                return { valid: true }
+              }}
+            />
+          </SpaceBetween>
         }
         pagination={
           <Pagination

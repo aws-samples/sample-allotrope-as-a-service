@@ -24,6 +24,9 @@
     .get { background: #0972d3; }
     .btn { display: inline-block; background: #0972d3; color: white; padding: 8px 16px; border-radius: 4px; text-decoration: none; margin: 8px 4px 8px 0; }
     .btn:hover { background: #065299; }
+    .diagram { margin: 20px 0; text-align: center; }
+    .diagram img { max-width: 100%; height: auto; border: 1px solid #d5dbdb; border-radius: 4px; background: #f9f9f9; }
+    .diagram figcaption { font-size: 12px; color: #545b64; margin-top: 6px; }
     @media print { .nav, .btn { display: none; } body { max-width: 100%; } }
   </style>
 </head>
@@ -76,6 +79,12 @@
 }</code></pre>
 
   <h3>Routing Priority</h3>
+
+  <figure class="diagram">
+    <img src="/docs/images/04-converter-lookup.svg" alt="Converter Lookup - Instrument Registry">
+    <figcaption>Converter lookup flow — how the Instrument Registry resolves which converter to use</figcaption>
+  </figure>
+
   <table>
     <tr><th>Priority</th><th>Route</th><th>When</th></tr>
     <tr><td>1</td><td>Custom Converter Registry</td><td>Manifest vendor + model match an APPROVED converter</td></tr>
@@ -135,6 +144,40 @@
 
   <h2>List Converters</h2>
   <p><span class="method get">GET</span> <code>/list</code> (Custom Converter Service)</p>
+
+  <h2>Generate Converter with AI</h2>
+  <p><span class="method post">POST</span> <code>/generate-converter</code> (ATaaS)</p>
+  <p>Analyzes a sample instrument file and generates a Python converter using AWS Bedrock Claude. The generated converter follows the Custom Converter Requirements and is auto-registered as PENDING.</p>
+  <h3>Request</h3>
+  <pre><code>{
+  "file_content": "&lt;raw instrument file content&gt;",
+  "file_name": "SampleResults.csv",
+  "manifest": {
+    "vendor": "NOVABIO_FLEX2",
+    "model": "BioProfile FLEX2",
+    "instrument_type": "solution_analyzer",
+    "file_format": "csv"
+  },
+  "auto_register": true
+}</code></pre>
+  <h3>Response</h3>
+  <pre><code>{
+  "converter_id": "novabio-flex2-bioprofile-flex2-ai-v1",
+  "converter_code": "def convert(file_content): ...",
+  "file_analysis": {
+    "file_format": "csv",
+    "instrument_type": "solution_analyzer",
+    "total_rows": 27,
+    "columns": "Date &amp; Time,Sample ID,pH,..."
+  },
+  "registration": {
+    "registered": true,
+    "converter_id": "novabio-flex2-bioprofile-flex2-ai-v1",
+    "status": "PENDING"
+  },
+  "status": "success"
+}</code></pre>
+  <p><strong>Note:</strong> Only headers + first 3 rows are sent to AI. The generated converter handles all rows. Auto-registered converters require human approval before use.</p>
 
   <h2>Quick Start Examples</h2>
   <p>Copy and paste these examples to invoke the APIs directly from your terminal or scripts.</p>
@@ -492,17 +535,27 @@ print("Done. Files saved: output.asm.json, validation_report.pdf")</code></pre>
   <p>The schema registry is built dynamically at Lambda cold start — no code changes needed when schemas are updated.</p>
 
   <h2>Architecture</h2>
+
+  <figure class="diagram">
+    <img src="/docs/images/01-process-flow.svg" alt="ASM Transformation Service - Process Flow">
+    <figcaption>End-to-end process flow — from laboratory instrument to validated ASM output</figcaption>
+  </figure>
+
   <pre><code>Instrument File + Config
     ↓
 Unified Converter (Lambda)
     ↓
-1. Custom Converter Registry (DynamoDB) → Custom Converter Service (Lambda + S3)
-2. Embedded Custom Converters (e.g., Nova FLEX2)
-3. Allotropy Library (31 instruments)
-4. ATaaS - Bedrock Claude (fallback)
+1. Explicit converter_id (if specified in config or screen override)
+2. Custom Converter Registry (DynamoDB) → Custom Converter Service (Lambda + S3)
+3. Embedded Custom Converters (e.g., Nova FLEX2)
+4. Allotropy Library (31 instruments)
+5. ATaaS - Bedrock Claude (fallback)
     ↓
-DVaaS Validation (Lambda + Allotrope JSON Schemas)
+DVaaS Validation (Lambda + Allotrope JSON Schemas + Plugin Rule Sets)
     ↓
-ASM Output + Validation Report + Data Integrity Verification</code></pre>
+ASM Output + Validation Report + Data Integrity Verification
+
+AI Converter Generator:
+  Sample File + Config → Bedrock Claude → Python Converter Code → Auto-Register (PENDING)</code></pre>
 </body>
 </html>

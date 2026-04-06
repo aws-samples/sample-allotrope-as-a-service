@@ -29,7 +29,7 @@ export default function ManifestCreator() {
   const [converterId, setConverterId] = useState('')
   const [availableConverters, setAvailableConverters] = useState([])
 
-  const instrumentOptions = [
+  const [allInstrumentOptions, setAllInstrumentOptions] = useState([
     ...instrumentsData.map(inst => ({
       label: `${inst.name} (${inst.manufacturer})`,
       value: inst.canonical_id,
@@ -40,7 +40,34 @@ export default function ManifestCreator() {
       value: 'CUSTOM',
       description: 'AI-powered conversion'
     }
-  ]
+  ])
+
+  // Fetch registered converters and add to dropdown
+  useState(() => {
+    const fetchRegistered = async () => {
+      try {
+        const resp = await fetch(`${ENDPOINTS.customConverter}/list`)
+        const data = await resp.json()
+        const registered = (data.converters || []).filter(c => c.status === 'APPROVED')
+        const staticIds = new Set(instrumentsData.map(i => i.vendor_id))
+        const newOptions = registered
+          .filter(c => !staticIds.has(c.vendor))
+          .map(c => ({
+            label: `${c.model || c.converter_id} (${c.vendor})`,
+            value: `registered-${c.converter_id}`,
+            description: `${(c.instrument_type || '').replace('_', ' ')} — converter: ${c.converter_id}`
+          }))
+        if (newOptions.length > 0) {
+          setAllInstrumentOptions(prev => [
+            ...prev.filter(o => o.value !== 'CUSTOM'),
+            ...newOptions,
+            { label: 'Custom Instrument (Not in Registry)', value: 'CUSTOM', description: 'AI-powered conversion' }
+          ])
+        }
+      } catch (e) { /* ignore */ }
+    }
+    fetchRegistered()
+  })
 
   const instrumentTypeOptions = [
     { label: 'Solution Analyzer', value: 'solution_analyzer' },
@@ -70,10 +97,27 @@ export default function ManifestCreator() {
   const handleInstrumentSelect = (option) => {
     setSelectedInstrument(option)
     const custom = option.value === 'CUSTOM'
+    const isRegistered = option.value.startsWith('registered-')
     setIsCustom(custom)
     setConverterId('')
-    // Fetch available converters for this instrument
-    if (!custom) {
+
+    if (isRegistered) {
+      // Extract converter_id and pre-fill from API data
+      const cId = option.value.replace('registered-', '')
+      setConverterId(cId)
+      // Fetch converter details to populate fields
+      fetch(`${ENDPOINTS.customConverter}/list`)
+        .then(r => r.json())
+        .then(data => {
+          const conv = (data.converters || []).find(c => c.converter_id === cId)
+          if (conv) {
+            setCustomManufacturer(conv.vendor || '')
+            setCustomModel(conv.model || '')
+            setAvailableConverters([conv])
+          }
+        })
+        .catch(() => {})
+    } else if (!custom) {
       const inst = instrumentsData.find(i => i.canonical_id === option.value)
       if (inst) fetchConverters(inst.vendor_id, inst.name)
     }
@@ -92,15 +136,17 @@ export default function ManifestCreator() {
     }
   }
 
-  const instrument = selectedInstrument && !isCustom
+  const instrument = selectedInstrument && !isCustom && !selectedInstrument.value.startsWith('registered-')
     ? instrumentsData.find(i => i.canonical_id === selectedInstrument.value)
     : null
 
+  const isRegistered = selectedInstrument && selectedInstrument.value.startsWith('registered-')
+
   const manifest = selectedInstrument ? {
-    vendor: isCustom ? 'CUSTOM' : instrument.vendor_id,
-    instrument_type: isCustom ? customType.value : instrument.instrument_type,
-    manufacturer: isCustom ? customManufacturer : instrument.manufacturer,
-    model: isCustom ? customModel : instrument.name,
+    vendor: isCustom ? 'CUSTOM' : isRegistered ? customManufacturer : instrument.vendor_id,
+    instrument_type: isCustom ? customType.value : isRegistered ? customType.value : instrument.instrument_type,
+    manufacturer: isCustom ? customManufacturer : isRegistered ? customManufacturer : instrument.manufacturer,
+    model: isCustom ? customModel : isRegistered ? customModel : instrument.name,
     file_format: fileFormat.value,
     ...(serialNumber && { serial_number: serialNumber }),
     ...(softwareVersion && { software_version: softwareVersion }),
@@ -143,7 +189,7 @@ export default function ManifestCreator() {
           <Select
             selectedOption={selectedInstrument}
             onChange={({ detail }) => handleInstrumentSelect(detail.selectedOption)}
-            options={instrumentOptions}
+            options={allInstrumentOptions}
             placeholder="Search instruments..."
             filteringType="auto"
             empty="No instruments found"
@@ -220,7 +266,7 @@ export default function ManifestCreator() {
         </Container>
       )}
 
-      {(instrument || isCustom) && (
+      {(instrument || isCustom || (selectedInstrument && selectedInstrument.value.startsWith('registered-'))) && (
         <>
           <Container header={<Header variant="h2">Your Instrument Details</Header>}>
             <SpaceBetween size="m">

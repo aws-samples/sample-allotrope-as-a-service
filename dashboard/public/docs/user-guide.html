@@ -21,6 +21,9 @@
     .nav a:hover { text-decoration: underline; }
     .btn { display: inline-block; background: #0972d3; color: white; padding: 8px 16px; border-radius: 4px; text-decoration: none; margin: 8px 4px 8px 0; }
     .btn:hover { background: #065299; }
+    .diagram { margin: 20px 0; text-align: center; }
+    .diagram img { max-width: 100%; height: auto; border: 1px solid #d5dbdb; border-radius: 4px; background: #f9f9f9; }
+    .diagram figcaption { font-size: 12px; color: #545b64; margin-top: 6px; }
     @media print { .nav, .btn { display: none; } body { max-width: 100%; } }
   </style>
 </head>
@@ -40,6 +43,11 @@
   <h2>Overview</h2>
   <p>The ASM Transformation Service converts laboratory instrument output files to Allotrope Simple Model (ASM) format with built-in validation and data integrity verification.</p>
 
+  <figure class="diagram">
+    <img src="/docs/images/01-process-flow.svg" alt="ASM Transformation Service - End-to-End Process Flow">
+    <figcaption>Figure 1: End-to-end process flow — from laboratory instrument to validated ASM output</figcaption>
+  </figure>
+
   <h2>Dashboard Tabs</h2>
   <table>
     <tr><th>Tab</th><th>Purpose</th><th>When to Use</th></tr>
@@ -48,10 +56,17 @@
     <tr><td>Control Tower</td><td>Monitor all conversion and validation jobs</td><td>Operational monitoring and troubleshooting</td></tr>
     <tr><td>Instrument Config Creator</td><td>Create instrument configuration JSON files</td><td>One-time setup per instrument</td></tr>
     <tr><td>Instrument Registry</td><td>Browse all supported instruments</td><td>Check if your instrument is supported</td></tr>
-    <tr><td>Converter Management</td><td>Register and approve custom converters</td><td>Adding support for new instruments</td></tr>
+    <tr><td>Converter Management</td><td>Register and approve custom converters</td><td>Adding support for new instruments manually</td></tr>
+    <tr><td>Validation Rules</td><td>Create and manage custom validation rule sets</td><td>Adding organization-specific validation checks beyond the Allotrope schema</td></tr>
+    <tr><td>AI Converter Generator</td><td>Generate a custom converter using AI</td><td>You need a converter but don't want to write code manually</td></tr>
   </table>
 
   <h2>Getting Started</h2>
+
+  <figure class="diagram">
+    <img src="/docs/images/02-entry-points.svg" alt="Two Entry Points - Convert or Validate">
+    <figcaption>Figure 2: Two entry points — convert a raw file or validate an existing ASM</figcaption>
+  </figure>
 
   <h3>Step 1: Create an Instrument Config</h3>
   <p>Go to the <strong>Instrument Config Creator</strong> tab. Select your instrument from the dropdown or choose "Custom Instrument" for unlisted instruments. Fill in your instrument details (serial number, software version, location, source file path, timezone). Download the generated JSON file. You only need to do this once per instrument.</p>
@@ -71,13 +86,31 @@
   <p>If you already have an ASM file and want to check compliance, use the <strong>Validate ASM File</strong> tab. Upload your ASM JSON file and click "Validate ASM File". The service checks schema compliance, required fields, data traceability, and provides recommendations with side-by-side comparisons showing what to fix.</p>
 
   <h2>Registering a Custom Converter</h2>
-  <p>If your instrument is not supported or you need a converter that follows your organization's specific design principles:</p>
+
+  <figure class="diagram">
+    <img src="/docs/images/05-converter-lifecycle.svg" alt="Converter Lifecycle">
+    <figcaption>Figure 3: Converter lifecycle — how a new instrument gets supported</figcaption>
+  </figure>
+
+  <p>There are two ways to create a custom converter:</p>
+
+  <h3>Option A: Build Manually</h3>
   <ol>
     <li>Build a converter following the <a href="/docs/api-guide.html#converter-requirements">Custom Converter Requirements</a></li>
     <li>Go to the <strong>Converter Management</strong> tab</li>
     <li>Click "Register New Converter" and upload your Python file</li>
     <li>A reviewer will approve or reject the converter</li>
     <li>Once approved, the converter is automatically used for matching instruments</li>
+  </ol>
+
+  <h3>Option B: Generate with AI</h3>
+  <ol>
+    <li>Go to the <strong>AI Converter Generator</strong> tab</li>
+    <li>Enter your instrument details (vendor, model, type)</li>
+    <li>Upload a sample instrument file (only headers + a few rows are sent to AI)</li>
+    <li>Click "Generate Converter with AI" — Bedrock Claude generates the code</li>
+    <li>The converter is auto-registered as PENDING in Converter Management</li>
+    <li>Review the generated code, test it, then approve for production use</li>
   </ol>
 
   <h2>Instrument Config Fields</h2>
@@ -93,6 +126,7 @@
     <tr><td>Location</td><td>No</td><td>Physical location of the instrument</td></tr>
     <tr><td>Source File Path</td><td>No</td><td>Mount path or UNC path where instrument writes output files</td></tr>
     <tr><td>Timezone</td><td>No</td><td>IANA timezone for correct timestamp interpretation</td></tr>
+    <tr><td>Converter ID</td><td>No</td><td>Specific converter to use (when multiple converters exist for the same instrument)</td></tr>
   </table>
 
   <h2>Data Integrity Verification</h2>
@@ -106,5 +140,33 @@
     <tr><td>Comprehensive</td><td>Production use</td><td>Medium — recommended for routine use</td></tr>
     <tr><td>Certification</td><td>Regulatory submission</td><td>High — requires full equipment metadata</td></tr>
   </table>
+
+  <h2>Custom Validation Rules</h2>
+  <p>The service supports pluggable validation rule sets that add checks beyond the Allotrope JSON schema. Use the <strong>Validation Rules</strong> tab to:</p>
+  <ul>
+    <li><strong>Start from template</strong> — load 18 pre-built rules based on Allotrope building principles</li>
+    <li><strong>Import rules</strong> — upload a JSON rule set file</li>
+    <li><strong>Build rules</strong> — create individual rules using the form-based builder</li>
+    <li><strong>Enable/disable</strong> — toggle rule sets on or off</li>
+  </ul>
+  <p>Enabled rule sets are automatically applied when you validate or convert files. Each finding in the results is tagged with which rule set caught it.</p>
+  <p>Rule sets are organized by level: L1 (supplementary schema checks), L3 (Allotrope building principles), L4 (organization-specific). L2 (Data Integrity Verification) runs automatically via the converter's field_mapping.</p>
+
+  <h2>Onboarding a New Instrument</h2>
+
+  <figure class="diagram">
+    <img src="/docs/images/03-instrument-onboarding.svg" alt="Instrument Onboarding Flow">
+    <figcaption>Figure 4: Instrument onboarding — from building a converter to production readiness</figcaption>
+  </figure>
+
+  <p>To onboard a new instrument: build or generate a converter, register it in Converter Management, assign it in the Instrument Registry, create an instrument config, and the instrument is ready for conversion on every future use.</p>
+
+  <h2>Selecting a Specific Converter</h2>
+  <p>When multiple converters are registered for the same instrument, you can choose which one to use:</p>
+  <ul>
+    <li><strong>In the instrument config file</strong> — set the <code>converter_id</code> field for automated pipelines</li>
+    <li><strong>On the Convert tab</strong> — use the Converter Selection dropdown to override on the fly</li>
+  </ul>
+  <p>Priority: screen selection &gt; config file &gt; auto-select. If neither specifies a converter, the system picks the best available automatically.</p>
 </body>
 </html>

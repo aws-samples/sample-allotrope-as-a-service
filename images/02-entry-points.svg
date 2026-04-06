@@ -1,0 +1,54 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 680 340" font-family="Arial, sans-serif" font-size="13">
+  <defs>
+    <marker id="arrow" markerWidth="10" markerHeight="7" refX="10" refY="3.5" orient="auto">
+      <polygon points="0 0, 10 3.5, 0 7" fill="#555"/>
+    </marker>
+  </defs>
+
+  <rect width="680" height="340" fill="#f9f9f9"/>
+
+  <!-- Title -->
+  <text x="340" y="28" text-anchor="middle" font-size="16" font-weight="bold" fill="#222">Two Entry Points</text>
+
+  <!-- Outer container -->
+  <rect x="20" y="45" width="640" height="280" rx="8" fill="#eef6ff" stroke="#4a90d9" stroke-width="1.5"/>
+
+  <!-- Divider -->
+  <line x1="340" y1="55" x2="340" y2="315" stroke="#4a90d9" stroke-width="1" stroke-dasharray="6,4"/>
+
+  <!-- Entry Point 1 header -->
+  <text x="180" y="75" text-anchor="middle" font-weight="bold" font-size="14" fill="#155724">ENTRY POINT 1: CONVERT</text>
+  <text x="180" y="95" text-anchor="middle" fill="#555" font-size="11">"I have a raw instrument file</text>
+  <text x="180" y="110" text-anchor="middle" fill="#555" font-size="11">and need ASM output"</text>
+
+  <!-- Entry Point 2 header -->
+  <text x="510" y="75" text-anchor="middle" font-weight="bold" font-size="14" fill="#004085">ENTRY POINT 2: VALIDATE</text>
+  <text x="510" y="95" text-anchor="middle" fill="#555" font-size="11">"I already have an ASM file</text>
+  <text x="510" y="110" text-anchor="middle" fill="#555" font-size="11">and want to check compliance"</text>
+
+  <!-- EP1 input box -->
+  <rect x="70" y="125" width="220" height="55" rx="4" fill="#fff" stroke="#28a745" stroke-width="1.5"/>
+  <text x="180" y="148" text-anchor="middle" font-weight="bold" fill="#155724">Instrument File</text>
+  <text x="180" y="166" text-anchor="middle" fill="#155724" font-size="11">+ Instrument Config</text>
+
+  <!-- EP2 input box -->
+  <rect x="390" y="125" width="220" height="55" rx="4" fill="#fff" stroke="#004085" stroke-width="1.5"/>
+  <text x="500" y="148" text-anchor="middle" font-weight="bold" fill="#004085">ASM File (JSON)</text>
+  <text x="500" y="166" text-anchor="middle" fill="#004085" font-size="11">already produced</text>
+
+  <!-- Arrows down -->
+  <line x1="180" y1="180" x2="180" y2="215" stroke="#555" stroke-width="1.5" marker-end="url(#arrow)"/>
+  <line x1="500" y1="180" x2="500" y2="215" stroke="#555" stroke-width="1.5" marker-end="url(#arrow)"/>
+
+  <!-- EP1 output box -->
+  <rect x="60" y="215" width="240" height="70" rx="4" fill="#d4edda" stroke="#28a745" stroke-width="1.5"/>
+  <text x="180" y="238" text-anchor="middle" font-weight="bold" fill="#155724">Steps 1–5</text>
+  <text x="180" y="256" text-anchor="middle" fill="#155724" font-size="11">Full conversion pipeline</text>
+  <text x="180" y="272" text-anchor="middle" fill="#155724" font-size="11">(Convert → Validate → Integrity)</text>
+
+  <!-- EP2 output box -->
+  <rect x="380" y="215" width="240" height="70" rx="4" fill="#cce5ff" stroke="#004085" stroke-width="1.5"/>
+  <text x="500" y="238" text-anchor="middle" font-weight="bold" fill="#004085">DVaaS Validation Only</text>
+  <text x="500" y="256" text-anchor="middle" fill="#004085" font-size="11">Step 3 standalone</text>
+  <text x="500" y="272" text-anchor="middle" fill="#004085" font-size="11">(no original file needed)</text>
+</svg>

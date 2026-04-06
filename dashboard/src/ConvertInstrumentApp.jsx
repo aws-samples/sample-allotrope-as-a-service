@@ -32,6 +32,17 @@ function ConvertInstrumentApp() {
   const [availableConverters, setAvailableConverters] = useState([])
   const [parsedConfig, setParsedConfig] = useState(null)
 
+  // Fetch all approved converters on mount
+  useState(() => {
+    fetch(`${ENDPOINTS.customConverter}/list`)
+      .then(r => r.json())
+      .then(data => {
+        const approved = (data.converters || []).filter(c => c.status === 'APPROVED')
+        setAvailableConverters(approved)
+      })
+      .catch(() => {})
+  })
+
   const validateConfig = (config) => {
     const errors = []
     const warnings = []
@@ -101,19 +112,17 @@ function ConvertInstrumentApp() {
         try {
           const resp = await fetch(`${ENDPOINTS.customConverter}/list`)
           const data = await resp.json()
-          const matching = (data.converters || []).filter(c =>
-            c.status === 'APPROVED' && (c.vendor === config.vendor || c.model === config.model)
-          )
-          setAvailableConverters(matching)
+          const all = (data.converters || []).filter(c => c.status === 'APPROVED')
+          setAvailableConverters(all)
           // Pre-select from config if converter_id is specified
           if (config.converter_id) {
-            const found = matching.find(c => c.converter_id === config.converter_id)
+            const found = all.find(c => c.converter_id === config.converter_id)
             if (found) {
               setConverterOverride({ label: `${found.converter_id}`, value: found.converter_id, description: found.description || '' })
             }
           }
         } catch (e) {
-          setAvailableConverters([])
+          // Keep existing converters list
         }
       }
     } catch (err) {
@@ -202,12 +211,17 @@ function ConvertInstrumentApp() {
       setProgress(60)
 
       // Step 2: Validate the generated ASM
+      // Get enabled rule sets from localStorage
+      const savedRuleSets = JSON.parse(localStorage.getItem('validationRuleSets') || '[]')
+      const enabledRuleSets = savedRuleSets.filter(rs => rs.enabled)
+
       const validateResponse = await fetch(`${ENDPOINTS.dvaas}/validate`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
           asm_data: asmData,
           validation_level: 'comprehensive',
+          rule_sets: enabledRuleSets.length > 0 ? enabledRuleSets : [],
           use_allotropy_validator: true,
           generate_report: true,
           file_name: instrumentFile[0].name.replace(/\.[^/.]+$/, '') + '_asm.json'
@@ -415,29 +429,33 @@ function ConvertInstrumentApp() {
               )}
             </>
           )}
-
-          {availableConverters.length > 0 && (
-            <FormField
-              label="Converter (Optional Override)"
-              description={`${availableConverters.length} approved converter${availableConverters.length > 1 ? 's' : ''} available for this instrument. ${parsedConfig?.converter_id ? `Config file specifies: ${parsedConfig.converter_id}` : 'Select to override auto-selection.'}`}
-            >
-              <Select
-                selectedOption={converterOverride}
-                onChange={({ detail }) => setConverterOverride(detail.selectedOption)}
-                options={[
-                  { label: 'Auto-select (system chooses best converter)', value: '' },
-                  ...availableConverters.map(c => ({
-                    label: c.converter_id,
-                    value: c.converter_id,
-                    description: c.description || `${c.vendor} / ${c.model}`
-                  }))
-                ]}
-                placeholder="Auto-select"
-              />
-            </FormField>
-          )}
         </SpaceBetween>
       </Container>
+
+      {/* Converter Selection */}
+      {availableConverters.length > 0 && (
+        <Container header={<Header variant="h2">Converter Selection (Optional)</Header>}>
+          <FormField
+            label="Converter"
+            description={`${availableConverters.length} approved converter${availableConverters.length > 1 ? 's' : ''} available. ${parsedConfig?.converter_id ? `Config file specifies: ${parsedConfig.converter_id}.` : ''} Select a specific converter or leave as Auto-select.`}
+          >
+            <Select
+              selectedOption={converterOverride}
+              onChange={({ detail }) => setConverterOverride(detail.selectedOption)}
+              options={[
+                { label: 'Auto-select (system chooses best converter)', value: '' },
+                ...availableConverters.map(c => ({
+                  label: c.converter_id,
+                  value: c.converter_id,
+                  description: c.description || `${c.vendor} / ${c.model} / ${(c.instrument_type || '').replace('_', ' ')}`
+                }))
+              ]}
+              placeholder="Auto-select"
+              filteringType="auto"
+            />
+          </FormField>
+        </Container>
+      )}
 
       {/* Action Button */}
       <Container header={<Header variant="h2">Step 2: Convert & Validate</Header>}>

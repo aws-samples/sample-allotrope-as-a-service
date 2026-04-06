@@ -54,6 +54,7 @@ export default function InstrumentRegistry() {
           instrument_type: c.instrument_type || 'unknown',
           allotropy_supported: false,
           converter_type: 'custom',
+          converter_id: c.converter_id,
           aliases: [],
           registry_status: c.status,
           source: 'registered'
@@ -165,6 +166,11 @@ export default function InstrumentRegistry() {
                     ? <Badge color="green">Allotropy</Badge>
                     : <Badge color="blue">Custom</Badge>
                 }
+              },
+              {
+                id: 'converter_id',
+                header: 'Converter ID',
+                cell: item => item.converter_id || '-'
               }
             ]}
             items={filteredInstruments}

@@ -1,0 +1,53 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 500 620" font-family="Arial, sans-serif" font-size="13">
+  <defs>
+    <marker id="arrow" markerWidth="10" markerHeight="7" refX="10" refY="3.5" orient="auto">
+      <polygon points="0 0, 10 3.5, 0 7" fill="#555"/>
+    </marker>
+  </defs>
+
+  <rect width="500" height="620" fill="#f9f9f9"/>
+
+  <!-- Title -->
+  <text x="250" y="28" text-anchor="middle" font-size="16" font-weight="bold" fill="#222">Instrument Onboarding Flow</text>
+
+  <!-- Step 1: Build Converter -->
+  <rect x="60" y="45" width="380" height="80" rx="6" fill="#e2d9f3" stroke="#6f42c1" stroke-width="1.5"/>
+  <text x="250" y="70" text-anchor="middle" font-weight="bold" fill="#3d1a78">1. BUILD CONVERTER</text>
+  <text x="250" y="88" text-anchor="middle" fill="#3d1a78" font-size="11">Write manually or use AI Converter Generator</text>
+  <text x="250" y="104" text-anchor="middle" fill="#3d1a78" font-size="11">Type: allotropy-based, custom-built, or AI-generated</text>
+
+  <line x1="250" y1="125" x2="250" y2="155" stroke="#555" stroke-width="1.5" marker-end="url(#arrow)"/>
+
+  <!-- Step 2: Add to Converter Management -->
+  <rect x="60" y="155" width="380" height="90" rx="6" fill="#d4edda" stroke="#28a745" stroke-width="1.5"/>
+  <text x="250" y="180" text-anchor="middle" font-weight="bold" fill="#155724">2. ADD TO CONVERTER MANAGEMENT</text>
+  <text x="250" y="198" text-anchor="middle" fill="#155724" font-size="11">Register via Dashboard "Converter Mgmt" tab</text>
+  <text x="250" y="214" text-anchor="middle" fill="#155724" font-size="11">or POST /register</text>
+  <text x="250" y="230" text-anchor="middle" fill="#155724" font-size="11">Status: PENDING → APPROVED</text>
+
+  <line x1="250" y1="245" x2="250" y2="275" stroke="#555" stroke-width="1.5" marker-end="url(#arrow)"/>
+
+  <!-- Step 3: Assign in Instrument Registry -->
+  <rect x="60" y="275" width="380" height="90" rx="6" fill="#d4edda" stroke="#28a745" stroke-width="1.5"/>
+  <text x="250" y="300" text-anchor="middle" font-weight="bold" fill="#155724">3. ASSIGN IN INSTRUMENT REGISTRY</text>
+  <text x="250" y="318" text-anchor="middle" fill="#155724" font-size="11">Link the approved converter to the instrument</text>
+  <text x="250" y="334" text-anchor="middle" fill="#155724" font-size="11">vendor + model → converter ID</text>
+  <text x="250" y="350" text-anchor="middle" fill="#155724" font-size="11">via Dashboard "Instrument Registry" tab</text>
+
+  <line x1="250" y1="365" x2="250" y2="395" stroke="#555" stroke-width="1.5" marker-end="url(#arrow)"/>
+
+  <!-- Step 4: Create Instrument Config -->
+  <rect x="60" y="395" width="380" height="90" rx="6" fill="#d4edda" stroke="#28a745" stroke-width="1.5"/>
+  <text x="250" y="420" text-anchor="middle" font-weight="bold" fill="#155724">4. CREATE INSTRUMENT CONFIG</text>
+  <text x="250" y="438" text-anchor="middle" fill="#155724" font-size="11">JSON file via Dashboard "Instrument Config Creator"</text>
+  <text x="250" y="454" text-anchor="middle" fill="#155724" font-size="11">or record in equipment management database</text>
+  <text x="250" y="470" text-anchor="middle" fill="#155724" font-size="11">vendor, model, serial#, etc.</text>
+
+  <line x1="250" y1="485" x2="250" y2="515" stroke="#555" stroke-width="1.5" marker-end="url(#arrow)"/>
+
+  <!-- Step 5: Ready -->
+  <rect x="60" y="515" width="380" height="80" rx="6" fill="#cce5ff" stroke="#004085" stroke-width="1.5"/>
+  <text x="250" y="540" text-anchor="middle" font-weight="bold" fill="#004085">5. READY</text>
+  <text x="250" y="558" text-anchor="middle" fill="#004085" font-size="11">Instrument is onboarded.</text>
+  <text x="250" y="574" text-anchor="middle" fill="#004085" font-size="11">Converter lookup will resolve it on every future conversion.</text>
+</svg>

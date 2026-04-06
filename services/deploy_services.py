@@ -221,6 +221,45 @@ class AutonomousServicesStack(Stack):
             }]
         )
 
+        # AI Converter Generator Lambda
+        generate_converter_lambda = _lambda.Function(
+            self, "GenerateConverterFunction",
+            runtime=_lambda.Runtime.PYTHON_3_9,
+            handler="generate_converter.lambda_handler",
+            code=_lambda.Code.from_asset("ataas"),
+            timeout=Duration.seconds(120),
+            memory_size=1024,
+            environment={
+                "CONVERTER_REGISTRY_TABLE": converter_registry_table.table_name,
+                "CONVERTERS_BUCKET": converters_bucket.bucket_name,
+                "SERVICE_NAME": "GenerateConverter"
+            }
+        )
+
+        # Grant permissions
+        generate_converter_lambda.add_to_role_policy(
+            iam.PolicyStatement(
+                effect=iam.Effect.ALLOW,
+                actions=["bedrock:InvokeModel"],
+                resources=["*"]
+            )
+        )
+        converter_registry_table.grant_write_data(generate_converter_lambda)
+        converters_bucket.grant_write(generate_converter_lambda)
+
+        # Generate converter endpoint on ATaaS API
+        generate_resource = ataas_api.root.add_resource("generate-converter")
+        generate_resource.add_method(
+            "POST",
+            apigateway.LambdaIntegration(generate_converter_lambda),
+            method_responses=[{
+                "statusCode": "200",
+                "responseHeaders": {
+                    "Access-Control-Allow-Origin": True
+                }
+            }]
+        )
+
         # Health check for ATaaS
         ataas_health = ataas_api.root.add_resource("health")
         ataas_health.add_method(

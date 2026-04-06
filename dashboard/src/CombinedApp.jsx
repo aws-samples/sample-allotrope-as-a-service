@@ -12,6 +12,7 @@ import ManifestCreator from './ManifestCreator'
 import InstrumentRegistry from './InstrumentRegistry'
 import ConverterManagementApp from './ConverterManagementApp'
 import ValidationRulesApp from './ValidationRulesApp'
+import GenerateConverterApp from './GenerateConverterApp'
 
 function CombinedApp() {
   const [activeTab, setActiveTab] = useState('validate-asm')
@@ -58,6 +59,12 @@ function CombinedApp() {
       id: 'validation-rules',
       label: 'Validation Rules',
       content: <ValidationRulesApp />,
+      visible: true
+    },
+    {
+      id: 'generate-converter',
+      label: 'AI Converter Generator',
+      content: <GenerateConverterApp />,
       visible: true
     }
   ]

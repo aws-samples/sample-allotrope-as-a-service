@@ -1,0 +1,58 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 500 420" font-family="Arial, sans-serif" font-size="13">
+  <defs>
+    <marker id="arrow" markerWidth="10" markerHeight="7" refX="10" refY="3.5" orient="auto">
+      <polygon points="0 0, 10 3.5, 0 7" fill="#555"/>
+    </marker>
+  </defs>
+
+  <rect width="500" height="420" fill="#f9f9f9"/>
+
+  <!-- Title -->
+  <text x="250" y="28" text-anchor="middle" font-size="16" font-weight="bold" fill="#222">Converter Lookup — Instrument Registry</text>
+
+  <!-- Input -->
+  <rect x="150" y="45" width="200" height="50" rx="4" fill="#fff3cd" stroke="#ffc107" stroke-width="1.5"/>
+  <text x="250" y="66" text-anchor="middle" font-weight="bold" fill="#856404">Instrument Config</text>
+  <text x="250" y="84" text-anchor="middle" fill="#856404" font-size="11">vendor + model</text>
+
+  <line x1="250" y1="95" x2="250" y2="125" stroke="#555" stroke-width="1.5" marker-end="url(#arrow)"/>
+
+  <!-- Instrument Registry -->
+  <rect x="120" y="125" width="260" height="70" rx="6" fill="#e2d9f3" stroke="#6f42c1" stroke-width="1.5"/>
+  <text x="250" y="150" text-anchor="middle" font-weight="bold" fill="#3d1a78">Instrument Registry</text>
+  <text x="250" y="168" text-anchor="middle" fill="#3d1a78" font-size="11">vendor + model → converter ID</text>
+  <text x="250" y="184" text-anchor="middle" fill="#3d1a78" font-size="11">(single source of truth)</text>
+
+  <!-- Fork -->
+  <line x1="250" y1="195" x2="250" y2="225" stroke="#555" stroke-width="1.5"/>
+  <line x1="100" y1="225" x2="400" y2="225" stroke="#555" stroke-width="1.5"/>
+  <line x1="100" y1="225" x2="100" y2="255" stroke="#555" stroke-width="1.5" marker-end="url(#arrow)"/>
+  <line x1="400" y1="225" x2="400" y2="255" stroke="#555" stroke-width="1.5" marker-end="url(#arrow)"/>
+
+  <text x="100" y="243" text-anchor="middle" fill="#28a745" font-weight="bold" font-size="12">Found</text>
+  <text x="400" y="243" text-anchor="middle" fill="#dc3545" font-weight="bold" font-size="12">Not Found</text>
+
+  <!-- Found box -->
+  <rect x="20" y="255" width="200" height="120" rx="4" fill="#d4edda" stroke="#28a745" stroke-width="1.5"/>
+  <text x="120" y="278" text-anchor="middle" font-weight="bold" fill="#155724">Execute Converter</text>
+  <text x="120" y="296" text-anchor="middle" fill="#155724" font-size="11">Any registered type:</text>
+  <text x="120" y="312" text-anchor="middle" fill="#155724" font-size="11">• Allotropy-based</text>
+  <text x="120" y="328" text-anchor="middle" fill="#155724" font-size="11">• Custom-built</text>
+  <text x="120" y="344" text-anchor="middle" fill="#155724" font-size="11">• AI-generated</text>
+
+  <!-- Not Found box -->
+  <rect x="300" y="255" width="180" height="120" rx="4" fill="#f8d7da" stroke="#dc3545" stroke-width="1.5"/>
+  <text x="390" y="278" text-anchor="middle" font-weight="bold" fill="#721c24">Error Returned</text>
+  <text x="390" y="296" text-anchor="middle" fill="#721c24" font-size="11">INSTRUMENT_NOT_FOUND</text>
+  <text x="390" y="314" text-anchor="middle" fill="#721c24" font-size="11">Please complete</text>
+  <text x="390" y="330" text-anchor="middle" fill="#721c24" font-size="11">instrument onboarding</text>
+  <text x="390" y="346" text-anchor="middle" fill="#721c24" font-size="11">before retrying.</text>
+
+  <!-- Arrow from Found to ASM output -->
+  <line x1="120" y1="375" x2="120" y2="400" stroke="#555" stroke-width="1.5"/>
+  <line x1="120" y1="400" x2="250" y2="400" stroke="#555" stroke-width="1.5" marker-end="url(#arrow)"/>
+
+  <!-- ASM Output -->
+  <rect x="150" y="390" width="200" height="25" rx="4" fill="#cce5ff" stroke="#004085" stroke-width="1.5"/>
+  <text x="250" y="407" text-anchor="middle" font-weight="bold" fill="#004085">ASM Output (JSON)</text>
+</svg>

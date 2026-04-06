@@ -61,7 +61,10 @@ class AutonomousServicesStack(Stack):
             memory_size=2048,
             environment={
                 "DVAAS_ENDPOINT": "internal",  # Will be updated after DVaaS API creation
-                "SERVICE_NAME": "ATaaS"
+                "SERVICE_NAME": "ATaaS",
+                # Optional: set these to route through a custom LLM gateway
+                # "BEDROCK_ENDPOINT_URL": "https://your-llm-gateway.internal.company.com",
+                # "BEDROCK_MODEL_ID": "us.anthropic.claude-3-5-sonnet-20241022-v2:0",
             }
         )
 
@@ -244,7 +247,10 @@ class AutonomousServicesStack(Stack):
             environment={
                 "CONVERTER_REGISTRY_TABLE": converter_registry_table.table_name,
                 "CONVERTERS_BUCKET": converters_bucket.bucket_name,
-                "SERVICE_NAME": "GenerateConverter"
+                "SERVICE_NAME": "GenerateConverter",
+                # Optional: set these to route through a custom LLM gateway
+                # "BEDROCK_ENDPOINT_URL": "https://your-llm-gateway.internal.company.com",
+                # "BEDROCK_MODEL_ID": "us.anthropic.claude-3-5-sonnet-20241022-v2:0",
             }
         )
 

@@ -8,8 +8,12 @@ import boto3
 import os
 from datetime import datetime
 
-# Initialize Bedrock client
-bedrock = boto3.client('bedrock-runtime', region_name='us-east-1')
+# Initialize Bedrock client (supports custom gateway via BEDROCK_ENDPOINT_URL)
+bedrock_kwargs = {'region_name': os.environ.get('AWS_REGION', 'us-east-1')}
+if os.environ.get('BEDROCK_ENDPOINT_URL'):
+    bedrock_kwargs['endpoint_url'] = os.environ['BEDROCK_ENDPOINT_URL']
+bedrock = boto3.client('bedrock-runtime', **bedrock_kwargs)
+MODEL_ID = os.environ.get('BEDROCK_MODEL_ID', 'us.anthropic.claude-3-5-sonnet-20241022-v2:0')
 
 def lambda_handler(event, context):
     """Minimal ATaaS entry point"""
@@ -151,7 +155,7 @@ Respond ONLY with valid JSON, no other text."""
     
     try:
         response = bedrock.invoke_model(
-            modelId='us.anthropic.claude-3-5-sonnet-20241022-v2:0',
+            modelId=MODEL_ID,
             body=json.dumps({
                 "anthropic_version": "bedrock-2023-05-31",
                 "max_tokens": 4000,
@@ -221,7 +225,7 @@ Respond ONLY with valid JSON, no other text."""
     
     try:
         response = bedrock.invoke_model(
-            modelId='us.anthropic.claude-3-5-sonnet-20241022-v2:0',
+            modelId=MODEL_ID,
             body=json.dumps({
                 "anthropic_version": "bedrock-2023-05-31",
                 "max_tokens": 8000,
@@ -281,7 +285,7 @@ Respond ONLY with Python code, no explanations."""
     
     try:
         response = bedrock.invoke_model(
-            modelId='us.anthropic.claude-3-5-sonnet-20241022-v2:0',
+            modelId=MODEL_ID,
             body=json.dumps({
                 "anthropic_version": "bedrock-2023-05-31",
                 "max_tokens": 8000,

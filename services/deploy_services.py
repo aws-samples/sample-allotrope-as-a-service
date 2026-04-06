@@ -54,7 +54,7 @@ class AutonomousServicesStack(Stack):
         # ATaaS Lambda Function
         ataas_lambda = _lambda.Function(
             self, "ATaaSFunction", 
-            runtime=_lambda.Runtime.PYTHON_3_9,
+            runtime=_lambda.Runtime.PYTHON_3_12,
             handler="lambda_function.lambda_handler",
             code=_lambda.Code.from_asset("ataas"),
             timeout=Duration.seconds(300),
@@ -123,7 +123,7 @@ class AutonomousServicesStack(Stack):
         # Multi-Instrument Lambda Function
         multi_instrument_lambda = _lambda.Function(
             self, "MultiInstrumentFunction",
-            runtime=_lambda.Runtime.PYTHON_3_9,
+            runtime=_lambda.Runtime.PYTHON_3_12,
             handler="lambda_function.lambda_handler",
             code=_lambda.Code.from_asset("multi-instrument"),
             timeout=Duration.seconds(300),
@@ -224,7 +224,7 @@ class AutonomousServicesStack(Stack):
         # AI Converter Generator Lambda
         generate_converter_lambda = _lambda.Function(
             self, "GenerateConverterFunction",
-            runtime=_lambda.Runtime.PYTHON_3_9,
+            runtime=_lambda.Runtime.PYTHON_3_12,
             handler="generate_converter.lambda_handler",
             code=_lambda.Code.from_asset("ataas"),
             timeout=Duration.seconds(120),
@@ -324,7 +324,7 @@ class AutonomousServicesStack(Stack):
         # Custom Converter Service Lambda
         custom_converter_lambda = _lambda.Function(
             self, "CustomConverterFunction",
-            runtime=_lambda.Runtime.PYTHON_3_9,
+            runtime=_lambda.Runtime.PYTHON_3_12,
             handler="lambda_function.lambda_handler",
             code=_lambda.Code.from_asset("custom-converter"),
             timeout=Duration.seconds(60),
@@ -369,7 +369,7 @@ class AutonomousServicesStack(Stack):
         register_resource = custom_converter_api.root.add_resource("register")
         register_lambda = _lambda.Function(
             self, "RegisterConverterFunction",
-            runtime=_lambda.Runtime.PYTHON_3_9,
+            runtime=_lambda.Runtime.PYTHON_3_12,
             handler="index.lambda_handler",
             code=_lambda.Code.from_inline("""
 import json
@@ -439,7 +439,7 @@ def lambda_handler(event, context):
         approve_resource = custom_converter_api.root.add_resource("approve")
         approve_lambda = _lambda.Function(
             self, "ApproveConverterFunction",
-            runtime=_lambda.Runtime.PYTHON_3_9,
+            runtime=_lambda.Runtime.PYTHON_3_12,
             handler="index.lambda_handler",
             code=_lambda.Code.from_inline("""
 import json
@@ -496,7 +496,7 @@ def lambda_handler(event, context):
         # List endpoint (for dashboard)
         list_lambda = _lambda.Function(
             self, "ListConvertersFunction",
-            runtime=_lambda.Runtime.PYTHON_3_9,
+            runtime=_lambda.Runtime.PYTHON_3_12,
             handler="index.lambda_handler",
             code=_lambda.Code.from_inline("""
 import json
@@ -594,7 +594,7 @@ def lambda_handler(event, context):
         # History endpoint for Control Tower
         history_lambda = _lambda.Function(
             self, "ConversionHistoryFunction",
-            runtime=_lambda.Runtime.PYTHON_3_9,
+            runtime=_lambda.Runtime.PYTHON_3_12,
             handler="index.lambda_handler",
             code=_lambda.Code.from_inline("""
 import json

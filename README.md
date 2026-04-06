@@ -39,7 +39,7 @@ asm-converter/
 
 - AWS Account with Bedrock access
 - AWS CDK installed (`npm install -g aws-cdk`)
-- Python 3.9+
+- Python 3.12+
 - Node.js 18+ (for dashboard)
 
 ### Deploy Services

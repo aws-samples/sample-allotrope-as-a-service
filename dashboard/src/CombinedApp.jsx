@@ -17,20 +17,20 @@ import ValidationRulesApp from './ValidationRulesApp'
 import GenerateConverterApp from './GenerateConverterApp'
 
 function CombinedApp() {
-  const [activeTab, setActiveTab] = useState('validate-asm')
+  const [activeTab, setActiveTab] = useState('convert-instrument')
 
   // Define all tabs including hidden ones
   const allTabs = [
     {
-      id: 'validate-asm',
-      label: 'Validate ASM File',
-      content: <ValidateASMApp />,
-      visible: true
-    },
-    {
       id: 'convert-instrument',
       label: 'Convert Instrument File',
       content: <ConvertInstrumentApp />,
+      visible: true
+    },
+    {
+      id: 'validate-asm',
+      label: 'Validate ASM File',
+      content: <ValidateASMApp />,
       visible: true
     },
     {

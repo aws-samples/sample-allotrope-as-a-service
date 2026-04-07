@@ -23,6 +23,7 @@ export default function ManifestCreator() {
   const [location, setLocation] = useState('')
   const [uncPath, setUncPath] = useState('')
   const [timezone, setTimezone] = useState('')
+  const [dateFormat, setDateFormat] = useState(null)
   const [contact, setContact] = useState('')
   const [customerAlias, setCustomerAlias] = useState('')
   const [fileFormat, setFileFormat] = useState({ label: 'CSV', value: 'csv' })
@@ -150,10 +151,11 @@ export default function ManifestCreator() {
     file_format: fileFormat.value,
     ...(serialNumber && { serial_number: serialNumber }),
     ...(softwareVersion && { software_version: softwareVersion }),
-    ...((location || uncPath || timezone) && { location: {
+    ...((location || uncPath || timezone || dateFormat) && { location: {
       ...(location && { description: location }),
       ...(uncPath && { unc_path: uncPath }),
-      ...(timezone && { timezone: timezone })
+      ...(timezone && { timezone: timezone }),
+      ...(dateFormat && { date_format: dateFormat.value })
     }}),
     ...(contact && { contact: contact }),
     ...(customerAlias && { customer_alias: customerAlias }),
@@ -335,6 +337,25 @@ export default function ManifestCreator() {
                   value={timezone}
                   onChange={({ detail }) => setTimezone(detail.value)}
                   placeholder="e.g., America/New_York"
+                />
+              </FormField>
+
+              <FormField 
+                key="date-format"
+                label="Date Format (Optional)" 
+                description="How dates appear in the instrument output file. Critical for multi-site deployments where US and European formats differ."
+              >
+                <Select
+                  selectedOption={dateFormat}
+                  onChange={({ detail }) => setDateFormat(detail.selectedOption)}
+                  options={[
+                    { label: 'MM/DD/YYYY (US)', value: 'MM/DD/YYYY' },
+                    { label: 'DD/MM/YYYY (Europe)', value: 'DD/MM/YYYY' },
+                    { label: 'YYYY-MM-DD (ISO 8601)', value: 'YYYY-MM-DD' },
+                    { label: 'DD.MM.YYYY (Germany)', value: 'DD.MM.YYYY' },
+                    { label: 'YYYY/MM/DD (Japan)', value: 'YYYY/MM/DD' },
+                  ]}
+                  placeholder="Select date format"
                 />
               </FormField>
 

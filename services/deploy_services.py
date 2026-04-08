@@ -119,8 +119,8 @@ class AutonomousServicesStack(Stack):
             removal_policy=RemovalPolicy.DESTROY
         )
 
-        # JWT secret for token signing
-        jwt_secret = "asm-service-jwt-secret-change-in-production"
+        # JWT secret - auto-generated per deployment (unique per AWS account + stack)
+        jwt_secret = f"{cdk.Aws.ACCOUNT_ID}-{cdk.Aws.STACK_NAME}-asm-jwt-secret"
 
         # Custom Converter Registry table
         converter_registry_table = dynamodb.Table(

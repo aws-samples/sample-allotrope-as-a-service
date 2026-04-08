@@ -119,6 +119,16 @@ class AutonomousServicesStack(Stack):
             removal_policy=RemovalPolicy.DESTROY
         )
 
+        # CORS: restrict to your CloudFront domain (set after deployment, redeploy)
+        # Change "*" to your CloudFront URL, e.g., "https://dxxxxxxxxxx.cloudfront.net"
+        allowed_origin = "*"  # TODO: restrict after first deployment
+
+        # API Key for endpoint protection
+        api_key = apigateway.ApiKey(self, "ASMServiceApiKey",
+            api_key_name="asm-service-key",
+            description="API key for ASM Transformation Service"
+        )
+
         # JWT secret - auto-generated per deployment (unique per AWS account + stack)
         jwt_secret = f"{cdk.Aws.ACCOUNT_ID}-{cdk.Aws.STACK_NAME}-asm-jwt-secret"
 
@@ -189,7 +199,7 @@ class AutonomousServicesStack(Stack):
             rest_api_name="DVaaS - Data Validation as a Service",
             description="Standalone ASM validation service",
             default_cors_preflight_options=apigateway.CorsOptions(
-                allow_origins=apigateway.Cors.ALL_ORIGINS,
+                allow_origins=[allowed_origin],
                 allow_methods=apigateway.Cors.ALL_METHODS,
                 allow_headers=["Content-Type", "Authorization"]
             )
@@ -232,7 +242,7 @@ class AutonomousServicesStack(Stack):
             rest_api_name="ATaaS - ASM Transformation as a Service",
             description="File conversion and code generation service",
             default_cors_preflight_options=apigateway.CorsOptions(
-                allow_origins=apigateway.Cors.ALL_ORIGINS,
+                allow_origins=[allowed_origin],
                 allow_methods=apigateway.Cors.ALL_METHODS,
                 allow_headers=["Content-Type", "Authorization"]
             )
@@ -317,7 +327,7 @@ class AutonomousServicesStack(Stack):
             rest_api_name="Multi-Instrument ASM Converter",
             description="Multi-instrument ASM conversion service",
             default_cors_preflight_options=apigateway.CorsOptions(
-                allow_origins=apigateway.Cors.ALL_ORIGINS,
+                allow_origins=[allowed_origin],
                 allow_methods=apigateway.Cors.ALL_METHODS,
                 allow_headers=["Content-Type", "Authorization"]
             )
@@ -379,7 +389,7 @@ class AutonomousServicesStack(Stack):
             rest_api_name="Custom Converter Service",
             description="Execute approved custom converters",
             default_cors_preflight_options=apigateway.CorsOptions(
-                allow_origins=apigateway.Cors.ALL_ORIGINS,
+                allow_origins=[allowed_origin],
                 allow_methods=apigateway.Cors.ALL_METHODS,
                 allow_headers=["Content-Type", "Authorization"]
             )
@@ -823,7 +833,7 @@ def lambda_handler(event, context):
             rest_api_name="Unified ASM Converter",
             description="Intelligent converter with automatic fallback (Multi-Instrument -> AI)",
             default_cors_preflight_options=apigateway.CorsOptions(
-                allow_origins=apigateway.Cors.ALL_ORIGINS,
+                allow_origins=[allowed_origin],
                 allow_methods=apigateway.Cors.ALL_METHODS,
                 allow_headers=["Content-Type", "Authorization"]
             )
@@ -940,6 +950,24 @@ def lambda_handler(event, context):
             self, "ConvertersBucket",
             value=converters_bucket.bucket_name,
             description="S3 bucket for custom converter code"
+        )
+
+        # Usage plan to associate API key with all APIs
+        plan = apigateway.UsagePlan(self, "ASMUsagePlan",
+            name="asm-service-plan",
+            api_stages=[
+                apigateway.UsagePlanPerApiStage(api=dvaas_api, stage=dvaas_api.deployment_stage),
+                apigateway.UsagePlanPerApiStage(api=ataas_api, stage=ataas_api.deployment_stage),
+                apigateway.UsagePlanPerApiStage(api=multi_instrument_api, stage=multi_instrument_api.deployment_stage),
+                apigateway.UsagePlanPerApiStage(api=custom_converter_api, stage=custom_converter_api.deployment_stage),
+                apigateway.UsagePlanPerApiStage(api=unified_api, stage=unified_api.deployment_stage),
+            ]
+        )
+        plan.add_api_key(api_key)
+
+        cdk.CfnOutput(self, "ApiKeyId",
+            value=api_key.key_id,
+            description="API Key ID - retrieve value with: aws apigateway get-api-key --api-key <id> --include-value"
         )
 
 app = cdk.App()

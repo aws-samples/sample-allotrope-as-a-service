@@ -203,6 +203,87 @@ DynamoDB (converter registry, job history)
 S3 (ASM files, converter code, validation results)
 ```
 
+## Security Hardening
+
+The default deployment is functional but open. For production/enterprise environments, apply these hardening steps:
+
+### 1. Restrict CORS (Required)
+
+After your first deployment, update `allowed_origin` in `services/deploy_services.py` from `"*"` to your CloudFront URL:
+
+```python
+allowed_origin = "https://dxxxxxxxxxx.cloudfront.net"
+```
+
+Then redeploy: `cd services && cdk deploy --require-approval never`
+
+### 2. Enable API Key Protection (Recommended)
+
+An API key and usage plan are created automatically. To require the key on API calls:
+
+1. Retrieve your API key value:
+   ```bash
+   aws apigateway get-api-key --api-key <ApiKeyId from CDK output> --include-value
+   ```
+
+2. Set the key in `dashboard/src/config.js`:
+   ```javascript
+   export const API_KEY = 'your-api-key-value'
+   ```
+
+3. Add `api_key_required=True` to API Gateway methods in `deploy_services.py` and redeploy
+
+4. Rebuild and redeploy the dashboard
+
+### 3. VPC Deployment (Enterprise)
+
+For private network deployment, add VPC configuration to Lambda functions in `deploy_services.py`:
+
+```python
+vpc = ec2.Vpc.from_lookup(self, "VPC", vpc_id="vpc-xxxxxxxx")
+
+# Add to each Lambda function:
+vpc=vpc,
+vpc_subnets=ec2.SubnetSelection(subnet_type=ec2.SubnetType.PRIVATE_WITH_EGRESS),
+```
+
+This requires importing `aws_ec2 as ec2` in the CDK stack.
+
+### 4. KMS Encryption (Enterprise)
+
+To use customer-managed KMS keys for DynamoDB and S3:
+
+```python
+from aws_cdk import aws_kms as kms
+
+key = kms.Key(self, "ASMEncryptionKey")
+
+# Add to DynamoDB tables:
+encryption=dynamodb.TableEncryption.CUSTOMER_MANAGED,
+encryption_key=key,
+
+# Add to S3 buckets:
+encryption=s3.BucketEncryption.KMS,
+encryption_key=key,
+```
+
+### 5. WAF (Enterprise)
+
+Add AWS WAF to CloudFront and API Gateway for rate limiting, IP filtering, and bot protection. Configure via AWS Console or add `aws_wafv2` constructs to the CDK stack.
+
+### 6. Private API Gateway (Enterprise)
+
+To make APIs accessible only from within your VPC:
+
+```python
+endpoint_configuration=apigateway.EndpointConfiguration(
+    types=[apigateway.EndpointType.PRIVATE]
+),
+policy=iam.PolicyDocument(...)
+```
+
+This removes public internet access entirely — APIs are only reachable from within the VPC.
+
 ## Custom LLM Gateway (Optional)
 
 If your organization uses a gateway or load balancer in front of Bedrock, you can route AI requests through it. In `services/deploy_services.py`, uncomment and set these environment variables on the ATaaS and GenerateConverter Lambda definitions:

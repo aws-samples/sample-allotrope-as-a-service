@@ -7,6 +7,7 @@ import SpaceBetween from '@cloudscape-design/components/space-between'
 import '@cloudscape-design/global-styles/index.css'
 
 // Import all components
+import LoginPage from './LoginPage'
 import ValidateASMApp from './ValidateASMApp'
 import ConvertInstrumentApp from './ConvertInstrumentApp'
 import ControlTowerApp from './ControlTowerApp'
@@ -18,6 +19,17 @@ import GenerateConverterApp from './GenerateConverterApp'
 
 function CombinedApp() {
   const [activeTab, setActiveTab] = useState('convert-instrument')
+  const [user, setUser] = useState(localStorage.getItem('asm_user'))
+
+  const handleLogout = () => {
+    localStorage.removeItem('asm_token')
+    localStorage.removeItem('asm_user')
+    setUser(null)
+  }
+
+  if (!user) {
+    return <LoginPage onLogin={(email) => setUser(email)} />
+  }
 
   // Define all tabs including hidden ones
   const allTabs = [
@@ -111,6 +123,16 @@ function CombinedApp() {
             items: [
               { id: 'user-guide', text: 'User Guide', href: '/docs/user-guide.html' },
               { id: 'api', text: 'API & Technical Guide', href: '/docs/api-guide.html' }
+            ]
+          },
+          {
+            type: 'menu-dropdown',
+            text: user,
+            onItemClick: ({ detail }) => {
+              if (detail.id === 'signout') handleLogout()
+            },
+            items: [
+              { id: 'signout', text: 'Sign out' }
             ]
           }
         ]}

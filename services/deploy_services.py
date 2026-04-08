@@ -107,6 +107,21 @@ class AutonomousServicesStack(Stack):
             removal_policy=RemovalPolicy.DESTROY
         )
 
+        # Users table for authentication
+        users_table = dynamodb.Table(
+            self, "UsersTable",
+            table_name="ASMUsers",
+            partition_key=dynamodb.Attribute(
+                name="email",
+                type=dynamodb.AttributeType.STRING
+            ),
+            billing_mode=dynamodb.BillingMode.PAY_PER_REQUEST,
+            removal_policy=RemovalPolicy.DESTROY
+        )
+
+        # JWT secret for token signing
+        jwt_secret = "asm-service-jwt-secret-change-in-production"
+
         # Custom Converter Registry table
         converter_registry_table = dynamodb.Table(
             self, "CustomConverterRegistry",
@@ -667,6 +682,107 @@ def lambda_handler(event, context):
         )
         rule_sets_table.grant_write_data(delete_rule_set_lambda)
         rule_sets_resource.add_method("DELETE", apigateway.LambdaIntegration(delete_rule_set_lambda), method_responses=[{"statusCode": "200"}])
+
+        # --- Authentication ---
+        auth_resource = custom_converter_api.root.add_resource("auth")
+
+        # Register endpoint
+        register_user_lambda = _lambda.Function(
+            self, "RegisterUserFunction",
+            runtime=_lambda.Runtime.PYTHON_3_12,
+            handler="index.lambda_handler",
+            code=_lambda.Code.from_inline("""
+import json
+import boto3
+import os
+import hashlib
+import secrets
+from datetime import datetime, timezone
+
+dynamodb = boto3.resource('dynamodb')
+
+def hash_password(password, salt=None):
+    if not salt:
+        salt = secrets.token_hex(16)
+    hashed = hashlib.pbkdf2_hmac('sha256', password.encode(), salt.encode(), 100000).hex()
+    return salt, hashed
+
+def lambda_handler(event, context):
+    try:
+        body = json.loads(event['body']) if isinstance(event['body'], str) else event['body']
+        email = (body.get('email') or '').strip().lower()
+        password = body.get('password') or ''
+        if not email or not password:
+            return {'statusCode': 400, 'headers': {'Access-Control-Allow-Origin': '*'}, 'body': json.dumps({'error': 'Email and password required'})}
+        if len(password) < 8:
+            return {'statusCode': 400, 'headers': {'Access-Control-Allow-Origin': '*'}, 'body': json.dumps({'error': 'Password must be at least 8 characters'})}
+        table = dynamodb.Table(os.environ['USERS_TABLE'])
+        existing = table.get_item(Key={'email': email}).get('Item')
+        if existing:
+            return {'statusCode': 409, 'headers': {'Access-Control-Allow-Origin': '*'}, 'body': json.dumps({'error': 'User already exists'})}
+        salt, hashed = hash_password(password)
+        table.put_item(Item={'email': email, 'password_hash': hashed, 'salt': salt, 'created_at': datetime.now(timezone.utc).isoformat()})
+        return {'statusCode': 200, 'headers': {'Access-Control-Allow-Origin': '*'}, 'body': json.dumps({'email': email, 'status': 'registered'})}
+    except Exception as e:
+        return {'statusCode': 500, 'headers': {'Access-Control-Allow-Origin': '*'}, 'body': json.dumps({'error': str(e)})}
+"""),
+            timeout=Duration.seconds(30),
+            memory_size=256,
+            environment={"USERS_TABLE": users_table.table_name}
+        )
+        users_table.grant_read_write_data(register_user_lambda)
+        register_user_resource = auth_resource.add_resource("register")
+        register_user_resource.add_method("POST", apigateway.LambdaIntegration(register_user_lambda), method_responses=[{"statusCode": "200"}])
+
+        # Login endpoint
+        login_lambda = _lambda.Function(
+            self, "LoginFunction",
+            runtime=_lambda.Runtime.PYTHON_3_12,
+            handler="index.lambda_handler",
+            code=_lambda.Code.from_inline("""
+import json
+import boto3
+import os
+import hashlib
+import hmac
+import base64
+import time
+
+dynamodb = boto3.resource('dynamodb')
+
+def verify_password(password, salt, stored_hash):
+    hashed = hashlib.pbkdf2_hmac('sha256', password.encode(), salt.encode(), 100000).hex()
+    return hashed == stored_hash
+
+def create_jwt(email, secret):
+    header = base64.urlsafe_b64encode(json.dumps({"alg": "HS256", "typ": "JWT"}).encode()).rstrip(b'=').decode()
+    payload = base64.urlsafe_b64encode(json.dumps({"email": email, "exp": int(time.time()) + 86400}).encode()).rstrip(b'=').decode()
+    signature = base64.urlsafe_b64encode(hmac.new(secret.encode(), f"{header}.{payload}".encode(), hashlib.sha256).digest()).rstrip(b'=').decode()
+    return f"{header}.{payload}.{signature}"
+
+def lambda_handler(event, context):
+    try:
+        body = json.loads(event['body']) if isinstance(event['body'], str) else event['body']
+        email = (body.get('email') or '').strip().lower()
+        password = body.get('password') or ''
+        if not email or not password:
+            return {'statusCode': 400, 'headers': {'Access-Control-Allow-Origin': '*'}, 'body': json.dumps({'error': 'Email and password required'})}
+        table = dynamodb.Table(os.environ['USERS_TABLE'])
+        user = table.get_item(Key={'email': email}).get('Item')
+        if not user or not verify_password(password, user['salt'], user['password_hash']):
+            return {'statusCode': 401, 'headers': {'Access-Control-Allow-Origin': '*'}, 'body': json.dumps({'error': 'Invalid email or password'})}
+        token = create_jwt(email, os.environ['JWT_SECRET'])
+        return {'statusCode': 200, 'headers': {'Access-Control-Allow-Origin': '*'}, 'body': json.dumps({'token': token, 'email': email})}
+    except Exception as e:
+        return {'statusCode': 500, 'headers': {'Access-Control-Allow-Origin': '*'}, 'body': json.dumps({'error': str(e)})}
+"""),
+            timeout=Duration.seconds(30),
+            memory_size=256,
+            environment={"USERS_TABLE": users_table.table_name, "JWT_SECRET": jwt_secret}
+        )
+        users_table.grant_read_data(login_lambda)
+        login_resource = auth_resource.add_resource("login")
+        login_resource.add_method("POST", apigateway.LambdaIntegration(login_lambda), method_responses=[{"statusCode": "200"}])
 
         # Lambda Layer for allotropy + dependencies
         allotropy_layer = _lambda.LayerVersion(

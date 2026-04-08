@@ -26,11 +26,13 @@ cdk deploy --require-approval never
 ```
 
 This creates:
-- 6 Lambda functions (Unified Converter, DVaaS, ATaaS, Multi-Instrument, Custom Converter, History)
+- 10 Lambda functions (Unified Converter, DVaaS, ATaaS, Multi-Instrument, Custom Converter, History, Register, Approve, List, Generate Converter, plus auth and rule set functions)
 - 5 API Gateway endpoints
-- 2 DynamoDB tables (ConversionHistory, CustomConverterRegistry)
+- 4 DynamoDB tables (ConversionHistory, CustomConverterRegistry, ValidationRuleSets, ASMUsers)
 - 3 S3 buckets (ASM files, validation results, custom converters)
 - 3 Lambda Layers (allotropy, reportlab, jsonschema-rs)
+
+Authentication is automatically configured — a unique JWT signing secret is generated from your AWS account ID and stack name. No manual secret management needed.
 
 **Save the output endpoints** — you'll need them in Step 3.
 
@@ -117,11 +119,19 @@ If you want the AI-powered fallback (ATaaS):
 
 Without this, the AI fallback route will return an error, but all other routes (custom converters, allotropy) work fine.
 
-## Step 7: Verify Deployment
+## Step 7: Create Your First User Account
+
+Open the CloudFront URL. You'll see a login page. Click **"Need an account? Create one"** to register with your email and a password (minimum 8 characters). After registering, sign in to access the dashboard.
+
+All users are stored in the `ASMUsers` DynamoDB table. Each deployment has its own user database.
+
+## Step 8: Verify Deployment
 
 Open the CloudFront URL and test:
 
-1. **Control Tower tab** — should show empty job history (no errors)
+1. **Login page** — should show sign in form
+2. **Register** — create an account and sign in
+3. **Control Tower tab** — should show empty job history (no errors)
 2. **Instrument Registry tab** — should show 18+ instruments
 3. **Validate ASM File tab** — upload a test ASM JSON file
 4. **Converter Management tab** — should show empty converter list
@@ -192,6 +202,19 @@ Lambda Functions
 DynamoDB (converter registry, job history)
 S3 (ASM files, converter code, validation results)
 ```
+
+## Custom LLM Gateway (Optional)
+
+If your organization uses a gateway or load balancer in front of Bedrock, you can route AI requests through it. In `services/deploy_services.py`, uncomment and set these environment variables on the ATaaS and GenerateConverter Lambda definitions:
+
+```python
+"BEDROCK_ENDPOINT_URL": "https://your-llm-gateway.internal.company.com",
+"BEDROCK_MODEL_ID": "us.anthropic.claude-3-5-sonnet-20241022-v2:0",
+```
+
+Then redeploy: `cd services && cdk deploy --require-approval never`
+
+If left commented out, the service calls Bedrock directly (default).
 
 ## Updating
 

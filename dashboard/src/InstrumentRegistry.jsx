@@ -11,7 +11,7 @@ import Button from '@cloudscape-design/components/button'
 import Modal from '@cloudscape-design/components/modal'
 import FormField from '@cloudscape-design/components/form-field'
 import Alert from '@cloudscape-design/components/alert'
-import { ENDPOINTS } from './config'
+import { ENDPOINTS, authFetch } from './config'
 import instrumentsData from './data/instruments.json'
 
 export default function InstrumentRegistry() {
@@ -44,7 +44,7 @@ export default function InstrumentRegistry() {
   useEffect(() => {
     const fetchRegistered = async () => {
       try {
-        const resp = await fetch(`${ENDPOINTS.customConverter}/list`)
+        const resp = await authFetch(`${ENDPOINTS.customConverter}/list`)
         const data = await resp.json()
         const registered = (data.converters || []).map(c => ({
           canonical_id: `registered-${c.converter_id}`,

@@ -19,7 +19,7 @@ import ColumnLayout from '@cloudscape-design/components/column-layout'
 import ExpandableSection from '@cloudscape-design/components/expandable-section'
 import StatusIndicator from '@cloudscape-design/components/status-indicator'
 
-import { ENDPOINTS } from './config'
+import { ENDPOINTS, authFetch } from './config'
 import TEMPLATE from '../public/docs/asm-validation-template-v1.json'
 
 const LEVEL_COLORS = { L1: 'red', L2: 'blue', L3: 'green', L4: 'grey' }
@@ -70,7 +70,7 @@ function ValidationRulesApp() {
   const fetchRuleSets = async () => {
     try {
       setLoading(true)
-      const resp = await fetch(`${ENDPOINTS.customConverter}/rule-sets`)
+      const resp = await authFetch(`${ENDPOINTS.customConverter}/rule-sets`)
       const data = await resp.json()
       setRuleSets(data.rule_sets || [])
     } catch (e) {
@@ -82,9 +82,8 @@ function ValidationRulesApp() {
 
   const saveRuleSetToAPI = async (ruleSet) => {
     try {
-      await fetch(`${ENDPOINTS.customConverter}/rule-sets`, {
+      await authFetch(`${ENDPOINTS.customConverter}/rule-sets`, {
         method: 'PUT',
-        headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify(ruleSet)
       })
     } catch (e) {
@@ -94,9 +93,8 @@ function ValidationRulesApp() {
 
   const deleteRuleSetFromAPI = async (ruleSetId) => {
     try {
-      await fetch(`${ENDPOINTS.customConverter}/rule-sets`, {
+      await authFetch(`${ENDPOINTS.customConverter}/rule-sets`, {
         method: 'DELETE',
-        headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ rule_set_id: ruleSetId })
       })
     } catch (e) {

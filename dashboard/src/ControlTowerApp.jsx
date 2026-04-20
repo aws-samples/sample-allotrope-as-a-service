@@ -16,7 +16,7 @@ import Select from '@cloudscape-design/components/select'
 import DateRangePicker from '@cloudscape-design/components/date-range-picker'
 import FormField from '@cloudscape-design/components/form-field'
 
-import { ENDPOINTS } from './config'
+import { ENDPOINTS, authFetch } from './config'
 
 function ControlTowerApp() {
   const [jobs, setJobs] = useState([])
@@ -32,7 +32,7 @@ function ControlTowerApp() {
     setLoading(true)
     setError(null)
     try {
-      const resp = await fetch(`${ENDPOINTS.unifiedConverter}/history`)
+      const resp = await authFetch(`${ENDPOINTS.unifiedConverter}/history`)
       const data = await resp.json()
       if (data.jobs) {
         setJobs(data.jobs.map(j => ({

@@ -14,7 +14,7 @@ import FormField from '@cloudscape-design/components/form-field'
 import Input from '@cloudscape-design/components/input'
 import Select from '@cloudscape-design/components/select'
 
-import { ENDPOINTS } from './config'
+import { ENDPOINTS, authFetch } from './config'
 
 function GenerateConverterApp() {
   const [instrumentFile, setInstrumentFile] = useState([])
@@ -61,9 +61,8 @@ function GenerateConverterApp() {
       const fileContent = await instrumentFile[0].text()
       setProgress(20)
 
-      const response = await fetch(`${ENDPOINTS.ataas}/generate-converter`, {
+      const response = await authFetch(`${ENDPOINTS.ataas}/generate-converter`, {
         method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
           file_content: fileContent,
           file_name: instrumentFile[0].name,

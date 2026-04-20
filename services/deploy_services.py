@@ -132,6 +132,109 @@ class AutonomousServicesStack(Stack):
         # JWT secret - auto-generated per deployment (unique per AWS account + stack)
         jwt_secret = f"{cdk.Aws.ACCOUNT_ID}-{cdk.Aws.STACK_NAME}-asm-jwt-secret"
 
+        # --- JWT Token Authorizer ---
+        jwt_authorizer_lambda = _lambda.Function(
+            self, "JWTAuthorizerFunction",
+            runtime=_lambda.Runtime.PYTHON_3_12,
+            handler="index.lambda_handler",
+            code=_lambda.Code.from_inline("""
+import json
+import hashlib
+import hmac
+import base64
+import time
+import os
+
+def lambda_handler(event, context):
+    token = event.get('authorizationToken', '')
+    method_arn = event.get('methodArn', '')
+    
+    # Extract base ARN for policy (allow all methods on this API)
+    # arn:aws:execute-api:region:account:api-id/stage/method/resource
+    arn_parts = method_arn.split(':')
+    api_gateway_arn = ':'.join(arn_parts[:5]) + ':' + arn_parts[5].split('/')[0] + '/*'
+    
+    if not token.startswith('Bearer '):
+        return generate_policy('user', 'Deny', api_gateway_arn)
+    
+    jwt_token = token[7:]
+    secret = os.environ['JWT_SECRET']
+    
+    try:
+        parts = jwt_token.split('.')
+        if len(parts) != 3:
+            return generate_policy('user', 'Deny', api_gateway_arn)
+        
+        header_b64, payload_b64, signature_b64 = parts
+        
+        # Verify signature
+        expected_sig = base64.urlsafe_b64encode(
+            hmac.new(secret.encode(), f"{header_b64}.{payload_b64}".encode(), hashlib.sha256).digest()
+        ).rstrip(b'=').decode()
+        
+        if not hmac.compare_digest(signature_b64, expected_sig):
+            return generate_policy('user', 'Deny', api_gateway_arn)
+        
+        # Decode payload and check expiry
+        padding = 4 - len(payload_b64) % 4
+        if padding != 4:
+            payload_b64 += '=' * padding
+        payload = json.loads(base64.urlsafe_b64decode(payload_b64))
+        
+        if payload.get('exp', 0) < time.time():
+            return generate_policy('user', 'Deny', api_gateway_arn)
+        
+        return generate_policy(payload.get('email', 'user'), 'Allow', api_gateway_arn)
+    except Exception:
+        return generate_policy('user', 'Deny', api_gateway_arn)
+
+def generate_policy(principal_id, effect, resource):
+    return {
+        'principalId': principal_id,
+        'policyDocument': {
+            'Version': '2012-10-17',
+            'Statement': [{
+                'Action': 'execute-api:Invoke',
+                'Effect': effect,
+                'Resource': resource
+            }]
+        }
+    }
+"""),
+            timeout=Duration.seconds(10),
+            memory_size=128,
+            environment={"JWT_SECRET": jwt_secret}
+        )
+
+        # Create the token authorizer (reusable across all APIs)
+        jwt_authorizer = apigateway.TokenAuthorizer(
+            self, "JWTAuthorizer",
+            handler=jwt_authorizer_lambda,
+            results_cache_ttl=Duration.seconds(300)
+        )
+
+        # One authorizer per API Gateway (CDK requires separate instances)
+        jwt_authorizer_ataas = apigateway.TokenAuthorizer(
+            self, "JWTAuthorizerATaaS",
+            handler=jwt_authorizer_lambda,
+            results_cache_ttl=Duration.seconds(300)
+        )
+        jwt_authorizer_multi = apigateway.TokenAuthorizer(
+            self, "JWTAuthorizerMulti",
+            handler=jwt_authorizer_lambda,
+            results_cache_ttl=Duration.seconds(300)
+        )
+        jwt_authorizer_unified = apigateway.TokenAuthorizer(
+            self, "JWTAuthorizerUnified",
+            handler=jwt_authorizer_lambda,
+            results_cache_ttl=Duration.seconds(300)
+        )
+        jwt_authorizer_dvaas = apigateway.TokenAuthorizer(
+            self, "JWTAuthorizerDVaaS",
+            handler=jwt_authorizer_lambda,
+            results_cache_ttl=Duration.seconds(300)
+        )
+
         # Custom Converter Registry table
         converter_registry_table = dynamodb.Table(
             self, "CustomConverterRegistry",
@@ -210,6 +313,8 @@ class AutonomousServicesStack(Stack):
         validate_resource.add_method(
             "POST",
             apigateway.LambdaIntegration(dvaas_lambda),
+            authorizer=jwt_authorizer_dvaas,
+            authorization_type=apigateway.AuthorizationType.CUSTOM,
             method_responses=[{
                 "statusCode": "200",
                 "responseHeaders": {
@@ -253,6 +358,8 @@ class AutonomousServicesStack(Stack):
         convert_resource.add_method(
             "POST",
             apigateway.LambdaIntegration(ataas_lambda),
+            authorizer=jwt_authorizer_ataas,
+            authorization_type=apigateway.AuthorizationType.CUSTOM,
             method_responses=[{
                 "statusCode": "200",
                 "responseHeaders": {
@@ -295,6 +402,8 @@ class AutonomousServicesStack(Stack):
         generate_resource.add_method(
             "POST",
             apigateway.LambdaIntegration(generate_converter_lambda),
+            authorizer=jwt_authorizer_ataas,
+            authorization_type=apigateway.AuthorizationType.CUSTOM,
             method_responses=[{
                 "statusCode": "200",
                 "responseHeaders": {
@@ -338,6 +447,8 @@ class AutonomousServicesStack(Stack):
         multi_convert_resource.add_method(
             "POST",
             apigateway.LambdaIntegration(multi_instrument_lambda),
+            authorizer=jwt_authorizer_multi,
+            authorization_type=apigateway.AuthorizationType.CUSTOM,
             method_responses=[{
                 "statusCode": "200",
                 "responseHeaders": {
@@ -400,6 +511,8 @@ class AutonomousServicesStack(Stack):
         execute_resource.add_method(
             "POST",
             apigateway.LambdaIntegration(custom_converter_lambda),
+            authorizer=jwt_authorizer,
+            authorization_type=apigateway.AuthorizationType.CUSTOM,
             method_responses=[{
                 "statusCode": "200",
                 "responseHeaders": {
@@ -475,6 +588,8 @@ def lambda_handler(event, context):
         register_resource.add_method(
             "POST",
             apigateway.LambdaIntegration(register_lambda),
+            authorizer=jwt_authorizer,
+            authorization_type=apigateway.AuthorizationType.CUSTOM,
             method_responses=[{"statusCode": "200"}]
         )
 
@@ -533,6 +648,8 @@ def lambda_handler(event, context):
         approve_resource.add_method(
             "POST",
             apigateway.LambdaIntegration(approve_lambda),
+            authorizer=jwt_authorizer,
+            authorization_type=apigateway.AuthorizationType.CUSTOM,
             method_responses=[{"statusCode": "200"}]
         )
 
@@ -574,6 +691,8 @@ def lambda_handler(event, context):
         list_resource.add_method(
             "GET",
             apigateway.LambdaIntegration(list_lambda),
+            authorizer=jwt_authorizer,
+            authorization_type=apigateway.AuthorizationType.CUSTOM,
             method_responses=[{"statusCode": "200"}]
         )
 
@@ -618,7 +737,7 @@ def lambda_handler(event, context):
             environment={"RULE_SETS_TABLE": rule_sets_table.table_name}
         )
         rule_sets_table.grant_write_data(save_rule_set_lambda)
-        rule_sets_resource.add_method("PUT", apigateway.LambdaIntegration(save_rule_set_lambda), method_responses=[{"statusCode": "200"}])
+        rule_sets_resource.add_method("PUT", apigateway.LambdaIntegration(save_rule_set_lambda), authorizer=jwt_authorizer, authorization_type=apigateway.AuthorizationType.CUSTOM, method_responses=[{"statusCode": "200"}])
 
         # List rule sets
         list_rule_sets_lambda = _lambda.Function(
@@ -656,7 +775,7 @@ def lambda_handler(event, context):
             environment={"RULE_SETS_TABLE": rule_sets_table.table_name}
         )
         rule_sets_table.grant_read_data(list_rule_sets_lambda)
-        rule_sets_resource.add_method("GET", apigateway.LambdaIntegration(list_rule_sets_lambda), method_responses=[{"statusCode": "200"}])
+        rule_sets_resource.add_method("GET", apigateway.LambdaIntegration(list_rule_sets_lambda), authorizer=jwt_authorizer, authorization_type=apigateway.AuthorizationType.CUSTOM, method_responses=[{"statusCode": "200"}])
 
         # Delete rule set
         delete_rule_set_lambda = _lambda.Function(
@@ -691,7 +810,7 @@ def lambda_handler(event, context):
             environment={"RULE_SETS_TABLE": rule_sets_table.table_name}
         )
         rule_sets_table.grant_write_data(delete_rule_set_lambda)
-        rule_sets_resource.add_method("DELETE", apigateway.LambdaIntegration(delete_rule_set_lambda), method_responses=[{"statusCode": "200"}])
+        rule_sets_resource.add_method("DELETE", apigateway.LambdaIntegration(delete_rule_set_lambda), authorizer=jwt_authorizer, authorization_type=apigateway.AuthorizationType.CUSTOM, method_responses=[{"statusCode": "200"}])
 
         # --- Authentication ---
         auth_resource = custom_converter_api.root.add_resource("auth")
@@ -843,6 +962,8 @@ def lambda_handler(event, context):
         unified_convert.add_method(
             "POST",
             apigateway.LambdaIntegration(unified_lambda),
+            authorizer=jwt_authorizer_unified,
+            authorization_type=apigateway.AuthorizationType.CUSTOM,
             method_responses=[{
                 "statusCode": "200",
                 "responseHeaders": {
@@ -900,6 +1021,8 @@ def lambda_handler(event, context):
         history_resource.add_method(
             "GET",
             apigateway.LambdaIntegration(history_lambda),
+            authorizer=jwt_authorizer_unified,
+            authorization_type=apigateway.AuthorizationType.CUSTOM,
             method_responses=[{"statusCode": "200"}]
         )
 

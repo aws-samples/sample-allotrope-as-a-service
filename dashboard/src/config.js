@@ -19,3 +19,16 @@ export function apiHeaders(contentType = 'application/json') {
   if (token) headers['Authorization'] = `Bearer ${token}`
   return headers
 }
+
+// Wrapper around fetch that adds auth headers and handles 401 (expired/invalid token)
+export async function authFetch(url, options = {}) {
+  const opts = { ...options, headers: { ...apiHeaders(), ...options.headers } }
+  const response = await fetch(url, opts)
+  if (response.status === 401 || response.status === 403) {
+    localStorage.removeItem('asm_token')
+    localStorage.removeItem('asm_user')
+    window.location.reload()
+    throw new Error('Session expired. Please log in again.')
+  }
+  return response
+}

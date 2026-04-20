@@ -9,7 +9,7 @@ import Button from '@cloudscape-design/components/button'
 import Box from '@cloudscape-design/components/box'
 import Alert from '@cloudscape-design/components/alert'
 
-import { ENDPOINTS } from './config'
+import { ENDPOINTS, authFetch } from './config'
 import instrumentsData from './data/instruments.json'
 
 export default function ManifestCreator() {
@@ -47,7 +47,7 @@ export default function ManifestCreator() {
   useState(() => {
     const fetchRegistered = async () => {
       try {
-        const resp = await fetch(`${ENDPOINTS.customConverter}/list`)
+        const resp = await authFetch(`${ENDPOINTS.customConverter}/list`)
         const data = await resp.json()
         const registered = (data.converters || []).filter(c => c.status === 'APPROVED')
         const staticIds = new Set(instrumentsData.map(i => i.vendor_id))
@@ -107,7 +107,7 @@ export default function ManifestCreator() {
       const cId = option.value.replace('registered-', '')
       setConverterId(cId)
       // Fetch converter details to populate fields
-      fetch(`${ENDPOINTS.customConverter}/list`)
+      authFetch(`${ENDPOINTS.customConverter}/list`)
         .then(r => r.json())
         .then(data => {
           const conv = (data.converters || []).find(c => c.converter_id === cId)
@@ -126,7 +126,7 @@ export default function ManifestCreator() {
 
   const fetchConverters = async (vendor, model) => {
     try {
-      const resp = await fetch(`${ENDPOINTS.customConverter}/list`)
+      const resp = await authFetch(`${ENDPOINTS.customConverter}/list`)
       const data = await resp.json()
       const matching = (data.converters || []).filter(c =>
         c.status === 'APPROVED' && (c.vendor === vendor || c.model === model)

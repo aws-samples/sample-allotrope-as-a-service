@@ -17,7 +17,7 @@ import {
   StatusIndicator
 } from '@cloudscape-design/components';
 
-import { ENDPOINTS } from './config';
+import { ENDPOINTS, authFetch } from './config';
 
 const CUSTOM_CONVERTER_API = ENDPOINTS.customConverter;
 
@@ -60,7 +60,7 @@ export default function ConverterManagementApp() {
   const loadConverters = async () => {
     setLoading(true);
     try {
-      const response = await fetch(`${CUSTOM_CONVERTER_API}/list`);
+      const response = await authFetch(`${CUSTOM_CONVERTER_API}/list`);
       if (!response.ok) throw new Error('Failed to load converters');
       
       const data = await response.json();
@@ -182,9 +182,8 @@ export default function ConverterManagementApp() {
       // Read file content
       const fileContent = await converterFile[0].text();
 
-      const response = await fetch(`${CUSTOM_CONVERTER_API}/register`, {
+      const response = await authFetch(`${CUSTOM_CONVERTER_API}/register`, {
         method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
           converter_id: converterId,
           converter_code: fileContent,
@@ -220,9 +219,8 @@ export default function ConverterManagementApp() {
     try {
       // Use /approve endpoint for both approve and reject
       // Backend should handle status field
-      const response = await fetch(`${CUSTOM_CONVERTER_API}/approve`, {
+      const response = await authFetch(`${CUSTOM_CONVERTER_API}/approve`, {
         method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
           converter_id: selectedConverter.converter_id,
           approved_by: reviewerEmail,

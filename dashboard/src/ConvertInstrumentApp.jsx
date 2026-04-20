@@ -15,7 +15,7 @@ import StatusIndicator from '@cloudscape-design/components/status-indicator'
 import Select from '@cloudscape-design/components/select'
 import FormField from '@cloudscape-design/components/form-field'
 
-import { ENDPOINTS } from './config'
+import { ENDPOINTS, authFetch } from './config'
 
 function ConvertInstrumentApp() {
   const [instrumentFile, setInstrumentFile] = useState([])
@@ -35,7 +35,7 @@ function ConvertInstrumentApp() {
 
   // Fetch all approved converters on mount
   useState(() => {
-    fetch(`${ENDPOINTS.customConverter}/list`)
+    authFetch(`${ENDPOINTS.customConverter}/list`)
       .then(r => r.json())
       .then(data => {
         const approved = (data.converters || []).filter(c => c.status === 'APPROVED')
@@ -46,7 +46,7 @@ function ConvertInstrumentApp() {
 
   // Fetch enabled rule sets from API on mount
   useEffect(() => {
-    fetch(`${ENDPOINTS.customConverter}/rule-sets`)
+    authFetch(`${ENDPOINTS.customConverter}/rule-sets`)
       .then(r => r.json())
       .then(data => setEnabledRuleSets((data.rule_sets || []).filter(rs => rs.enabled)))
       .catch(() => {})
@@ -119,7 +119,7 @@ function ConvertInstrumentApp() {
       // Fetch available converters for this vendor+model
       if (config.vendor && config.model) {
         try {
-          const resp = await fetch(`${ENDPOINTS.customConverter}/list`)
+          const resp = await authFetch(`${ENDPOINTS.customConverter}/list`)
           const data = await resp.json()
           const all = (data.converters || []).filter(c => c.status === 'APPROVED')
           setAvailableConverters(all)
@@ -184,9 +184,8 @@ function ConvertInstrumentApp() {
       }
 
       // Step 1: Convert instrument file to ASM
-      const convertResponse = await fetch(`${ENDPOINTS.unifiedConverter}/convert`, {
+      const convertResponse = await authFetch(`${ENDPOINTS.unifiedConverter}/convert`, {
         method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
           file_content: fileContent,
           file_name: instrumentFile[0].name,
@@ -222,9 +221,8 @@ function ConvertInstrumentApp() {
       // Step 2: Validate the generated ASM
       // Use rule sets fetched from API
 
-      const validateResponse = await fetch(`${ENDPOINTS.dvaas}/validate`, {
+      const validateResponse = await authFetch(`${ENDPOINTS.dvaas}/validate`, {
         method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
           asm_data: asmData,
           validation_level: 'comprehensive',

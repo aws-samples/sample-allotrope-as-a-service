@@ -13,7 +13,7 @@ import ExpandableSection from '@cloudscape-design/components/expandable-section'
 import FormField from '@cloudscape-design/components/form-field'
 import Select from '@cloudscape-design/components/select'
 
-import { ENDPOINTS } from './config'
+import { ENDPOINTS, authFetch } from './config'
 
 function ValidateASMApp() {
   const [file, setFile] = useState([])
@@ -28,7 +28,7 @@ function ValidateASMApp() {
 
   // Fetch enabled rule sets from API on mount
   useEffect(() => {
-    fetch(`${ENDPOINTS.customConverter}/rule-sets`)
+    authFetch(`${ENDPOINTS.customConverter}/rule-sets`)
       .then(r => r.json())
       .then(data => setEnabledRuleSets((data.rule_sets || []).filter(rs => rs.enabled)))
       .catch(() => {})
@@ -55,9 +55,8 @@ function ValidateASMApp() {
       const enabledForRequest = enabledRuleSets
 
       // Validate ASM
-      const response = await fetch(`${ENDPOINTS.dvaas}/validate`, {
+      const response = await authFetch(`${ENDPOINTS.dvaas}/validate`, {
         method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
           asm_data: asmData,
           validation_level: validationLevel.value,

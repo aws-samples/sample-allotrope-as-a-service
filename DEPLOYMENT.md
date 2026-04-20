@@ -26,13 +26,17 @@ cdk deploy --require-approval never
 ```
 
 This creates:
-- 10 Lambda functions (Unified Converter, DVaaS, ATaaS, Multi-Instrument, Custom Converter, History, Register, Approve, List, Generate Converter, plus auth and rule set functions)
+- 14 Lambda functions (Unified Converter, DVaaS, ATaaS, Multi-Instrument, Custom Converter, History, Register, Approve, List, Generate Converter, JWT Authorizer, Login, Register User, plus rule set functions)
 - 5 API Gateway endpoints
 - 4 DynamoDB tables (ConversionHistory, CustomConverterRegistry, ValidationRuleSets, ASMUsers)
 - 3 S3 buckets (ASM files, validation results, custom converters)
 - 3 Lambda Layers (allotropy, reportlab, jsonschema-rs)
 
-Authentication is automatically configured — a unique JWT signing secret is generated from your AWS account ID and stack name. No manual secret management needed.
+Authentication is automatically configured:
+- A unique JWT signing secret is generated from your AWS account ID and stack name
+- A JWT Lambda Authorizer is attached to all API endpoints (except login, register, and health checks)
+- Unauthenticated API requests receive `403 Forbidden` before reaching any backend Lambda
+- No manual secret management needed
 
 **Save the output endpoints** — you'll need them in Step 3.
 
@@ -271,7 +275,18 @@ encryption_key=key,
 
 Add AWS WAF to CloudFront and API Gateway for rate limiting, IP filtering, and bot protection. Configure via AWS Console or add `aws_wafv2` constructs to the CDK stack.
 
-### 6. Private API Gateway (Enterprise)
+### 6. Identity Provider Swap (Enterprise)
+
+The built-in auth uses email/password stored in DynamoDB. To integrate with your organization's identity provider (PingFederate, Okta, Azure AD, Cognito):
+
+1. Have your IdP issue JWT tokens with an `email` and `exp` claim
+2. Replace the `JWTAuthorizerFunction` Lambda code to validate tokens against your provider's JWKS endpoint instead of the built-in HMAC secret
+3. Remove or repurpose the `/auth/login` and `/auth/register` endpoints
+4. Update the dashboard `LoginPage.jsx` to redirect to your IdP's login page
+
+The API Gateway authorizer pattern stays the same — only the token validation logic changes.
+
+### 7. Private API Gateway (Enterprise)
 
 To make APIs accessible only from within your VPC:
 

@@ -57,6 +57,7 @@ export default function InstrumentRegistry() {
           converter_id: c.converter_id,
           aliases: [],
           registry_status: c.status,
+          registered_at: c.created_at || null,
           source: 'registered'
         }))
         // Merge: static instruments + registered (avoid duplicates by vendor_id)
@@ -171,6 +172,12 @@ export default function InstrumentRegistry() {
                 id: 'converter_id',
                 header: 'Converter ID',
                 cell: item => item.converter_id || '-'
+              },
+              {
+                id: 'registered_at',
+                header: 'Registered',
+                cell: item => item.registered_at ? new Date(item.registered_at).toLocaleDateString() : '-',
+                sortingField: 'registered_at'
               }
             ]}
             items={filteredInstruments}

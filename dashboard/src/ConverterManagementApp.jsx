@@ -31,9 +31,21 @@ export default function ConverterManagementApp() {
   const [alert, setAlert] = useState(null);
 
   // Registration form state
-  const [converterId, setConverterId] = useState('');
   const [vendor, setVendor] = useState('');
   const [model, setModel] = useState('');
+
+  const generateConverterId = (v, m) => {
+    if (!v || !m) return '';
+    const base = `${v}-${m}`.toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/(^-|-$)/g, '');
+    const existing = converters.filter(c => c.converter_id && c.converter_id.startsWith(base + '-v'));
+    const maxVersion = existing.reduce((max, c) => {
+      const match = c.converter_id.match(/-v(\d+)$/);
+      return match ? Math.max(max, parseInt(match[1])) : max;
+    }, 0);
+    return `${base}-v${maxVersion + 1}`;
+  };
+
+  const converterId = generateConverterId(vendor, model);
   const [instrumentType, setInstrumentType] = useState({ value: 'solution_analyzer' });
   const [description, setDescription] = useState('');
   const [converterFile, setConverterFile] = useState([]);
@@ -146,7 +158,7 @@ export default function ConverterManagementApp() {
   };
 
   const registerConverter = async () => {
-    if (!converterFile.length || !converterId || !vendor || !model) {
+    if (!converterFile.length || !vendor || !model) {
       setAlert({ type: 'error', message: 'Please fill in all required fields and upload a file' });
       return;
     }
@@ -191,7 +203,6 @@ export default function ConverterManagementApp() {
       setShowRegisterModal(false);
       
       // Reset form
-      setConverterId('');
       setVendor('');
       setModel('');
       setDescription('');
@@ -512,7 +523,7 @@ export default function ConverterManagementApp() {
                 variant="primary"
                 onClick={registerConverter}
                 loading={loading}
-                disabled={!converterId || !vendor || !model || !converterFile.length}
+                disabled={!vendor || !model || !converterFile.length}
               >
                 Upload for Approval
               </Button>
@@ -525,17 +536,11 @@ export default function ConverterManagementApp() {
             Upload your Python converter code. It will be validated, uploaded to S3, and submitted for human review.
           </Alert>
 
-          <FormField 
-            label="Converter ID" 
-            description="Unique identifier (e.g., nova-flex2-v1)"
-            constraintText="Required"
-          >
-            <Input
-              value={converterId}
-              onChange={e => setConverterId(e.detail.value)}
-              placeholder="converter-id-v1"
-            />
-          </FormField>
+          {converterId && (
+            <Alert type="info">
+              Converter ID: <strong>{converterId}</strong>
+            </Alert>
+          )}
 
           <FormField 
             label="Vendor" 

@@ -534,6 +534,83 @@ print("Done. Files saved: output.asm.json, validation_report.pdf")</code></pre>
   </ol>
   <p>The schema registry is built dynamically at Lambda cold start — no code changes needed when schemas are updated.</p>
 
+  <h2>Security &amp; Authentication</h2>
+  <p>This section describes how the service protects API endpoints, manages user sessions, and handles data — intended for security review and compliance documentation.</p>
+
+  <h3>Authentication Flow</h3>
+  <ol>
+    <li>User registers or logs in via <code>POST /auth/register</code> or <code>POST /auth/login</code></li>
+    <li>Login returns a signed JWT token (HMAC-SHA256) valid for 24 hours</li>
+    <li>The dashboard stores the token in browser localStorage and includes it as <code>Authorization: Bearer &lt;token&gt;</code> on every API request</li>
+    <li>If the token expires or is invalid, the user is automatically redirected to the login page</li>
+  </ol>
+
+  <h3>API Gateway Authorization</h3>
+  <p>Every API endpoint (except <code>/auth/login</code>, <code>/auth/register</code>, and <code>/health</code>) is protected by a <strong>Lambda Token Authorizer</strong> on API Gateway. Unauthenticated requests receive a <code>403 Forbidden</code> response before reaching any backend Lambda.</p>
+  <p>The authorizer:</p>
+  <ul>
+    <li>Extracts the JWT from the <code>Authorization</code> header</li>
+    <li>Verifies the HMAC-SHA256 signature against the deployment-specific secret</li>
+    <li>Checks token expiry (<code>exp</code> claim)</li>
+    <li>Returns an IAM Allow/Deny policy to API Gateway</li>
+    <li>Caches authorization results for 5 minutes (reduces Lambda invocations)</li>
+  </ul>
+
+  <h3>JWT Token Details</h3>
+  <table>
+    <tr><th>Property</th><th>Value</th></tr>
+    <tr><td>Algorithm</td><td>HMAC-SHA256 (HS256)</td></tr>
+    <tr><td>Expiry</td><td>24 hours from issuance</td></tr>
+    <tr><td>Claims</td><td><code>email</code> (user identity), <code>exp</code> (expiry timestamp)</td></tr>
+    <tr><td>Secret</td><td>Auto-generated per deployment: <code>{AWS_ACCOUNT_ID}-{STACK_NAME}-asm-jwt-secret</code></td></tr>
+    <tr><td>Storage</td><td>Browser localStorage (<code>asm_token</code>)</td></tr>
+  </table>
+
+  <h3>User Management</h3>
+  <p>Users are stored in a DynamoDB table (<code>ASMUsers</code>). Passwords are hashed with <strong>PBKDF2-SHA256</strong> (100,000 iterations) using a random 16-byte salt per user. Plaintext passwords are never stored.</p>
+
+  <h3>Data Handling</h3>
+  <table>
+    <tr><th>Principle</th><th>Implementation</th></tr>
+    <tr><td>No data persistence</td><td>Instrument files and ASM outputs are processed in Lambda memory only. They are not written to disk or stored in S3 unless <code>store_results: true</code> is explicitly set.</td></tr>
+    <tr><td>No file content in logs</td><td>Lambda functions do not log file content. Only metadata (file name, conversion ID, status) is logged.</td></tr>
+    <tr><td>Converter code isolation</td><td>Custom converter code executes in a sandboxed Lambda environment with no filesystem or network access. Code is validated for dangerous patterns before upload.</td></tr>
+    <tr><td>Audit trail</td><td>Conversion and validation jobs are recorded in DynamoDB (<code>ConversionHistory</code>) with timestamps, status, and user identity.</td></tr>
+  </table>
+
+  <h3>Infrastructure Security</h3>
+  <table>
+    <tr><th>Control</th><th>Status</th><th>Configuration</th></tr>
+    <tr><td>API Gateway Authorization</td><td>Enabled</td><td>JWT Lambda Authorizer on all endpoints</td></tr>
+    <tr><td>API Key</td><td>Created</td><td>Enable <code>api_key_required=True</code> on methods for additional protection</td></tr>
+    <tr><td>CORS</td><td>Configurable</td><td>Set <code>allowed_origin</code> in CDK stack to your CloudFront URL (default: <code>*</code>)</td></tr>
+    <tr><td>HTTPS</td><td>Enforced</td><td>API Gateway and CloudFront serve HTTPS only</td></tr>
+    <tr><td>DynamoDB encryption</td><td>Default</td><td>AWS-owned keys by default. Switch to customer-managed KMS keys in CDK if required.</td></tr>
+    <tr><td>S3 encryption</td><td>Default</td><td>SSE-S3 by default. Switch to SSE-KMS in CDK if required.</td></tr>
+  </table>
+
+  <h3>Optional Hardening (Customer-Configurable)</h3>
+  <p>These controls are documented in <code>DEPLOYMENT.md</code> and can be enabled by the customer's infrastructure team:</p>
+  <ul>
+    <li><strong>CORS restriction</strong> — Change <code>allowed_origin</code> from <code>*</code> to your CloudFront domain</li>
+    <li><strong>VPC deployment</strong> — Place Lambda functions inside a VPC with private subnets and VPC endpoints for DynamoDB, S3, and Bedrock</li>
+    <li><strong>Private API Gateway</strong> — Restrict API access to VPC-only using resource policies</li>
+    <li><strong>KMS encryption</strong> — Use customer-managed KMS keys for DynamoDB and S3</li>
+    <li><strong>WAF</strong> — Attach AWS WAF to API Gateway for rate limiting, IP filtering, and SQL injection protection</li>
+    <li><strong>Identity provider swap</strong> — Replace the built-in JWT auth with your organization's identity provider (PingFederate, Okta, Azure AD, Cognito). The Lambda authorizer pattern stays the same — just validate tokens from your provider's JWKS endpoint instead.</li>
+  </ul>
+
+  <h3>Regulatory Compliance</h3>
+  <table>
+    <tr><th>Requirement</th><th>How It's Addressed</th></tr>
+    <tr><td>FDA 21 CFR Part 11 — Electronic signatures</td><td>User authentication with email + password. Approval workflow with reviewer identity stored in DynamoDB.</td></tr>
+    <tr><td>FDA 21 CFR Part 11 — Audit trail</td><td>ConversionHistory table records every conversion and validation with timestamp, user, and status.</td></tr>
+    <tr><td>EMA Annex 11 — Data integrity</td><td>Field-by-field Data Integrity Verification proves source values are preserved exactly in ASM output.</td></tr>
+    <tr><td>EMA Annex 11 — Access control</td><td>JWT-based authentication. API Gateway rejects unauthenticated requests.</td></tr>
+    <tr><td>ALCOA+ — Attributable</td><td>Every conversion and validation is linked to a user email and timestamp.</td></tr>
+    <tr><td>ALCOA+ — Original</td><td>Source file content is preserved in ASM output. field_mapping provides traceability.</td></tr>
+  </table>
+
   <h2>Architecture</h2>
 
   <figure class="diagram">

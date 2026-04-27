@@ -133,6 +133,57 @@ field_mapping.append({
 
 The `asm_output` must follow the Allotrope Simple Model schema for the relevant instrument type.
 
+### Handling Non-Tabular Data (Grids, Matrices, Unstructured Formats)
+
+Not all instrument files are simple CSVs with column headers. Plate readers, for example, output grid/matrix layouts with metadata rows, empty rows, and checksums:
+
+```
+Weyland-Yutani 470 1384,,,,
+Recorded,2023-10-26:11:15:40,,,
+,,,,
+,A,B,C,D
+1,3.61,1.45,2.23,3.08
+2,4.10,4.58,3.60,1.67
+3,3.27,1.40,4.99,2.47
+4,2.78,0.72,4.00,0.49
+,,,,
+Checksum,b855,,,
+```
+
+The `field_mapping` still works — use the well position or natural identifier as `source_field`:
+
+```python
+field_mapping = [
+    # Metadata rows
+    {"source_field": "Instrument", "source_value": "Weyland-Yutani 470 1384",
+     "asm_field": "device identifier", "asm_value": "Weyland-Yutani 470 1384", "unit": ""},
+    {"source_field": "Recorded", "source_value": "2023-10-26:11:15:40",
+     "asm_field": "measurement time", "asm_value": "2023-10-26T11:15:40+00:00", "unit": ""},
+    {"source_field": "Checksum", "source_value": "b855",
+     "asm_field": "Checksum (custom info)", "asm_value": "b855", "unit": ""},
+
+    # Grid values — well position as source_field
+    {"source_field": "A1", "source_value": 3.61,
+     "asm_field": "absorbance", "asm_value": 3.61, "unit": "mAU"},
+    {"source_field": "B1", "source_value": 1.45,
+     "asm_field": "absorbance", "asm_value": 1.45, "unit": "mAU"},
+    {"source_field": "C1", "source_value": 2.23,
+     "asm_field": "absorbance", "asm_value": 2.23, "unit": "mAU"},
+    # ... all wells
+]
+```
+
+**Guidelines for non-tabular data:**
+
+| Source Element | How to Handle |
+|---------------|---------------|
+| Grid/matrix values | Use well position (A1, B2) or row:col as `source_field` |
+| Metadata rows (instrument name, date, operator) | Map like any other field |
+| Checksums, hashes | Map to custom info — preserves verifiability |
+| Empty rows, separators | Structural — no field_mapping entry needed |
+| Row/column headers (A, B, C, 1, 2, 3) | Structural — no field_mapping entry needed |
+| Timestamps in non-standard format | Normalize to ISO 8601 in `asm_value` — this is the one case where source and ASM values can differ |
+
 ### Required Elements
 
 | Element | Description |

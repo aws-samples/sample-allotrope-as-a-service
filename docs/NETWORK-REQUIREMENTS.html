@@ -1,0 +1,249 @@
+<!--
+  Copyright 2016 Amazon.com, Inc. or its affiliates. All Rights Reserved.
+  Licensed under the Apache License, Version 2.0.
+  http://aws.amazon.com/apache2.0/
+-->
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>ASM Transformation Service — Network Requirements & Air-Gapped Deployment Guide</title>
+  <style>
+    body { font-family: 'Amazon Ember', 'Helvetica Neue', Arial, sans-serif; max-width: 900px; margin: 0 auto; padding: 40px 20px; color: #16191f; line-height: 1.6; }
+    h1 { color: #0972d3; border-bottom: 2px solid #0972d3; padding-bottom: 8px; font-size: 22px; }
+    h2 { color: #232f3e; margin-top: 32px; font-size: 18px; }
+    h3 { color: #545b64; font-size: 15px; }
+    table { border-collapse: collapse; width: 100%; margin: 16px 0; }
+    th, td { border: 1px solid #d5dbdb; padding: 8px 12px; text-align: left; font-size: 13px; }
+    th { background: #232f3e; color: white; }
+    tr:nth-child(even) { background: #f2f3f3; }
+    code { background: #f2f3f3; padding: 2px 6px; border-radius: 3px; font-size: 13px; }
+    pre { background: #232f3e; color: #d5dbdb; padding: 16px; border-radius: 4px; overflow-x: auto; font-size: 12px; }
+    pre code { background: none; color: inherit; }
+    .key-point { background: #e8f4fd; border-left: 4px solid #0972d3; padding: 12px 16px; margin: 16px 0; border-radius: 0 4px 4px 0; }
+    .warning { background: #fff3cd; border-left: 4px solid #ffc107; padding: 12px 16px; margin: 16px 0; border-radius: 0 4px 4px 0; }
+    .option { background: #f8f8f8; border: 1px solid #ddd; border-radius: 6px; padding: 16px; margin: 16px 0; }
+    .option h3 { margin-top: 0; }
+    @media print {
+      body { max-width: 100%; padding: 20px; font-size: 11px; }
+      h1 { font-size: 18px; }
+      h2 { font-size: 15px; page-break-after: avoid; }
+      h3 { font-size: 13px; }
+      pre { font-size: 10px; }
+      th, td { font-size: 11px; padding: 4px 8px; }
+      .option { page-break-inside: avoid; }
+    }
+  </style>
+</head>
+<body>
+
+  <h1>Network Requirements &amp; Air-Gapped Deployment Guide</h1>
+  <p><strong>ASM Transformation Service</strong> — v1.0</p>
+
+  <h2>Overview</h2>
+  <p>The ASM Transformation Service requires internet access <strong>only during initial build and deployment</strong> — not at runtime. Once deployed, all Lambda functions, layers, and schemas are self-contained within your AWS account.</p>
+  <p>This document explains exactly when internet access is needed, what is downloaded, and how to deploy in environments with no internet access.</p>
+
+  <h2>Runtime — No Internet Required</h2>
+  <div class="key-point">
+    <strong>No ports need to be opened for the running application.</strong> Once deployed, the service runs entirely within AWS with no external dependencies.
+  </div>
+
+  <table>
+    <tr><th>Component</th><th>Connectivity</th><th>Notes</th></tr>
+    <tr><td>Lambda functions</td><td>AWS internal</td><td>Invoke via API Gateway</td></tr>
+    <tr><td>DynamoDB</td><td>AWS internal</td><td>VPC Endpoint available</td></tr>
+    <tr><td>S3</td><td>AWS internal</td><td>VPC Endpoint available</td></tr>
+    <tr><td>API Gateway</td><td>AWS internal</td><td>Regional endpoint</td></tr>
+    <tr><td>CloudFront</td><td>AWS internal</td><td>Edge distribution</td></tr>
+    <tr><td>Bedrock (Claude)</td><td>AWS internal</td><td>VPC Endpoint available</td></tr>
+    <tr><td>Allotrope schemas</td><td>Bundled</td><td>Packaged inside DVaaS Lambda</td></tr>
+    <tr><td>Lambda layers</td><td>Bundled</td><td>allotropy, jsonschema-rs, reportlab pre-built in repo</td></tr>
+  </table>
+
+  <p>If your Lambda functions are deployed inside a VPC, you will need VPC Endpoints for the AWS services listed above (see "VPC Endpoints" section below).</p>
+
+  <h2>Build &amp; Deploy — Internet Required (One-Time)</h2>
+  <p>Internet access is needed in two places during initial setup. Both are one-time operations.</p>
+
+  <h3>1. Python Packages (Backend CDK Deployment)</h3>
+  <p><strong>When:</strong> <code>pip install -r requirements.txt</code> in the <code>services/</code> directory</p>
+  <table>
+    <tr><th>Package</th><th>Source</th><th>Purpose</th></tr>
+    <tr><td>aws-cdk-lib</td><td>PyPI (pypi.org)</td><td>AWS CDK infrastructure-as-code framework</td></tr>
+    <tr><td>constructs</td><td>PyPI (pypi.org)</td><td>CDK constructs library</td></tr>
+  </table>
+  <p><strong>Size:</strong> ~50 MB</p>
+
+  <h3>2. Node.js Packages (Dashboard Build)</h3>
+  <p><strong>When:</strong> <code>npm install</code> in the <code>dashboard/</code> directory</p>
+  <table>
+    <tr><th>Package</th><th>Source</th><th>Purpose</th></tr>
+    <tr><td>@cloudscape-design/*</td><td>npm (npmjs.com)</td><td>AWS Cloudscape UI components</td></tr>
+    <tr><td>react, react-dom</td><td>npm (npmjs.com)</td><td>React framework</td></tr>
+    <tr><td>vite</td><td>npm (npmjs.com)</td><td>Build tool</td></tr>
+    <tr><td>aws-cdk-lib, constructs</td><td>npm (npmjs.com)</td><td>CDK for dashboard stack</td></tr>
+  </table>
+  <p><strong>Size:</strong> ~200 MB (node_modules)</p>
+
+  <h3>3. CDK Bootstrap (First-Time Only)</h3>
+  <p><strong>When:</strong> <code>cdk bootstrap</code> on a new AWS account/region</p>
+  <p><strong>What is downloaded:</strong> CDK bootstrap assets from public ECR (<code>public.ecr.aws/cdk</code>)</p>
+  <p><strong>Size:</strong> ~30 MB</p>
+
+  <h3>What Does NOT Need Internet</h3>
+  <div class="key-point">
+    These are already bundled in the repository — no download required:
+    <ul>
+      <li>Lambda layers (allotropy, jsonschema-rs, reportlab) — pre-built in <code>services/lambda-layers/</code></li>
+      <li>DVaaS bundle (boto3, jsonschema, etc.) — pre-built in <code>services/dvaas-bundle/</code></li>
+      <li>Unified converter dependencies (requests, urllib3, etc.) — pre-built in <code>services/unified-converter/</code></li>
+      <li>Allotrope JSON schemas — downloaded separately (see Step 5 in DEPLOYMENT.md) but only needed once</li>
+      <li>Dashboard source code — all JSX/JS files included</li>
+    </ul>
+  </div>
+
+  <h2>Deployment Options for Restricted Environments</h2>
+
+  <div class="option">
+    <h3>Option A: Build Outside, Deploy Inside (Recommended)</h3>
+    <p>Use a machine with internet access to install dependencies, then transfer everything to the restricted environment.</p>
+    <p><strong>On a machine with internet access:</strong></p>
+<pre><code># 1. Extract the tarball
+tar -xzf asm-converter-v1.0.tar.gz
+cd asm-converter
+
+# 2. Install Python CDK dependencies
+cd services
+pip install -r requirements.txt --target ./cdk-deps
+cd ..
+
+# 3. Install Node.js dashboard dependencies
+cd dashboard
+npm install
+npm run build
+cd ..
+
+# 4. Re-package everything
+cd ..
+tar -czf asm-converter-v1.0-bundled.tar.gz asm-converter/</code></pre>
+    <p><strong>Transfer <code>asm-converter-v1.0-bundled.tar.gz</code> to the restricted environment, then:</strong></p>
+<pre><code>tar -xzf asm-converter-v1.0-bundled.tar.gz
+cd asm-converter
+
+# Deploy backend (Python deps already installed)
+cd services
+PYTHONPATH=./cdk-deps cdk deploy --require-approval never
+cd ..
+
+# Deploy dashboard (already built)
+cd dashboard
+cdk deploy --require-approval never</code></pre>
+  </div>
+
+  <div class="option">
+    <h3>Option B: Internal Package Repository</h3>
+    <p>If your organization has an internal PyPI mirror (e.g., Artifactory, Nexus, CodeArtifact) and/or npm registry, configure pip and npm to use them.</p>
+    <p><strong>For pip (Python/CDK):</strong></p>
+<pre><code># Using pip.conf or command line
+pip install -r requirements.txt --index-url https://your-internal-pypi.company.com/simple/
+
+# Or set globally
+pip config set global.index-url https://your-internal-pypi.company.com/simple/</code></pre>
+    <p><strong>Required Python packages in your internal PyPI:</strong></p>
+    <ul>
+      <li>aws-cdk-lib (&gt;=2.100.0)</li>
+      <li>constructs (&gt;=10.0.0)</li>
+    </ul>
+    <p><strong>For npm (Dashboard):</strong></p>
+<pre><code># Set registry
+npm config set registry https://your-internal-npm.company.com/
+
+# Then install normally
+npm install</code></pre>
+    <p><strong>Required npm packages:</strong> @cloudscape-design/components, @cloudscape-design/global-styles, react, react-dom, vite, aws-cdk-lib, constructs. The full list is in <code>dashboard/package.json</code> and <code>dashboard/package-lock.json</code>.</p>
+  </div>
+
+  <div class="option">
+    <h3>Option C: AWS CodeArtifact</h3>
+    <p>Set up AWS CodeArtifact as a managed package proxy within your AWS account. CodeArtifact can mirror public PyPI and npm registries through a controlled connection.</p>
+<pre><code># Create CodeArtifact domain and repositories
+aws codeartifact create-domain --domain my-company
+aws codeartifact create-repository --domain my-company --repository pypi-store \
+    --description "PyPI mirror"
+aws codeartifact create-repository --domain my-company --repository npm-store \
+    --description "npm mirror"
+
+# Associate with public upstream
+aws codeartifact associate-external-connection --domain my-company \
+    --repository pypi-store --external-connection public:pypi
+aws codeartifact associate-external-connection --domain my-company \
+    --repository npm-store --external-connection public:npmjs
+
+# Configure pip
+aws codeartifact login --tool pip --domain my-company --repository pypi-store
+
+# Configure npm
+aws codeartifact login --tool npm --domain my-company --repository npm-store</code></pre>
+    <p>Then run <code>pip install</code> and <code>npm install</code> as normal — CodeArtifact fetches from public registries and caches locally.</p>
+  </div>
+
+  <div class="option">
+    <h3>Option D: Pre-Bundled Tarball (Fully Air-Gapped)</h3>
+    <p>If you need a tarball that requires zero internet access, contact your AWS account team. We can provide a version with all Python and Node.js dependencies pre-installed (~400 MB). This is the largest option but requires no network access at all during deployment.</p>
+  </div>
+
+  <h2>VPC Endpoints (For VPC-Deployed Lambdas)</h2>
+  <p>If you deploy Lambda functions inside a VPC (see Security Hardening in DEPLOYMENT.md), you need VPC Endpoints for the AWS services the application uses:</p>
+
+  <table>
+    <tr><th>Service</th><th>VPC Endpoint Type</th><th>Required By</th></tr>
+    <tr><td>DynamoDB</td><td>Gateway (free)</td><td>All Lambdas (converter registry, history, users, rule sets)</td></tr>
+    <tr><td>S3</td><td>Gateway (free)</td><td>Unified Converter, Custom Converter, ATaaS</td></tr>
+    <tr><td>Bedrock Runtime</td><td>Interface (charged)</td><td>ATaaS, Generate Converter</td></tr>
+    <tr><td>CloudWatch Logs</td><td>Interface (charged)</td><td>All Lambdas (logging)</td></tr>
+  </table>
+
+  <p>Example CDK configuration:</p>
+<pre><code>from aws_cdk import aws_ec2 as ec2
+
+vpc = ec2.Vpc.from_lookup(self, "VPC", vpc_id="vpc-xxxxxxxx")
+
+# Gateway endpoints (free)
+vpc.add_gateway_endpoint("DynamoDBEndpoint",
+    service=ec2.GatewayVpcEndpointAwsService.DYNAMODB)
+vpc.add_gateway_endpoint("S3Endpoint",
+    service=ec2.GatewayVpcEndpointAwsService.S3)
+
+# Interface endpoints (charged)
+vpc.add_interface_endpoint("BedrockEndpoint",
+    service=ec2.InterfaceVpcEndpointAwsService("bedrock-runtime"))
+vpc.add_interface_endpoint("CloudWatchLogsEndpoint",
+    service=ec2.InterfaceVpcEndpointAwsService.CLOUDWATCH_LOGS)</code></pre>
+
+  <h2>Allotrope Schemas (One-Time Download)</h2>
+  <p>Step 5 in DEPLOYMENT.md requires cloning the Allotrope public schema repository from GitLab. This is a one-time download (~5 MB).</p>
+
+  <div class="warning">
+    <strong>If GitLab is not accessible from your environment:</strong>
+    <ol>
+      <li>Download the schemas from a machine with internet access:<br><code>git clone https://gitlab.com/allotrope-public/asm.git</code></li>
+      <li>Copy the <code>json-schemas/adm/</code> and <code>manifests/</code> directories to a USB drive or file transfer</li>
+      <li>Place them in <code>services/dvaas/schemas/json-schemas/</code> and <code>services/dvaas/schemas/manifests/</code></li>
+      <li>Redeploy DVaaS: <code>cd services &amp;&amp; cdk deploy --require-approval never</code></li>
+    </ol>
+  </div>
+
+  <h2>Summary</h2>
+  <table>
+    <tr><th>Phase</th><th>Internet Required</th><th>What For</th><th>Alternative</th></tr>
+    <tr><td>Build (one-time)</td><td>Yes</td><td>pip install, npm install</td><td>Internal repo, CodeArtifact, or pre-bundled tarball</td></tr>
+    <tr><td>CDK Bootstrap (one-time)</td><td>Yes</td><td>CDK assets from public ECR</td><td>Pre-bootstrap from connected machine</td></tr>
+    <tr><td>Schema download (one-time)</td><td>Yes</td><td>Allotrope GitLab repo</td><td>Manual file transfer</td></tr>
+    <tr><td>Runtime</td><td>No</td><td>Everything runs within AWS</td><td>VPC Endpoints if Lambdas are in VPC</td></tr>
+    <tr><td>Dashboard access</td><td>No</td><td>CloudFront serves static files</td><td>Users need network path to CloudFront URL</td></tr>
+  </table>
+
+</body>
+</html>

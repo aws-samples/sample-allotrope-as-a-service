@@ -1,0 +1,173 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1100 820" font-family="Arial, sans-serif" font-size="12">
+  <defs>
+    <marker id="arr" markerWidth="8" markerHeight="6" refX="8" refY="3" orient="auto">
+      <polygon points="0 0, 8 3, 0 6" fill="#555"/>
+    </marker>
+    <filter id="shadow" x="-2%" y="-2%" width="104%" height="104%">
+      <feDropShadow dx="1" dy="1" stdDeviation="2" flood-opacity="0.1"/>
+    </filter>
+  </defs>
+
+  <!-- Background -->
+  <rect width="1100" height="820" fill="#f5f7fa" rx="8"/>
+
+  <!-- Title -->
+  <text x="550" y="30" text-anchor="middle" font-size="18" font-weight="bold" fill="#232f3e">ASM Transformation Service — Reference Architecture</text>
+  <text x="550" y="48" text-anchor="middle" font-size="11" fill="#888">AWS Cloud</text>
+
+  <!-- ===== USERS ===== -->
+  <rect x="420" y="60" width="260" height="50" rx="25" fill="#232f3e" filter="url(#shadow)"/>
+  <text x="550" y="82" text-anchor="middle" fill="#fff" font-size="13">👤 Users</text>
+  <text x="550" y="98" text-anchor="middle" fill="#aaa" font-size="10">Browser / API Client</text>
+
+  <!-- Arrow users down -->
+  <line x1="460" y1="110" x2="460" y2="150" stroke="#555" stroke-width="1.5" marker-end="url(#arr)"/>
+  <line x1="640" y1="110" x2="640" y2="150" stroke="#555" stroke-width="1.5" marker-end="url(#arr)"/>
+
+  <!-- ===== CLOUDFRONT + S3 (Dashboard) ===== -->
+  <rect x="340" y="150" width="180" height="70" rx="6" fill="#8C4FFF" filter="url(#shadow)"/>
+  <text x="430" y="175" text-anchor="middle" fill="#fff" font-weight="bold" font-size="11">☁ CloudFront</text>
+  <text x="430" y="192" text-anchor="middle" fill="#e0d0ff" font-size="10">+ S3 Static Website</text>
+  <text x="430" y="207" text-anchor="middle" fill="#e0d0ff" font-size="10">React Dashboard</text>
+
+  <!-- ===== API GATEWAY ===== -->
+  <rect x="560" y="150" width="200" height="70" rx="6" fill="#E7157B" filter="url(#shadow)"/>
+  <text x="660" y="175" text-anchor="middle" fill="#fff" font-weight="bold" font-size="11">⬡ API Gateway (x5)</text>
+  <text x="660" y="192" text-anchor="middle" fill="#ffd0e8" font-size="10">REST APIs + CORS</text>
+  <text x="660" y="207" text-anchor="middle" fill="#ffd0e8" font-size="10">JWT Token Authorizer</text>
+
+  <!-- Arrow API GW down to Lambda zone -->
+  <line x1="660" y1="220" x2="660" y2="260" stroke="#555" stroke-width="1.5" marker-end="url(#arr)"/>
+
+  <!-- Arrow CloudFront to API GW (dashboard calls APIs) -->
+  <line x1="520" y1="185" x2="558" y2="185" stroke="#555" stroke-width="1" stroke-dasharray="4,3" marker-end="url(#arr)"/>
+
+  <!-- ===== JWT AUTHORIZER LAMBDA ===== -->
+  <rect x="800" y="155" width="150" height="55" rx="6" fill="#ED7100" filter="url(#shadow)"/>
+  <!-- Lambda hexagon approximation -->
+  <text x="875" y="177" text-anchor="middle" fill="#fff" font-weight="bold" font-size="11">λ JWT Authorizer</text>
+  <text x="875" y="197" text-anchor="middle" fill="#ffe0c0" font-size="10">HMAC-SHA256</text>
+
+  <!-- Arrow API GW to JWT -->
+  <line x1="760" y1="180" x2="798" y2="180" stroke="#555" stroke-width="1.5" marker-end="url(#arr)"/>
+
+  <!-- ===== LAMBDA FUNCTIONS ZONE ===== -->
+  <rect x="40" y="260" width="1020" height="240" rx="8" fill="#fff" stroke="#ddd" stroke-width="1" filter="url(#shadow)"/>
+  <text x="60" y="282" font-weight="bold" fill="#ED7100" font-size="13">λ Lambda Functions</text>
+
+  <!-- Unified Converter -->
+  <rect x="60" y="295" width="175" height="65" rx="5" fill="#ED7100" opacity="0.9"/>
+  <text x="147" y="318" text-anchor="middle" fill="#fff" font-weight="bold" font-size="11">Unified Converter</text>
+  <text x="147" y="335" text-anchor="middle" fill="#ffe0c0" font-size="9">Intelligent routing</text>
+  <text x="147" y="348" text-anchor="middle" fill="#ffe0c0" font-size="9">converter_id → scan → allotropy → AI</text>
+
+  <!-- DVaaS -->
+  <rect x="250" y="295" width="175" height="65" rx="5" fill="#ED7100" opacity="0.9"/>
+  <text x="337" y="318" text-anchor="middle" fill="#fff" font-weight="bold" font-size="11">DVaaS</text>
+  <text x="337" y="335" text-anchor="middle" fill="#ffe0c0" font-size="9">Schema validation (jsonschema-rs)</text>
+  <text x="337" y="348" text-anchor="middle" fill="#ffe0c0" font-size="9">Rule engine + PDF reports</text>
+
+  <!-- ATaaS -->
+  <rect x="440" y="295" width="175" height="65" rx="5" fill="#ED7100" opacity="0.9"/>
+  <text x="527" y="318" text-anchor="middle" fill="#fff" font-weight="bold" font-size="11">ATaaS</text>
+  <text x="527" y="335" text-anchor="middle" fill="#ffe0c0" font-size="9">AI conversion (Bedrock Claude)</text>
+  <text x="527" y="348" text-anchor="middle" fill="#ffe0c0" font-size="9">+ AI Converter Generator</text>
+
+  <!-- Custom Converter -->
+  <rect x="630" y="295" width="175" height="65" rx="5" fill="#ED7100" opacity="0.9"/>
+  <text x="717" y="318" text-anchor="middle" fill="#fff" font-weight="bold" font-size="11">Custom Converter</text>
+  <text x="717" y="335" text-anchor="middle" fill="#ffe0c0" font-size="9">Execute registered converters</text>
+  <text x="717" y="348" text-anchor="middle" fill="#ffe0c0" font-size="9">from S3 (sandboxed)</text>
+
+  <!-- Multi-Instrument -->
+  <rect x="820" y="295" width="175" height="65" rx="5" fill="#ED7100" opacity="0.9"/>
+  <text x="907" y="318" text-anchor="middle" fill="#fff" font-weight="bold" font-size="11">Multi-Instrument</text>
+  <text x="907" y="335" text-anchor="middle" fill="#ffe0c0" font-size="9">Allotropy library</text>
+  <text x="907" y="348" text-anchor="middle" fill="#ffe0c0" font-size="9">31+ instruments</text>
+
+  <!-- Inline Lambdas -->
+  <rect x="60" y="375" width="935" height="45" rx="5" fill="#f0e0cc" stroke="#ED7100" stroke-width="1"/>
+  <text x="75" y="395" fill="#8a5000" font-size="11" font-weight="bold">Inline Lambdas:</text>
+  <text x="195" y="395" fill="#8a5000" font-size="10">History  •  Register Converter  •  Approve Converter  •  List Converters  •  Login  •  Register User  •  Save/List/Delete Rule Sets</text>
+  <text x="75" y="411" fill="#8a5000" font-size="10" font-weight="bold">Layers:</text>
+  <text x="130" y="411" fill="#8a5000" font-size="10">allotropy  •  jsonschema-rs  •  reportlab</text>
+
+  <!-- Routing arrows inside Lambda zone -->
+  <line x1="235" y1="327" x2="248" y2="327" stroke="#fff" stroke-width="1" stroke-dasharray="3,2" marker-end="url(#arr)"/>
+  <line x1="425" y1="327" x2="438" y2="327" stroke="#fff" stroke-width="1" stroke-dasharray="3,2" marker-end="url(#arr)"/>
+  <line x1="615" y1="327" x2="628" y2="327" stroke="#fff" stroke-width="1" stroke-dasharray="3,2" marker-end="url(#arr)"/>
+  <line x1="805" y1="327" x2="818" y2="327" stroke="#fff" stroke-width="1" stroke-dasharray="3,2" marker-end="url(#arr)"/>
+
+  <!-- ===== BOTTOM ROW: Bedrock, DynamoDB, S3 ===== -->
+
+  <!-- Bedrock -->
+  <rect x="60" y="540" width="200" height="100" rx="6" fill="#1A9C72" filter="url(#shadow)"/>
+  <text x="160" y="570" text-anchor="middle" fill="#fff" font-weight="bold" font-size="13">🧠 Amazon Bedrock</text>
+  <text x="160" y="590" text-anchor="middle" fill="#c0f0e0" font-size="10">Claude 3.5 Sonnet</text>
+  <text x="160" y="606" text-anchor="middle" fill="#c0f0e0" font-size="10">AI conversion + code generation</text>
+  <text x="160" y="622" text-anchor="middle" fill="#c0f0e0" font-size="9">(configurable endpoint for LLM gateway)</text>
+
+  <!-- DynamoDB -->
+  <rect x="310" y="540" width="260" height="100" rx="6" fill="#3B48CC" filter="url(#shadow)"/>
+  <!-- Cylinder approximation for DB -->
+  <text x="440" y="565" text-anchor="middle" fill="#fff" font-weight="bold" font-size="13">⬢ DynamoDB (x4)</text>
+  <text x="440" y="585" text-anchor="middle" fill="#c0c8ff" font-size="10">ConversionHistory</text>
+  <text x="440" y="600" text-anchor="middle" fill="#c0c8ff" font-size="10">CustomConverterRegistry</text>
+  <text x="440" y="615" text-anchor="middle" fill="#c0c8ff" font-size="10">ValidationRuleSets</text>
+  <text x="440" y="630" text-anchor="middle" fill="#c0c8ff" font-size="10">ASMUsers</text>
+
+  <!-- S3 -->
+  <rect x="620" y="540" width="200" height="100" rx="6" fill="#3F8624" filter="url(#shadow)"/>
+  <text x="720" y="570" text-anchor="middle" fill="#fff" font-weight="bold" font-size="13">🪣 S3 (x3)</text>
+  <text x="720" y="590" text-anchor="middle" fill="#c8f0c0" font-size="10">ASM Converted Files</text>
+  <text x="720" y="606" text-anchor="middle" fill="#c8f0c0" font-size="10">Validation Results</text>
+  <text x="720" y="622" text-anchor="middle" fill="#c8f0c0" font-size="10">Custom Converter Code</text>
+
+  <!-- Allotrope Schemas callout -->
+  <rect x="870" y="540" width="180" height="100" rx="6" fill="#fff" stroke="#aaa" stroke-width="1.5" filter="url(#shadow)"/>
+  <text x="960" y="570" text-anchor="middle" fill="#333" font-weight="bold" font-size="12">📋 Allotrope Schemas</text>
+  <text x="960" y="590" text-anchor="middle" fill="#666" font-size="10">JSON Schema (2020-12)</text>
+  <text x="960" y="606" text-anchor="middle" fill="#666" font-size="10">Bundled in DVaaS Lambda</text>
+  <text x="960" y="622" text-anchor="middle" fill="#666" font-size="10">gitlab.com/allotrope-public</text>
+
+  <!-- Arrows from Lambda zone down to services -->
+  <line x1="160" y1="420" x2="160" y2="538" stroke="#555" stroke-width="1.5" marker-end="url(#arr)"/>
+  <text x="165" y="480" fill="#888" font-size="9">invoke model</text>
+
+  <line x1="440" y1="420" x2="440" y2="538" stroke="#555" stroke-width="1.5" marker-end="url(#arr)"/>
+  <text x="445" y="480" fill="#888" font-size="9">read/write</text>
+
+  <line x1="720" y1="420" x2="720" y2="538" stroke="#555" stroke-width="1.5" marker-end="url(#arr)"/>
+  <text x="725" y="480" fill="#888" font-size="9">store/retrieve</text>
+
+  <line x1="907" y1="360" x2="960" y2="538" stroke="#555" stroke-width="1" stroke-dasharray="4,3" marker-end="url(#arr)"/>
+
+  <!-- ===== SECURITY CALLOUT ===== -->
+  <rect x="60" y="680" width="990" height="55" rx="6" fill="#232f3e" filter="url(#shadow)"/>
+  <text x="80" y="702" fill="#FF9900" font-weight="bold" font-size="12">🔒 Security</text>
+  <text x="175" y="702" fill="#ccc" font-size="10">JWT auth on all endpoints  •  PBKDF2 password hashing  •  API keys  •  CORS configurable  •  HTTPS enforced</text>
+  <text x="80" y="722" fill="#FF9900" font-weight="bold" font-size="12">⚙ Hardening</text>
+  <text x="175" y="722" fill="#ccc" font-size="10">VPC deployment  •  KMS encryption  •  WAF  •  Private API Gateway  •  Identity provider swap (PingFederate / Okta / Azure AD)</text>
+
+  <!-- ===== LEGEND ===== -->
+  <rect x="60" y="755" width="990" height="50" rx="6" fill="#fff" stroke="#ddd" stroke-width="1"/>
+  <text x="80" y="775" fill="#333" font-weight="bold" font-size="11">Services:</text>
+  <rect x="140" y="765" width="14" height="14" rx="2" fill="#ED7100"/>
+  <text x="160" y="776" fill="#555" font-size="10">Lambda</text>
+  <rect x="210" y="765" width="14" height="14" rx="2" fill="#E7157B"/>
+  <text x="230" y="776" fill="#555" font-size="10">API Gateway</text>
+  <rect x="310" y="765" width="14" height="14" rx="2" fill="#3B48CC"/>
+  <text x="330" y="776" fill="#555" font-size="10">DynamoDB</text>
+  <rect x="400" y="765" width="14" height="14" rx="2" fill="#3F8624"/>
+  <text x="420" y="776" fill="#555" font-size="10">S3</text>
+  <rect x="450" y="765" width="14" height="14" rx="2" fill="#8C4FFF"/>
+  <text x="470" y="776" fill="#555" font-size="10">CloudFront</text>
+  <rect x="545" y="765" width="14" height="14" rx="2" fill="#1A9C72"/>
+  <text x="565" y="776" fill="#555" font-size="10">Bedrock</text>
+
+  <text x="660" y="776" fill="#333" font-weight="bold" font-size="11">Counts:</text>
+  <text x="720" y="776" fill="#555" font-size="10">14 Lambdas  •  5 API Gateways  •  4 DynamoDB Tables  •  3 S3 Buckets  •  3 Lambda Layers</text>
+
+  <text x="80" y="795" fill="#333" font-weight="bold" font-size="11">License:</text>
+  <text x="135" y="795" fill="#555" font-size="10">Apache License 2.0  •  Copyright 2016 Amazon.com, Inc. or its affiliates</text>
+</svg>

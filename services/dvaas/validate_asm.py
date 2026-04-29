@@ -245,13 +245,21 @@ def validate_against_schema(asm: Dict, result: ValidationResult) -> bool:
     result.add_info(f"Schema: {schema_id}")
     result.metrics["schema_id"] = schema_id
 
-    # Build retriever for $ref resolution from local schema files
+    # Build retriever for $ref resolution from local schema files.
+    # ADM schemas reference QUDT unit schemas (e.g.
+    # http://purl.allotrope.org/json-schemas/qudt/REC/YYYY/MM/units.schema) so
+    # both the adm/ and qudt/ trees from the Allotrope GitLab repo must be
+    # present under schemas/json-schemas/. See DEPLOYMENT.md Step 5.
+    missing_refs: List[str] = []
+
     def retriever(uri):
         # Strip fragment
         base_uri = uri.split("#")[0]
         s = schema_registry.get(base_uri)
         if s:
             return s
+        if base_uri not in missing_refs:
+            missing_refs.append(base_uri)
         raise jsonschema_rs.ReferencingError(f"Schema not found: {uri}")
 
     try:
@@ -259,6 +267,12 @@ def validate_against_schema(asm: Dict, result: ValidationResult) -> bool:
         errors = list(validator.iter_errors(asm))
     except Exception as e:
         result.add_warning(f"Schema validation engine error: {e}")
+        if any("/qudt/" in ref for ref in missing_refs):
+            result.add_warning(
+                "One or more QUDT unit schemas were not found locally. "
+                "Ensure the qudt/ tree was copied alongside adm/ into "
+                "schemas/json-schemas/ (see DEPLOYMENT.md Step 5)."
+            )
         return False
 
     schema_errors = []

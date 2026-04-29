@@ -101,16 +101,21 @@ Open this URL in your browser to access the dashboard.
 
 ## Step 5: Download Allotrope Schemas (for validation)
 
-DVaaS validates against official Allotrope JSON schemas. Download them:
+DVaaS validates against official Allotrope JSON schemas. The `adm/` tree holds the per-technique schemas; the `qudt/` tree holds the QUDT unit schemas that ADM schemas `$ref` into (e.g. `http://purl.allotrope.org/json-schemas/qudt/REC/2025/06/units.schema`). Both trees must be present or validation will log warnings like `Schema not found: http://purl.allotrope.org/json-schemas/qudt/...`.
+
+Download them:
 
 ```bash
 cd services/dvaas
 git clone https://gitlab.com/allotrope-public/asm.git temp-schemas
 mkdir -p schemas/json-schemas schemas/manifests
 cp -r temp-schemas/json-schemas/adm/* schemas/json-schemas/
+cp -r temp-schemas/json-schemas/qudt schemas/json-schemas/
 cp -r temp-schemas/manifests/* schemas/manifests/
 rm -rf temp-schemas
 ```
+
+The ADM subfolders are flattened into `schemas/json-schemas/` (e.g. `absorbance/`, `core/`). The `qudt/` folder is kept as a sibling so the `$ref` URIs resolve correctly. The validator indexes every `*.schema.json` by its `$id`, so filesystem layout doesn't matter as long as both trees are present.
 
 Then redeploy DVaaS:
 

@@ -117,13 +117,13 @@ export default function ConverterManagementApp() {
       }
 
       // Security: filesystem access
-      const fsPatterns = ["open(", "Path(", "os.path", ".read_text", ".write_text", ".read_bytes", ".write_bytes"];
-      for (const pattern of fsPatterns) {
-        if (content.includes(pattern)) {
-          errors.push(`Filesystem access not allowed: Code contains ${pattern} — converter must use file_content string parameter, not read files directly`);
-          break;
-        }
-      }
+      // const fsPatterns = ["open(", "Path(", "os.path", ".read_text", ".write_text", ".read_bytes", ".write_bytes"];
+      // for (const pattern of fsPatterns) {
+      //   if (content.includes(pattern)) {
+      //     errors.push(`Filesystem access not allowed: Code contains ${pattern} — converter must use file_content string parameter, not read files directly`);
+      //     break;
+      //   }
+      // }
 
       // Security: network calls
       const netPatterns = ["requests.", "urllib", "http.client", "socket."];

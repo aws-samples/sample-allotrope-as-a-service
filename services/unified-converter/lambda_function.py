@@ -9,15 +9,27 @@ Tries Multi-Instrument (allotropy) first, falls back to ATaaS (AI) if needed
 """
 
 import json
+import logging
 import boto3
 import os
 import requests
 import csv
 import io
+import time
 import uuid
 from datetime import datetime
 
+logger = logging.getLogger()
+logger.setLevel(logging.INFO)
+
 dynamodb = boto3.resource('dynamodb')
+
+
+def _log(request_id, event, **kwargs):
+    """Structured one-line log for easy CloudWatch scanning."""
+    payload = {"request_id": request_id, "event": event}
+    payload.update(kwargs)
+    logger.info(json.dumps(payload, default=str))
 
 def try_custom_converter_by_id(converter_id, file_content):
     """Try a specific custom converter by ID"""
@@ -55,11 +67,11 @@ def try_custom_converter_by_id(converter_id, file_content):
 
 def try_custom_converter(vendor, model, file_content):
     """Try custom converter from registry"""
-    
+
     try:
         # Query registry for matching converter
         registry_table = dynamodb.Table(os.environ.get('CONVERTER_REGISTRY_TABLE'))
-        
+
         # Scan for matching vendor and model (simple implementation)
         response = registry_table.scan(
             FilterExpression='vendor = :vendor AND model = :model AND #status = :status',
@@ -70,22 +82,22 @@ def try_custom_converter(vendor, model, file_content):
                 ':status': 'APPROVED'
             }
         )
-        
+
         if not response.get('Items'):
             return {'success': False, 'error': 'No approved converter found'}
-        
+
         converter = response['Items'][0]
         converter_id = converter['converter_id']
-        
+
         # Call Custom Converter Service
         custom_endpoint = os.environ.get('CUSTOM_CONVERTER_ENDPOINT')
-        
+
         result = requests.post(
             custom_endpoint,
             json={'converter_id': converter_id, 'file_content': file_content},
             timeout=60
         )
-        
+
         if result.status_code == 200:
             data = result.json()
             return {
@@ -93,30 +105,44 @@ def try_custom_converter(vendor, model, file_content):
                 'converter_id': converter_id,
                 'asm_output': data.get('asm_output')
             }
-        
+
         return {'success': False, 'error': f"Custom converter failed: {result.text[:200]}"}
-        
+
     except Exception as e:
+        logger.exception("try_custom_converter raised")
         return {'success': False, 'error': f"Custom converter error: {str(e)}"}
 
 def lambda_handler(event, context):
     """Unified conversion with intelligent fallback"""
-    
+
+    request_id = getattr(context, "aws_request_id", "unknown")
+    t_start = time.monotonic()
+
     try:
         # Parse request
         if 'body' in event:
             body = json.loads(event['body']) if isinstance(event['body'], str) else event['body']
         else:
             body = event
-        
+
         file_content = body.get('file_content', '')
         file_name = body.get('file_name', 'unknown.txt')
         manifest = body.get('manifest', {})
         store_results = body.get('store_results', False)
-        
+
+        _log(request_id, "request_parsed",
+             file_name=file_name,
+             file_content_len=len(file_content),
+             has_manifest=bool(manifest),
+             manifest_converter_id=(manifest or {}).get('converter_id', ''),
+             manifest_vendor=(manifest or {}).get('vendor', ''),
+             manifest_model=(manifest or {}).get('model', ''),
+             store_results=store_results,
+             elapsed_ms=int((time.monotonic() - t_start) * 1000))
+
         if not file_content:
             return error_response(400, "No file content provided")
-        
+
         conversion_id = f"UNIFIED-{datetime.utcnow().strftime('%Y%m%d%H%M%S')}"
         
         # Step 1: Check for explicit converter_id in manifest
@@ -127,7 +153,16 @@ def lambda_handler(event, context):
             
             # If converter_id specified, use that exact converter
             if converter_id_override:
+                _log(request_id, "custom_converter_by_id.start",
+                     converter_id=converter_id_override,
+                     elapsed_ms=int((time.monotonic() - t_start) * 1000))
+                t_branch = time.monotonic()
                 custom_result = try_custom_converter_by_id(converter_id_override, file_content)
+                _log(request_id, "custom_converter_by_id.done",
+                     success=custom_result.get('success'),
+                     error=custom_result.get('error', ''),
+                     branch_ms=int((time.monotonic() - t_branch) * 1000),
+                     elapsed_ms=int((time.monotonic() - t_start) * 1000))
                 if custom_result['success']:
                     response = {
                         'conversion_id': conversion_id,
@@ -157,7 +192,16 @@ def lambda_handler(event, context):
                     }
             
             # Otherwise, try by vendor+model
+            _log(request_id, "custom_converter_by_vm.start",
+                 vendor=vendor, model=model,
+                 elapsed_ms=int((time.monotonic() - t_start) * 1000))
+            t_branch = time.monotonic()
             custom_result = try_custom_converter(vendor, model, file_content)
+            _log(request_id, "custom_converter_by_vm.done",
+                 success=custom_result.get('success'),
+                 error=custom_result.get('error', ''),
+                 branch_ms=int((time.monotonic() - t_branch) * 1000),
+                 elapsed_ms=int((time.monotonic() - t_start) * 1000))
             if custom_result['success']:
                 response = {
                     'conversion_id': conversion_id,
@@ -186,11 +230,21 @@ def lambda_handler(event, context):
                 }
         
         # Check if it's Nova FLEX2 - use embedded custom converter
-        if is_nova_flex2(file_content, file_name):
+        is_flex2 = is_nova_flex2(file_content, file_name)
+        _log(request_id, "nova_flex2.detect",
+             is_flex2=is_flex2,
+             elapsed_ms=int((time.monotonic() - t_start) * 1000))
+        if is_flex2:
             # Pass file context to converter
             convert_nova_flex2._file_name = file_name
             convert_nova_flex2._unc_path = manifest.get('location', {}).get('unc_path', '') if manifest else ''
+            t_branch = time.monotonic()
             nova_result = convert_nova_flex2(file_content)
+            _log(request_id, "nova_flex2.done",
+                 success=nova_result.get('success'),
+                 error=nova_result.get('error', ''),
+                 branch_ms=int((time.monotonic() - t_branch) * 1000),
+                 elapsed_ms=int((time.monotonic() - t_start) * 1000))
             if nova_result['success']:
                 response = {
                     'conversion_id': conversion_id,
@@ -220,8 +274,17 @@ def lambda_handler(event, context):
                 }
         
         # Step 2: Try Multi-Instrument Service (fast, rule-based)
+        _log(request_id, "multi_instrument.start",
+             elapsed_ms=int((time.monotonic() - t_start) * 1000))
+        t_branch = time.monotonic()
         multi_instrument_result = try_multi_instrument(file_content, file_name)
-        
+        _log(request_id, "multi_instrument.done",
+             success=multi_instrument_result.get('success'),
+             vendor=multi_instrument_result.get('vendor', ''),
+             error=multi_instrument_result.get('error', ''),
+             branch_ms=int((time.monotonic() - t_branch) * 1000),
+             elapsed_ms=int((time.monotonic() - t_start) * 1000))
+
         if multi_instrument_result['success']:
             response = {
                 'conversion_id': conversion_id,
@@ -239,8 +302,16 @@ def lambda_handler(event, context):
             }
         else:
             # Step 2: Fallback to ATaaS (AI-powered)
+            _log(request_id, "ataas.start",
+                 elapsed_ms=int((time.monotonic() - t_start) * 1000))
+            t_branch = time.monotonic()
             ataas_result = try_ataas(file_content)
-            
+            _log(request_id, "ataas.done",
+                 success=ataas_result.get('success'),
+                 error=ataas_result.get('error', ''),
+                 branch_ms=int((time.monotonic() - t_branch) * 1000),
+                 elapsed_ms=int((time.monotonic() - t_start) * 1000))
+
             if ataas_result['success']:
                 response = {
                     'conversion_id': conversion_id,
@@ -260,9 +331,23 @@ def lambda_handler(event, context):
         
         # Store results if requested
         if store_results:
+            _log(request_id, "store.start",
+                 method=response.get('method'),
+                 elapsed_ms=int((time.monotonic() - t_start) * 1000))
+            t_store = time.monotonic()
             storage_result = store_conversion(response)
+            _log(request_id, "store.done",
+                 stored=storage_result.get('stored'),
+                 error=storage_result.get('error', ''),
+                 branch_ms=int((time.monotonic() - t_store) * 1000),
+                 elapsed_ms=int((time.monotonic() - t_start) * 1000))
             response['storage'] = storage_result
-        
+
+        _log(request_id, "response.ready",
+             method=response.get('method'),
+             status='success',
+             total_ms=int((time.monotonic() - t_start) * 1000))
+
         return {
             'statusCode': 200,
             'headers': {
@@ -271,15 +356,32 @@ def lambda_handler(event, context):
             },
             'body': json.dumps(response)
         }
-        
+
     except Exception as e:
+        _log(request_id, "handler.exception",
+             error=str(e),
+             total_ms=int((time.monotonic() - t_start) * 1000))
+        logger.exception("Unhandled exception in lambda_handler")
         return error_response(500, f"Error: {str(e)}")
 
 def try_multi_instrument(file_content, file_name):
     """Try allotropy conversion locally with data integrity traceability."""
     try:
+        t_import = time.monotonic()
         from allotropy_wrapper import convert_with_traceability
+        logger.info(json.dumps({
+            "event": "multi_instrument.import_ok",
+            "import_ms": int((time.monotonic() - t_import) * 1000),
+        }))
+        t_convert = time.monotonic()
         result = convert_with_traceability(file_content, file_name)
+        logger.info(json.dumps({
+            "event": "multi_instrument.local_convert_done",
+            "success": result.get('success'),
+            "vendor": result.get('vendor', ''),
+            "error": result.get('error', '')[:500],
+            "convert_ms": int((time.monotonic() - t_convert) * 1000),
+        }, default=str))
         if result['success']:
             return {
                 'success': True,
@@ -289,18 +391,31 @@ def try_multi_instrument(file_content, file_name):
                 'vendor': result.get('vendor', 'unknown'),
             }
         return {'success': False, 'error': result.get('error', 'Unknown error')}
-    except ImportError:
-        pass
+    except ImportError as e:
+        logger.info(json.dumps({
+            "event": "multi_instrument.import_failed",
+            "error": str(e),
+        }))
 
     # Fallback: call multi-instrument service remotely
     try:
         multi_endpoint = os.environ.get('MULTI_INSTRUMENT_ENDPOINT',
                                        'https://6uogqq4zb5.execute-api.us-east-1.amazonaws.com/prod/convert')
+        logger.info(json.dumps({
+            "event": "multi_instrument.remote_call",
+            "endpoint": multi_endpoint,
+        }))
+        t_http = time.monotonic()
         response = requests.post(
             multi_endpoint,
             json={'file_content': file_content, 'file_name': file_name},
             timeout=30
         )
+        logger.info(json.dumps({
+            "event": "multi_instrument.remote_response",
+            "status_code": response.status_code,
+            "http_ms": int((time.monotonic() - t_http) * 1000),
+        }))
         if response.status_code == 200:
             result = response.json()
             if result.get('asm_output'):
@@ -311,21 +426,34 @@ def try_multi_instrument(file_content, file_name):
                 }
         return {'success': False, 'error': f"Multi-Instrument failed: {response.text[:200]}"}
     except Exception as e:
+        logger.info(json.dumps({
+            "event": "multi_instrument.remote_exception",
+            "error": str(e),
+        }))
         return {'success': False, 'error': f"Multi-Instrument error: {str(e)}"}
 
 def try_ataas(file_content):
     """Fallback to ATaaS AI-powered conversion"""
-    
+
     try:
         ataas_endpoint = os.environ.get('ATAAS_ENDPOINT',
                                        'https://3dbnsq6w6h.execute-api.us-east-1.amazonaws.com/prod/convert')
-        
+        logger.info(json.dumps({
+            "event": "ataas.remote_call",
+            "endpoint": ataas_endpoint,
+        }))
+        t_http = time.monotonic()
         response = requests.post(
             ataas_endpoint,
             json={'file_content': file_content},
             timeout=180
         )
-        
+        logger.info(json.dumps({
+            "event": "ataas.remote_response",
+            "status_code": response.status_code,
+            "http_ms": int((time.monotonic() - t_http) * 1000),
+        }))
+
         if response.status_code == 200:
             result = response.json()
             return {
@@ -334,13 +462,17 @@ def try_ataas(file_content):
                 'asm_output': result.get('asm_output', {}),
                 'converter_code': result.get('converter_code', {})
             }
-        
+
         return {
             'success': False,
             'error': f"ATaaS failed: {response.text[:200]}"
         }
-        
+
     except Exception as e:
+        logger.info(json.dumps({
+            "event": "ataas.remote_exception",
+            "error": str(e),
+        }))
         return {
             'success': False,
             'error': f"ATaaS error: {str(e)}"

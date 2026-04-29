@@ -1,1 +1,2 @@
 allotropy==0.1.115
+requests==2.32.5

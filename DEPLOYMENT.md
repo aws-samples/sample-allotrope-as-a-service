@@ -7,6 +7,7 @@
 - AWS CDK installed (`npm install -g aws-cdk`)
 - Python 3.12+
 - Node.js 18+
+- Docker or [Finch](https://runfinch.com/) (required for building Lambda layers during `cdk deploy`)
 - AWS Bedrock Claude model access enabled (for AI fallback)
 
 ## Step 1: Clone the Repository
@@ -17,6 +18,12 @@ cd asm-converter
 ```
 
 ## Step 2: Deploy Backend Services
+
+The Lambda layers (`allotropy`, `reportlab`, `jsonschema-rs`) are built from `requirements.txt` during deployment using a container runtime. Make sure Docker or Finch is running before you deploy. If you use Finch, set `CDK_DOCKER=finch` so CDK uses it instead of Docker:
+
+```bash
+export CDK_DOCKER=finch   # only if using Finch instead of Docker
+```
 
 ```bash
 cd services

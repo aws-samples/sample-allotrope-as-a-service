@@ -3,6 +3,9 @@ cdk.out/
 .cdk.staging/
 *.asset.*
 
+# Lambda layer bundles (built at deploy time from requirements.txt)
+services/lambda-layers/*/python/
+
 # Python
 __pycache__/
 *.py[cod]
@@ -112,6 +115,7 @@ test-strands-*
 *.txt
 !README.md
 !DEPLOYMENT.md
+!services/lambda-layers/*/requirements.txt
 converted_output.json
 unified_response.json
 unified_test_payload.json

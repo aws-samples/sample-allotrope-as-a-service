@@ -19,24 +19,74 @@ from aws_cdk import (
     Duration,
     RemovalPolicy
 )
+from aws_cdk.aws_lambda_python_alpha import (
+    PythonLayerVersion,
+    BundlingOptions,
+    ICommandHooks,
+)
+import jsii
 from constructs import Construct
+
+
+# allotropy hard-requires rainbow-api, which drags in matplotlib, lxml,
+# contourpy, fonttools, kiwisolver, cycler, pyparsing, and pillow. None of
+# those are exercised by the ASM conversion paths used here, and together they
+# push the Lambda layer past AWS's 250 MB unzipped limit. Strip them out
+# after pip install.
+@jsii.implements(ICommandHooks)
+class _AllotropyLayerHooks:
+    def before_bundling(self, input_dir, output_dir):
+        return []
+
+    def after_bundling(self, input_dir, output_dir):
+        # output_dir already points at the bundle's `python/` directory, so
+        # package top-level dirs live directly beneath it.
+        unused_top_level = [
+            "matplotlib", "mpl_toolkits",
+            "lxml",
+            "contourpy",
+            "fonttools",
+            "kiwisolver",
+            "cycler",
+            "pyparsing",
+            "PIL",
+        ]
+        unused_sibling_prefixes = [
+            "matplotlib", "lxml", "contourpy", "fonttools", "kiwisolver",
+            "cycler", "pyparsing", "pillow",
+        ]
+        rm_targets = " ".join(
+            f"'{output_dir}/{name}'" for name in unused_top_level
+        )
+        dist_info_targets = " ".join(
+            f"'{output_dir}/{prefix}'*.dist-info "
+            f"'{output_dir}/{prefix}'*.libs"
+            for prefix in unused_sibling_prefixes
+        )
+        return [
+            f"rm -rf {rm_targets} {dist_info_targets}",
+            f"find {output_dir} -type d -name __pycache__ -prune -exec rm -rf {{}} +",
+            f"find {output_dir} -type d -name tests -prune -exec rm -rf {{}} +",
+            f"find {output_dir} -type f -name '*.pyc' -delete",
+        ]
+
 
 class AutonomousServicesStack(Stack):
     def __init__(self, scope: Construct, construct_id: str, **kwargs) -> None:
         super().__init__(scope, construct_id, **kwargs)
 
-        # Lambda Layer for reportlab
-        reportlab_layer = _lambda.LayerVersion(
+        # Lambda Layer for reportlab - built at deploy time from requirements.txt
+        reportlab_layer = PythonLayerVersion(
             self, "ReportlabLayer",
-            code=_lambda.Code.from_asset("lambda-layers/reportlab-layer"),
+            entry="lambda-layers/reportlab-layer",
             compatible_runtimes=[_lambda.Runtime.PYTHON_3_12],
             description="Reportlab for PDF generation"
         )
 
-        # Lambda Layer for jsonschema-rs
-        jsonschema_rs_layer = _lambda.LayerVersion(
+        # Lambda Layer for jsonschema-rs - built at deploy time from requirements.txt
+        jsonschema_rs_layer = PythonLayerVersion(
             self, "JsonschemaRsLayer",
-            code=_lambda.Code.from_asset("lambda-layers/jsonschema-rs-layer"),
+            entry="lambda-layers/jsonschema-rs-layer",
             compatible_runtimes=[_lambda.Runtime.PYTHON_3_12],
             description="jsonschema-rs for Allotrope schema validation"
         )
@@ -918,12 +968,15 @@ def lambda_handler(event, context):
         login_resource = auth_resource.add_resource("login")
         login_resource.add_method("POST", apigateway.LambdaIntegration(login_lambda), method_responses=[{"statusCode": "200"}])
 
-        # Lambda Layer for allotropy + dependencies
-        allotropy_layer = _lambda.LayerVersion(
+        # Lambda Layer for allotropy + dependencies - built at deploy time from requirements.txt.
+        # The after_bundling hook strips unused matplotlib/lxml/etc. to stay under the 250 MB
+        # Lambda layer limit (see _AllotropyLayerHooks above for rationale).
+        allotropy_layer = PythonLayerVersion(
             self, "AllotropyLayer",
-            code=_lambda.Code.from_asset("lambda-layers/allotropy-layer"),
+            entry="lambda-layers/allotropy-layer",
             compatible_runtimes=[_lambda.Runtime.PYTHON_3_12],
-            description="Allotropy library for multi-instrument ASM conversion"
+            description="Allotropy library for multi-instrument ASM conversion",
+            bundling=BundlingOptions(command_hooks=_AllotropyLayerHooks()),
         )
 
         # Unified Converter Lambda (tries Multi-Instrument first, falls back to ATaaS)

@@ -53,6 +53,16 @@ def lambda_handler(event, context):
         # Execute converter
         result = execute_converter(converter_code, file_content)
         
+        # result may be the raw ASM dict or a {'success': bool, 'asm_output': ..., 'field_mapping': ...} wrapper
+        if isinstance(result, dict) and 'success' in result:
+            if not result.get('success'):
+                return error_response(500, result.get('error', 'Converter returned failure'))
+            asm_output = result.get('asm_output', result)
+            field_mapping = result.get('field_mapping', [])
+        else:
+            asm_output = result
+            field_mapping = []
+        
         return {
             'statusCode': 200,
             'headers': {
@@ -61,7 +71,8 @@ def lambda_handler(event, context):
             },
             'body': json.dumps({
                 'converter_id': converter_id,
-                'asm_output': result,
+                'asm_output': asm_output,
+                'field_mapping': field_mapping,
                 'timestamp': datetime.utcnow().isoformat()
             })
         }

@@ -31,7 +31,7 @@ def _log(request_id, event, **kwargs):
     payload.update(kwargs)
     logger.info(json.dumps(payload, default=str))
 
-def try_custom_converter_by_id(converter_id, file_content):
+def try_custom_converter_by_id(converter_id, file_content, auth_token=None):
     """Try a specific custom converter by ID"""
     try:
         registry_table = dynamodb.Table(os.environ.get('CONVERTER_REGISTRY_TABLE'))
@@ -45,9 +45,13 @@ def try_custom_converter_by_id(converter_id, file_content):
             return {'success': False, 'error': f'Converter {converter_id} not approved'}
         
         custom_endpoint = os.environ.get('CUSTOM_CONVERTER_ENDPOINT')
+        headers = {'Content-Type': 'application/json'}
+        if auth_token:
+            headers['Authorization'] = f'Bearer {auth_token}'
         result = requests.post(
             custom_endpoint,
             json={'converter_id': converter_id, 'file_content': file_content},
+            headers=headers,
             timeout=60
         )
         
@@ -65,7 +69,7 @@ def try_custom_converter_by_id(converter_id, file_content):
         return {'success': False, 'error': f'Converter error: {str(e)}'}
 
 
-def try_custom_converter(vendor, model, file_content):
+def try_custom_converter(vendor, model, file_content, auth_token=None):
     """Try custom converter from registry"""
 
     try:
@@ -91,10 +95,14 @@ def try_custom_converter(vendor, model, file_content):
 
         # Call Custom Converter Service
         custom_endpoint = os.environ.get('CUSTOM_CONVERTER_ENDPOINT')
+        headers = {'Content-Type': 'application/json'}
+        if auth_token:
+            headers['Authorization'] = f'Bearer {auth_token}'
 
         result = requests.post(
             custom_endpoint,
             json={'converter_id': converter_id, 'file_content': file_content},
+            headers=headers,
             timeout=60
         )
 
@@ -130,6 +138,11 @@ def lambda_handler(event, context):
         manifest = body.get('manifest', {})
         store_results = body.get('store_results', False)
 
+        # Extract JWT token from incoming request to forward to internal service calls
+        auth_header = (event.get('headers') or {}).get('Authorization', '') or \
+                      (event.get('headers') or {}).get('authorization', '')
+        auth_token = auth_header.replace('Bearer ', '').strip() if auth_header else None
+
         _log(request_id, "request_parsed",
              file_name=file_name,
              file_content_len=len(file_content),
@@ -157,7 +170,7 @@ def lambda_handler(event, context):
                      converter_id=converter_id_override,
                      elapsed_ms=int((time.monotonic() - t_start) * 1000))
                 t_branch = time.monotonic()
-                custom_result = try_custom_converter_by_id(converter_id_override, file_content)
+                custom_result = try_custom_converter_by_id(converter_id_override, file_content, auth_token=auth_token)
                 _log(request_id, "custom_converter_by_id.done",
                      success=custom_result.get('success'),
                      error=custom_result.get('error', ''),
@@ -196,7 +209,7 @@ def lambda_handler(event, context):
                  vendor=vendor, model=model,
                  elapsed_ms=int((time.monotonic() - t_start) * 1000))
             t_branch = time.monotonic()
-            custom_result = try_custom_converter(vendor, model, file_content)
+            custom_result = try_custom_converter(vendor, model, file_content, auth_token=auth_token)
             _log(request_id, "custom_converter_by_vm.done",
                  success=custom_result.get('success'),
                  error=custom_result.get('error', ''),

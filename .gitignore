@@ -78,7 +78,6 @@ MEMORY.md
 # Customer-specific files
 merck/
 demo-samples/
-custom-converter/
 
 # Internal tracking documents
 PRODUCTION-READINESS-FIXES.md

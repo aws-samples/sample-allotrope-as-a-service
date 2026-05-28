@@ -91,6 +91,22 @@ def lambda_handler(event, context):
     except Exception as e:
         return error_response(500, str(e))
 
+# Standard library modules converters are permitted to import.
+_ALLOWED_IMPORTS = frozenset({
+    'csv', 'io', 're', 'uuid', 'datetime', 'math', 'json',
+    'collections', 'itertools', 'functools', 'operator',
+    'string', 'textwrap', 'decimal', 'fractions',
+    'enum', 'dataclasses', 'typing', 'types', 'copy',
+})
+
+_builtin_import = builtins.__import__
+
+def _safe_import(name, *args, **kwargs):
+    if name.split('.')[0] not in _ALLOWED_IMPORTS:
+        raise ImportError(f"Import of '{name}' is not permitted in converters")
+    return _builtin_import(name, *args, **kwargs)
+
+
 def execute_converter(converter_code, file_content):
     """Execute converter code with minimized blast radius.
 
@@ -124,10 +140,13 @@ def execute_converter(converter_code, file_content):
     os.environ.clear()
 
     try:
-        # Layer D — Build restricted builtins (remove open, exec, eval, compile)
+        # Layer D — Build restricted builtins. Replace __import__ with an
+        # allowlist version so converters can use standard library modules
+        # (csv, re, datetime, etc.) but cannot import boto3, subprocess, etc.
         safe_builtins = vars(builtins).copy()
-        for dangerous in ('open', 'exec', 'eval', 'compile', '__import__'):
+        for dangerous in ('open', 'exec', 'eval', 'compile'):
             safe_builtins.pop(dangerous, None)
+        safe_builtins['__import__'] = _safe_import
 
         # Create sandboxed namespace
         namespace = {

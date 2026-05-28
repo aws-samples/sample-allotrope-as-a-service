@@ -318,7 +318,7 @@ def lambda_handler(event, context):
             _log(request_id, "ataas.start",
                  elapsed_ms=int((time.monotonic() - t_start) * 1000))
             t_branch = time.monotonic()
-            ataas_result = try_ataas(file_content)
+            ataas_result = try_ataas(file_content, auth_token=auth_token)
             _log(request_id, "ataas.done",
                  success=ataas_result.get('success'),
                  error=ataas_result.get('error', ''),
@@ -445,7 +445,7 @@ def try_multi_instrument(file_content, file_name):
         }))
         return {'success': False, 'error': f"Multi-Instrument error: {str(e)}"}
 
-def try_ataas(file_content):
+def try_ataas(file_content, auth_token=None):
     """Fallback to ATaaS AI-powered conversion"""
 
     try:
@@ -455,10 +455,14 @@ def try_ataas(file_content):
             "event": "ataas.remote_call",
             "endpoint": ataas_endpoint,
         }))
+        headers = {'Content-Type': 'application/json'}
+        if auth_token:
+            headers['Authorization'] = f'Bearer {auth_token}'
         t_http = time.monotonic()
         response = requests.post(
             ataas_endpoint,
             json={'file_content': file_content},
+            headers=headers,
             timeout=180
         )
         logger.info(json.dumps({

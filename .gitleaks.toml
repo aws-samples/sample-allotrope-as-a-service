@@ -1,0 +1,6 @@
+[allowlist]
+description = "Allowlist for vendored third-party libraries removed from git tracking"
+paths = [
+  '''services/dvaas-bundle/''',
+  '''services/lambda-layers/.*/python/''',
+]

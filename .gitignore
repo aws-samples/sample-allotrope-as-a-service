@@ -1,5 +1,5 @@
 # CDK
-cdk.out/
+**/cdk.out/
 .cdk.staging/
 *.asset.*
 

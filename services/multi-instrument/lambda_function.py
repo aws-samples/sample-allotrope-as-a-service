@@ -110,6 +110,7 @@ def try_allotropy_conversion(file_content, vendor):
         # Write to temp file for allotropy
         with tempfile.NamedTemporaryFile(mode='w', delete=False, suffix='.txt') as tmp:
             tmp.write(file_content)
+            tmp.flush()
             tmp_path = tmp.name
         
         try:

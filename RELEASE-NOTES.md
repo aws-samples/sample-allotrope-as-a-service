@@ -7,16 +7,19 @@
 The Custom Converter Service uses `exec()` to run customer-written Python converters. This release adds three defense-in-depth layers that minimize what converter code can do, even if it passes the human review/approval process:
 
 **Layer B — Zero-Permission AWS Session**
+
 - Before `exec()`, the Lambda assumes a temporary IAM role with an explicit deny-all session policy
 - Converter code cannot use `import boto3` to access any AWS service
 - Original credentials restored after execution completes
 
 **Layer C — Network Isolation (VPC)**
+
 - Custom Converter Lambda runs in a VPC with private isolated subnets and no NAT gateway
 - Converter code cannot reach the internet — blocks data exfiltration and payload download
 - VPC endpoints for S3, DynamoDB, and STS allow the wrapper code to function normally
 
 **Layer D — Scrubbed Execution Namespace**
+
 - `os.environ` cleared before `exec()` — converter code cannot read secrets or config
 - Dangerous builtins removed: `open`, `exec`, `eval`, `compile`, `__import__`
 - Environment restored in `finally` block after execution

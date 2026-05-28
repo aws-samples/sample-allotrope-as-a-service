@@ -1,6 +1,0 @@
-GitLab repo
-
-https://gitlab.aws.dev/groups/allotrope-as-a-service
-
-git@ssh.gitlab.aws.dev:allotrope-as-a-service/asm-converter.git
-

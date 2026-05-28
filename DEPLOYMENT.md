@@ -33,6 +33,7 @@ cdk deploy --require-approval never
 ```
 
 This creates:
+
 - 14 Lambda functions (Unified Converter, DVaaS, ATaaS, Multi-Instrument, Custom Converter, History, Register, Approve, List, Generate Converter, JWT Authorizer, Login, Register User, plus rule set functions)
 - 5 API Gateway endpoints
 - 4 DynamoDB tables (ConversionHistory, CustomConverterRegistry, ValidationRuleSets, ASMUsers)
@@ -40,6 +41,7 @@ This creates:
 - 3 Lambda Layers (allotropy, reportlab, jsonschema-rs)
 
 Authentication is automatically configured:
+
 - A unique JWT signing secret is generated from your AWS account ID and stack name
 - A JWT Lambda Authorizer is attached to all API endpoints (except login, register, and health checks)
 - Unauthenticated API requests receive `403 Forbidden` before reaching any backend Lambda
@@ -48,7 +50,8 @@ Authentication is automatically configured:
 **Save the output endpoints** — you'll need them in Step 3.
 
 The deployment will print endpoints like:
-```
+
+```text
 UnifiedConverterAPIEndpoint = https://xxxxxxxxxx.execute-api.us-east-1.amazonaws.com/prod/
 DVaaSAPIEndpoint = https://xxxxxxxxxx.execute-api.us-east-1.amazonaws.com/prod/
 CustomConverterAPIEndpoint = https://xxxxxxxxxx.execute-api.us-east-1.amazonaws.com/prod/
@@ -89,11 +92,13 @@ cdk deploy --require-approval never
 ```
 
 This creates:
+
 - S3 bucket for static website
 - CloudFront distribution with HTTPS
 
 The deployment will print:
-```
+
+```text
 CloudFrontURL = https://dxxxxxxxxxx.cloudfront.net
 ```
 
@@ -106,8 +111,8 @@ DVaaS validates against official Allotrope JSON schemas. The `adm/` tree holds t
 Download them:
 
 ```bash
-cd services/dvaas
-git clone https://gitlab.com/allotrope-public/asm.git temp-schemas
+cd ../services/dvaas
+git clone https://gitlab.com/allotrope-public/asm.git --depth 1 temp-schemas
 mkdir -p schemas/json-schemas schemas/manifests
 cp -r temp-schemas/json-schemas/adm/* schemas/json-schemas/
 cp -r temp-schemas/json-schemas/qudt schemas/json-schemas/
@@ -148,9 +153,9 @@ Open the CloudFront URL and test:
 1. **Login page** — should show sign in form
 2. **Register** — create an account and sign in
 3. **Control Tower tab** — should show empty job history (no errors)
-2. **Instrument Registry tab** — should show 18+ instruments
-3. **Validate ASM File tab** — upload a test ASM JSON file
-4. **Converter Management tab** — should show empty converter list
+4. **Instrument Registry tab** — should show 18+ instruments
+5. **Validate ASM File tab** — upload a test ASM JSON file
+6. **Converter Management tab** — should show empty converter list
 
 ## Post-Deployment
 
@@ -180,30 +185,35 @@ Open the CloudFront URL and test:
 ## Troubleshooting
 
 ### Dashboard shows blank page
+
 - Hard refresh: Ctrl+Shift+R (Windows) or Cmd+Shift+R (Mac)
 - Check browser console for errors (F12 → Console)
 - Verify config.js has correct endpoints
 
 ### API returns CORS error
+
 - Verify the API Gateway has CORS enabled (CDK handles this automatically)
 - Check that you're using the `/prod/` path in endpoints
 
 ### Conversion fails with "Both conversion methods failed"
+
 - Check if your instrument has an approved custom converter
 - Check if the file format matches what the converter expects
 - Check the instrument config vendor/model matches the converter registration
 
 ### Validation returns "No matching schema found"
+
 - Ensure Allotrope schemas are downloaded (Step 5)
 - Check that the `$asm.manifest` URL in your ASM matches a schema version you have locally
 
 ### Bedrock returns access denied
+
 - Complete Step 6 (enable model access)
 - Verify the Lambda IAM role has `bedrock:InvokeModel` permission (CDK adds this automatically)
 
 ## Architecture
 
-```
+```text
 CloudFront (Dashboard)
     ↓
 API Gateway (5 endpoints)
@@ -238,11 +248,13 @@ Then redeploy: `cd services && cdk deploy --require-approval never`
 An API key and usage plan are created automatically. To require the key on API calls:
 
 1. Retrieve your API key value:
+
    ```bash
    aws apigateway get-api-key --api-key <ApiKeyId from CDK output> --include-value
    ```
 
 2. Set the key in `dashboard/src/config.js`:
+
    ```javascript
    export const API_KEY = 'your-api-key-value'
    ```
@@ -327,12 +339,14 @@ If left commented out, the service calls Bedrock directly (default).
 ## Updating
 
 ### Update backend services
+
 ```bash
 cd services
 cdk deploy --require-approval never
 ```
 
 ### Update dashboard
+
 ```bash
 cd dashboard
 npm run build
@@ -340,4 +354,5 @@ cdk deploy --require-approval never
 ```
 
 ### Update Allotrope schemas
+
 Repeat Step 5 with the latest schemas from the Allotrope GitLab repository.

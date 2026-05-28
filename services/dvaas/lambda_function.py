@@ -102,6 +102,7 @@ def run_validation(asm_data, validation_level):
     # Write ASM to temp file for validator
     with tempfile.NamedTemporaryFile(mode='w', suffix='.json', delete=False) as f:
         json.dump(asm_data, f, indent=2)
+        f.flush()
         temp_path = f.name
 
     try:

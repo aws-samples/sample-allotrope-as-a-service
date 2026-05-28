@@ -16,6 +16,7 @@ from aws_cdk import (
     aws_dynamodb as dynamodb,
     aws_s3 as s3,
     aws_iam as iam,
+    aws_ec2 as ec2,
     Duration,
     RemovalPolicy
 )
@@ -531,6 +532,36 @@ def generate_policy(principal_id, effect, resource):
         )
 
         # Custom Converter Service Lambda
+
+        # Layer B — Zero-permission IAM role for exec() sandbox
+        converter_sandbox_role = iam.Role(
+            self, "ConverterSandboxRole",
+            assumed_by=iam.ArnPrincipal(f"arn:aws:sts::{cdk.Aws.ACCOUNT_ID}:root"),
+            description="Zero-permission role assumed during converter exec() to strip AWS credentials",
+        )
+
+        # Layer C — VPC with isolated subnets (no NAT, no internet)
+        converter_vpc = ec2.Vpc(
+            self, "ConverterVpc",
+            max_azs=2,
+            nat_gateways=0,
+            subnet_configuration=[
+                ec2.SubnetConfiguration(
+                    name="Isolated",
+                    subnet_type=ec2.SubnetType.PRIVATE_ISOLATED,
+                )
+            ],
+        )
+
+        # VPC Endpoints so wrapper code can reach S3 and DynamoDB before exec()
+        converter_vpc.add_gateway_endpoint("S3Endpoint",
+            service=ec2.GatewayVpcEndpointAwsService.S3)
+        converter_vpc.add_gateway_endpoint("DynamoDBEndpoint",
+            service=ec2.GatewayVpcEndpointAwsService.DYNAMODB)
+        # STS interface endpoint for Layer B role assumption
+        converter_vpc.add_interface_endpoint("STSEndpoint",
+            service=ec2.InterfaceVpcEndpointAwsService.STS)
+
         custom_converter_lambda = _lambda.Function(
             self, "CustomConverterFunction",
             runtime=_lambda.Runtime.PYTHON_3_12,
@@ -538,9 +569,12 @@ def generate_policy(principal_id, effect, resource):
             code=_lambda.Code.from_asset("custom-converter"),
             timeout=Duration.seconds(60),
             memory_size=512,
+            vpc=converter_vpc,
+            vpc_subnets=ec2.SubnetSelection(subnet_type=ec2.SubnetType.PRIVATE_ISOLATED),
             environment={
                 "CONVERTER_REGISTRY_TABLE": converter_registry_table.table_name,
                 "CONVERTERS_BUCKET": converters_bucket.bucket_name,
+                "ZERO_PERMISSION_ROLE_ARN": converter_sandbox_role.role_arn,
                 "SERVICE_NAME": "CustomConverter"
             }
         )
@@ -548,6 +582,8 @@ def generate_policy(principal_id, effect, resource):
         # Grant permissions
         converter_registry_table.grant_read_data(custom_converter_lambda)
         converters_bucket.grant_read(custom_converter_lambda)
+        # Layer B — Allow Lambda to assume the zero-permission sandbox role
+        converter_sandbox_role.grant_assume_role(custom_converter_lambda.grant_principal)
 
         # Custom Converter API
         custom_converter_api = apigateway.RestApi(

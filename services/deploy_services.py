@@ -120,7 +120,7 @@ class AutonomousServicesStack(Stack):
                 "SERVICE_NAME": "ATaaS",
                 # Optional: set these to route through a custom LLM gateway
                 # "BEDROCK_ENDPOINT_URL": "https://your-llm-gateway.internal.company.com",
-                # "BEDROCK_MODEL_ID": "us.anthropic.claude-3-5-sonnet-20241022-v2:0",
+                # "BEDROCK_MODEL_ID": "global.anthropic.claude-sonnet-4-6",
             }
         )
 
@@ -438,7 +438,7 @@ def generate_policy(principal_id, effect, resource):
                 "SERVICE_NAME": "GenerateConverter",
                 # Optional: set these to route through a custom LLM gateway
                 # "BEDROCK_ENDPOINT_URL": "https://your-llm-gateway.internal.company.com",
-                # "BEDROCK_MODEL_ID": "us.anthropic.claude-3-5-sonnet-20241022-v2:0",
+                # "BEDROCK_MODEL_ID": "global.anthropic.claude-sonnet-4-6",
             }
         )
 

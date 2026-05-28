@@ -135,7 +135,7 @@ If you want the AI-powered fallback (ATaaS):
 
 1. Open AWS Console → Amazon Bedrock
 2. Go to Model access → Manage model access
-3. Request access for **Anthropic Claude 3.5 Sonnet**
+3. Request access for **Anthropic Claude 4.6 Sonnet**
 4. Wait for approval (usually instant)
 
 Without this, the AI fallback route will return an error, but all other routes (custom converters, allotropy) work fine.
@@ -329,7 +329,7 @@ If your organization uses a gateway or load balancer in front of Bedrock, you ca
 
 ```python
 "BEDROCK_ENDPOINT_URL": "https://your-llm-gateway.internal.company.com",
-"BEDROCK_MODEL_ID": "us.anthropic.claude-3-5-sonnet-20241022-v2:0",
+"BEDROCK_MODEL_ID": "global.anthropic.claude-sonnet-4-6",
 ```
 
 Then redeploy: `cd services && cdk deploy --require-approval never`

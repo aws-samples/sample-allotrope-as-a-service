@@ -43,7 +43,7 @@ Requests enter through the **Unified Converter** (`services/unified-converter/la
 
 1. **Multi-Instrument** (`services/multi-instrument/`) — rule-based conversion via the allotropy library (50+ instruments)
 2. **Custom Converter** (`services/custom-converter/`) — runs customer-uploaded Python converters fetched from S3
-3. **ATaaS** (`services/ataas/`) — AI fallback using Bedrock Claude 3.5 Sonnet v2 (`us.anthropic.claude-3-5-sonnet-20241022-v2:0`)
+3. **ATaaS** (`services/ataas/`) — AI fallback using Bedrock Claude 4.6 Sonnet (`global.anthropic.claude-sonnet-4-6`)
 
 Converted output is stored in S3 and logged to DynamoDB (`ConversionHistory`).
 
@@ -85,5 +85,5 @@ React 18 + AWS Cloudscape Design System + Vite. `CombinedApp.jsx` is the top-lev
 | `CONVERSION_HISTORY_TABLE` | DynamoDB table for job history |
 | `DVAAS_ENDPOINT` / `MULTI_INSTRUMENT_ENDPOINT` / `ATAAS_ENDPOINT` | Inter-service URLs |
 | `JWT_SECRET` | Token signing key (auto-generated per deployment) |
-| `BEDROCK_MODEL_ID` | Override Bedrock model (default: Claude 3.5 Sonnet v2) |
+| `BEDROCK_MODEL_ID` | Override Bedrock model (default: Claude 4.6 Sonnet) |
 | `BEDROCK_ENDPOINT_URL` | Optional custom LLM gateway URL |

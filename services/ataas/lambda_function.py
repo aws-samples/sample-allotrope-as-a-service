@@ -18,7 +18,7 @@ bedrock_kwargs = {'region_name': os.environ.get('AWS_REGION', 'us-east-1')}
 if os.environ.get('BEDROCK_ENDPOINT_URL'):
     bedrock_kwargs['endpoint_url'] = os.environ['BEDROCK_ENDPOINT_URL']
 bedrock = boto3.client('bedrock-runtime', **bedrock_kwargs)
-MODEL_ID = os.environ.get('BEDROCK_MODEL_ID', 'us.anthropic.claude-3-5-sonnet-20241022-v2:0')
+MODEL_ID = os.environ.get('BEDROCK_MODEL_ID', 'global.anthropic.claude-sonnet-4-6')
 
 def lambda_handler(event, context):
     """Minimal ATaaS entry point"""
@@ -313,7 +313,7 @@ Respond ONLY with Python code, no explanations."""
             'language': 'python',
             'code': code,
             'filename': f'{file_format.lower()}_{instrument_type.replace(" ", "_")}_converter_{datetime.utcnow().strftime("%Y%m%d%H%M%S")}.py',
-            'generated_by': 'claude-3.5-sonnet'
+            'generated_by': 'claude-4.6-sonnet'
         }
         
     except Exception as e:

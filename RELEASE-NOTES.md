@@ -61,7 +61,7 @@ The Custom Converter Service uses `exec()` to run customer-written Python conver
 ### Initial Release
 
 - Multi-instrument ASM conversion (31+ instruments via allotropy library)
-- AI-powered conversion fallback (AWS Bedrock Claude 3.5 Sonnet)
+- AI-powered conversion fallback (AWS Bedrock Claude 4.6 Sonnet)
 - ASM validation against official Allotrope JSON schemas (jsonschema-rs)
 - Pluggable validation framework with JSON rule engine
 - Custom converter registration with human approval workflow

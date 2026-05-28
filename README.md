@@ -65,7 +65,7 @@ cdk deploy
 ### 1. ATaaS (ASM Transformation as a Service)
 - **Endpoint**: `/prod/convert`
 - **Purpose**: AI-powered file analysis and ASM conversion
-- **Model**: AWS Bedrock Claude 3.5 Sonnet
+- **Model**: AWS Bedrock Claude 4.6 Sonnet
 
 ### 2. DVaaS (Data Validation as a Service)
 - **Endpoint**: `/prod/validate`

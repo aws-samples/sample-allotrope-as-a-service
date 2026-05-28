@@ -9,16 +9,25 @@ AI-Powered with AWS Bedrock Claude
 """
 
 import json
+import logging
 import boto3
+from botocore.config import Config
 import os
 from datetime import datetime
 
-# Initialize Bedrock client (supports custom gateway via BEDROCK_ENDPOINT_URL)
-bedrock_kwargs = {'region_name': os.environ.get('AWS_REGION', 'us-east-1')}
-if os.environ.get('BEDROCK_ENDPOINT_URL'):
-    bedrock_kwargs['endpoint_url'] = os.environ['BEDROCK_ENDPOINT_URL']
-bedrock = boto3.client('bedrock-runtime', **bedrock_kwargs)
-MODEL_ID = os.environ.get('BEDROCK_MODEL_ID', 'global.anthropic.claude-sonnet-4-6')
+logger = logging.getLogger()
+logger.setLevel(logging.INFO)
+
+MODEL_ID = os.environ.get('BEDROCK_MODEL_ID', 'us.anthropic.claude-sonnet-4-6')
+
+def _bedrock_client():
+    kwargs = {
+        'region_name': os.environ.get('AWS_REGION', 'us-east-1'),
+        'config': Config(connect_timeout=5, read_timeout=25, retries={'max_attempts': 1}),
+    }
+    if os.environ.get('BEDROCK_ENDPOINT_URL'):
+        kwargs['endpoint_url'] = os.environ['BEDROCK_ENDPOINT_URL']
+    return boto3.client('bedrock-runtime', **kwargs)
 
 def lambda_handler(event, context):
     """Minimal ATaaS entry point"""
@@ -36,14 +45,8 @@ def lambda_handler(event, context):
         if not file_content:
             return error_response(400, "No file content provided")
         
-        # AI-powered file analysis
-        file_analysis = analyze_file_with_claude(file_content)
-        
-        # AI-powered ASM conversion
-        asm_output = convert_to_asm_with_claude(file_content, file_analysis)
-        
-        # AI-powered converter code generation
-        converter_code = generate_converter_with_claude(file_content, file_analysis)
+        # Single Bedrock call for analysis + conversion + code generation
+        file_analysis, asm_output, converter_code = analyze_and_convert_with_claude(file_content)
         
         conversion_id = f"CONV-{datetime.utcnow().strftime('%Y%m%d%H%M%S')}"
         
@@ -139,190 +142,97 @@ def store_conversion_results(conversion_data):
             'message': 'Failed to store results'
         }
 
-def analyze_file_with_claude(file_content):
-    """Use Claude to analyze file format and structure"""
-    
-    # Optimize: Send only headers + first 3 rows for analysis
-    lines = file_content.strip().split('\n')[:4]  # Header + 3 sample rows
-    sample_content = '\n'.join(lines)
-    
-    prompt = f"""Analyze this laboratory instrument data file and provide a JSON response with:
-1. file_format (CSV, XML, JSON, etc.)
-2. instrument_type (plate reader, cell counter, spectrophotometer, solution analyzer, etc.)
-3. vendor (if identifiable)
-4. data_structure (description of columns/fields)
-5. sample_count (estimated from structure)
+def analyze_and_convert_with_claude(file_content):
+    """Single Bedrock call: analyze file, produce ASM output, and generate converter code."""
 
-File sample (headers + first 3 rows):
+    lines = file_content.strip().split('\n')
+    sample_content = '\n'.join(lines[:4])  # header + up to 3 rows
+
+    prompt = f"""You are a laboratory instrument data expert. Analyze the following data file and respond with a single JSON object containing three keys: "file_analysis", "asm_output", and "converter_code".
+
+FILE SAMPLE (header + first 3 rows):
 {sample_content}
 
-Respond ONLY with valid JSON, no other text."""
-    
-    try:
-        response = bedrock.invoke_model(
-            modelId=MODEL_ID,
-            body=json.dumps({
-                "anthropic_version": "bedrock-2023-05-31",
-                "max_tokens": 4000,
-                "messages": [
-                    {"role": "user", "content": prompt}
-                ]
-            })
-        )
-        
-        result = json.loads(response['body'].read())
-        analysis_text = result['content'][0]['text']
-        
-        # Extract JSON from response
-        if '{' in analysis_text:
-            json_start = analysis_text.index('{')
-            json_end = analysis_text.rindex('}') + 1
-            analysis = json.loads(analysis_text[json_start:json_end])
-        else:
-            analysis = {'file_format': 'UNKNOWN', 'instrument_type': 'unknown'}
-        
-        return analysis
-        
-    except Exception as e:
-        return {
-            'file_format': 'UNKNOWN',
-            'instrument_type': 'unknown',
-            'error': str(e)
-        }
+"file_analysis" must be a JSON object with:
+  - file_format: string (CSV, XML, JSON, etc.)
+  - instrument_type: string (plate reader, cell counter, spectrophotometer, solution analyzer, etc.)
+  - vendor: string or null
+  - data_structure: string description of columns/fields
+  - sample_count: estimated integer
 
-def convert_to_asm_with_claude(file_content, analysis):
-    """Use Claude to convert file to ASM format"""
-    
-    instrument_type = analysis.get('instrument_type', 'solution analyzer')
-    
-    # Map instrument type to ASM manifest
+"asm_output" must be valid Allotrope Simple Model (ASM) JSON for the 2 sample data rows shown, with:
+  - $asm.manifest: correct manifest URL for the instrument type
+  - measurement document array with measurement identifier, measurement time, and appropriate fields/units
+
+"converter_code" must be a complete executable Python script (as a JSON string) that:
+  - Parses this file format
+  - Processes ALL rows (not just the sample)
+  - Returns proper ASM JSON structure
+  - Uses the correct manifest URL
+  - Has error handling
+  - Defines a convert(file_content) function
+
+Respond ONLY with the JSON object, no other text."""
+
     manifest_map = {
         'plate reader': 'http://purl.allotrope.org/manifests/plate-reader/REC/2024/09/plate-reader.manifest',
         'cell counter': 'http://purl.allotrope.org/manifests/cell-counter/REC/2024/09/cell-counter.manifest',
         'spectrophotometer': 'http://purl.allotrope.org/manifests/uv-vis-spectroscopy/REC/2024/09/uv-vis-spectroscopy.manifest',
-        'solution analyzer': 'http://purl.allotrope.org/manifests/solution-analyzer/BENCHLING/2023/09/solution-analyzer.manifest'
+        'solution analyzer': 'http://purl.allotrope.org/manifests/solution-analyzer/BENCHLING/2023/09/solution-analyzer.manifest',
     }
-    
-    manifest = manifest_map.get(instrument_type, manifest_map['solution analyzer'])
-    
-    # Optimize: Send only first 2 rows for conversion example
-    lines = file_content.strip().split('\n')[:3]  # Header + 2 rows
-    sample_content = '\n'.join(lines)
-    
-    prompt = f"""Convert this laboratory instrument data to Allotrope Simple Model (ASM) JSON format.
 
-Instrument Type: {instrument_type}
-ASM Manifest: {manifest}
-
-File sample (first 2 data rows):
-{sample_content}
-
-Generate valid ASM JSON with:
-- Correct manifest URL
-- measurement document array
-- measurement identifier, measurement time for each
-- appropriate data fields based on instrument type
-- proper units for all measurements
-
-IMPORTANT: Generate structure for ONLY the 2 sample rows shown. The converter code will handle all rows.
-
-Respond ONLY with valid JSON, no other text."""
-    
     try:
-        response = bedrock.invoke_model(
+        response = _bedrock_client().invoke_model(
             modelId=MODEL_ID,
             body=json.dumps({
                 "anthropic_version": "bedrock-2023-05-31",
-                "max_tokens": 8000,
-                "messages": [
-                    {"role": "user", "content": prompt}
-                ]
+                "max_tokens": 16000,
+                "messages": [{"role": "user", "content": prompt}]
             })
         )
-        
+
         result = json.loads(response['body'].read())
-        asm_text = result['content'][0]['text']
-        
-        # Extract JSON from response
-        if '{' in asm_text:
-            json_start = asm_text.index('{')
-            json_end = asm_text.rindex('}') + 1
-            asm_output = json.loads(asm_text[json_start:json_end])
+        text = result['content'][0]['text']
+
+        if '{' in text:
+            json_start = text.index('{')
+            json_end = text.rindex('}') + 1
+            parsed = json.loads(text[json_start:json_end])
         else:
-            asm_output = create_fallback_asm(manifest)
-        
-        return asm_output
-        
-    except Exception as e:
-        return create_fallback_asm(manifest)
+            raise ValueError("No JSON in response")
 
-def generate_converter_with_claude(file_content, analysis):
-    """Use Claude to generate converter code"""
-    
-    file_format = analysis.get('file_format', 'CSV')
-    instrument_type = analysis.get('instrument_type', 'unknown')
-    
-    # Optimize: Send only headers + 2 sample rows
-    lines = file_content.strip().split('\n')[:3]
-    sample_content = '\n'.join(lines)
-    
-    prompt = f"""Generate a Python converter script that converts {file_format} files from {instrument_type} instruments to ASM format.
+        file_analysis = parsed.get('file_analysis', {'file_format': 'UNKNOWN', 'instrument_type': 'unknown'})
+        asm_output = parsed.get('asm_output', create_fallback_asm(manifest_map['solution analyzer']))
 
-Example input (headers + 2 sample rows):
-{sample_content}
+        raw_code = parsed.get('converter_code', '')
+        if isinstance(raw_code, str):
+            code = raw_code
+            if '```python' in code:
+                code = code.split('```python')[1].split('```')[0].strip()
+            elif '```' in code:
+                code = code.split('```')[1].split('```')[0].strip()
+        else:
+            code = str(raw_code)
 
-Requirements:
-1. Parse the {file_format} format
-2. Extract all measurements/samples from ANY number of rows
-3. Convert to proper ASM JSON structure
-4. Include proper manifest URL for {instrument_type}
-5. Handle errors gracefully
-6. Make it reusable for similar files
-7. Process ALL rows in the file, not just the sample shown
-
-Generate complete, executable Python code with:
-- Proper imports
-- Function to convert entire file
-- Error handling
-- Comments explaining key sections
-
-Respond ONLY with Python code, no explanations."""
-    
-    try:
-        response = bedrock.invoke_model(
-            modelId=MODEL_ID,
-            body=json.dumps({
-                "anthropic_version": "bedrock-2023-05-31",
-                "max_tokens": 8000,
-                "messages": [
-                    {"role": "user", "content": prompt}
-                ]
-            })
-        )
-        
-        result = json.loads(response['body'].read())
-        code = result['content'][0]['text']
-        
-        # Clean up code blocks if present
-        if '```python' in code:
-            code = code.split('```python')[1].split('```')[0].strip()
-        elif '```' in code:
-            code = code.split('```')[1].split('```')[0].strip()
-        
-        return {
+        file_format = file_analysis.get('file_format', 'CSV')
+        instrument_type = file_analysis.get('instrument_type', 'unknown')
+        converter_code = {
             'language': 'python',
             'code': code,
             'filename': f'{file_format.lower()}_{instrument_type.replace(" ", "_")}_converter_{datetime.utcnow().strftime("%Y%m%d%H%M%S")}.py',
             'generated_by': 'claude-4.6-sonnet'
         }
-        
+
+        return file_analysis, asm_output, converter_code
+
     except Exception as e:
-        return {
-            'language': 'python',
-            'code': f'# Error generating converter: {str(e)}',
-            'filename': f'converter_{datetime.utcnow().strftime("%Y%m%d%H%M%S")}.py',
-            'error': str(e)
-        }
+        logger.error("analyze_and_convert_with_claude failed: %s", e)
+        fallback_manifest = manifest_map['solution analyzer']
+        return (
+            {'file_format': 'UNKNOWN', 'instrument_type': 'unknown', 'error': str(e)},
+            create_fallback_asm(fallback_manifest),
+            {'language': 'python', 'code': f'# Error: {e}', 'filename': 'converter.py', 'error': str(e)}
+        )
 
 def create_fallback_asm(manifest):
     """Create basic ASM structure as fallback"""

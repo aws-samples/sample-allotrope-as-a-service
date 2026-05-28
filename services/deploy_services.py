@@ -29,6 +29,22 @@ import jsii
 from constructs import Construct
 
 
+def _add_cors_gateway_responses(api: apigateway.RestApi) -> None:
+    """Add CORS headers to all gateway error responses so browsers see real errors, not 'Failed to fetch'."""
+    cors_headers = {"gatewayresponse.header.Access-Control-Allow-Origin": "'*'"}
+    for response_type in (
+        apigateway.ResponseType.ACCESS_DENIED,
+        apigateway.ResponseType.UNAUTHORIZED,
+        apigateway.ResponseType.DEFAULT_5_XX,
+        apigateway.ResponseType.INTEGRATION_TIMEOUT,
+    ):
+        api.add_gateway_response(
+            f"cors-{response_type.response_type.lower().replace('_', '-')}",
+            type=response_type,
+            response_headers=cors_headers,
+        )
+
+
 # allotropy hard-requires rainbow-api, which drags in matplotlib, lxml,
 # contourpy, fonttools, kiwisolver, cycler, pyparsing, and pillow. None of
 # those are exercised by the ASM conversion paths used here, and together they
@@ -363,6 +379,7 @@ def generate_policy(principal_id, effect, resource):
                 allow_headers=["Content-Type", "Authorization"]
             )
         )
+        _add_cors_gateway_responses(dvaas_api)
 
         # DVaaS endpoints
         validate_resource = dvaas_api.root.add_resource("validate")
@@ -408,6 +425,7 @@ def generate_policy(principal_id, effect, resource):
                 allow_headers=["Content-Type", "Authorization"]
             )
         )
+        _add_cors_gateway_responses(ataas_api)
 
         # ATaaS endpoints
         convert_resource = ataas_api.root.add_resource("convert")
@@ -497,6 +515,7 @@ def generate_policy(principal_id, effect, resource):
                 allow_headers=["Content-Type", "Authorization"]
             )
         )
+        _add_cors_gateway_responses(multi_instrument_api)
 
         # Multi-instrument endpoints
         multi_convert_resource = multi_instrument_api.root.add_resource("convert")
@@ -596,6 +615,7 @@ def generate_policy(principal_id, effect, resource):
                 allow_headers=["Content-Type", "Authorization"]
             )
         )
+        _add_cors_gateway_responses(custom_converter_api)
 
         # Execute endpoint
         execute_resource = custom_converter_api.root.add_resource("execute")
@@ -1051,6 +1071,7 @@ def lambda_handler(event, context):
                 allow_headers=["Content-Type", "Authorization"]
             )
         )
+        _add_cors_gateway_responses(unified_api)
 
         unified_convert = unified_api.root.add_resource("convert")
         unified_convert.add_method(

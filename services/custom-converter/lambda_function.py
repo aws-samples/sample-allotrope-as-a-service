@@ -16,6 +16,7 @@ import json
 import builtins
 import boto3
 import os
+import _strptime  # pre-load so datetime.strptime() works inside exec() sandbox
 from datetime import datetime
 
 s3 = boto3.client('s3')
@@ -97,6 +98,7 @@ _ALLOWED_IMPORTS = frozenset({
     'collections', 'itertools', 'functools', 'operator',
     'string', 'textwrap', 'decimal', 'fractions',
     'enum', 'dataclasses', 'typing', 'types', 'copy',
+    '_strptime',  # lazy import triggered by datetime.strptime()
 })
 
 _builtin_import = builtins.__import__

@@ -1,0 +1,2 @@
+# Internal-only React dashboard — no i18n requirement, suppress jsx-not-internationalized noise
+dashboard/src/

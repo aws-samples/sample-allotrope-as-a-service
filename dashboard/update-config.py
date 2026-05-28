@@ -66,7 +66,7 @@ def update_config(outputs):
 
     config_content = "\n".join(config_lines)
 
-    with open("src/config.js", "w") as f:
+    with open("src/config.js", "w", encoding="utf-8") as f:
         f.write(config_content)
 
     print("Updated src/config.js:")

@@ -172,7 +172,7 @@ def check_value_in_list(data, rule, rule_set_id, reference_data=None):
         # Try loading from file
         try:
             rule_sets_dir = Path(__file__).parent / "rule-sets"
-            with open(rule_sets_dir / list_source, "r") as f:
+            with open(rule_sets_dir / list_source, "r", encoding="utf-8") as f:
                 allowed = set(json.load(f))
         except (FileNotFoundError, json.JSONDecodeError):
             return findings  # Can't validate without the list

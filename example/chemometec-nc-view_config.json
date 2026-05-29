@@ -1,0 +1,10 @@
+{
+  "vendor": "CHEMOMETEC_NC_VIEW",
+  "instrument_type": "cell_counter",
+  "manufacturer": "ChemoMetec",
+  "model": "NC-View",
+  "file_format": "csv",
+  "serial_number": "12345",
+  "software_version": "v1",
+  "contact": "manager@amazon.com"
+}

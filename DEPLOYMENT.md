@@ -66,7 +66,7 @@ Run the following helper script to update `dashboard/src/config.js` with your en
 
 ```bash
 cd ../dashboard
-python update-config.py
+uv run update-config.py
 ```
 
 Alternatively, you may manually update the following values in `dashboard/src/config.js`:
@@ -84,9 +84,9 @@ export const ENDPOINTS = {
 ## Step 4: Deploy Dashboard
 
 ```bash
+# From dashboard/
 npm install
-npm run build
-cdk deploy --require-approval never
+npm run build && cdk deploy --require-approval never
 ```
 
 This creates:
@@ -124,6 +124,7 @@ Then redeploy DVaaS:
 
 ```bash
 cd ..
+# From services/
 cdk deploy --require-approval never
 ```
 

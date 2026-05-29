@@ -171,3 +171,6 @@ fetch_*.py
 merck_*.py
 run_*.py
 verify_*.py
+
+# Exceptions: tracked test files
+!services/tests/test_*.py

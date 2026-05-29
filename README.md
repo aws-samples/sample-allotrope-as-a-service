@@ -80,6 +80,8 @@ See [SUPPORTED-INSTRUMENTS.md](docs/SUPPORTED-INSTRUMENTS.md) for complete list.
 - Nova BioProfile FLEX2 (solution analyzer)
 - Charles River EndoScan-V (endotoxin testing)
 
+> **Example implementation**: See [sample-laboratory-data-transformation-mcp](https://github.com/aws-samples/sample-laboratory-data-transformation-mcp) for a reference implementation showing how to use AI to generate instrument data-to-ASM converter scripts.
+
 ## 🔐 Security & Compliance
 
 - **No Data Persistence**: Files processed in-memory only

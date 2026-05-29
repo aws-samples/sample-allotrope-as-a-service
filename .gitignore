@@ -107,6 +107,7 @@ test-strands-*
 *_test_data_*.py
 *_test_data_*.json
 *_test_data_*.csv
+.coverage
 
 # Root-level output/temp files
 *.pdf

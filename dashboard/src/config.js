@@ -1,10 +1,13 @@
+// Copyright Amazon.com, Inc. or its affiliates. All Rights Reserved.
+// SPDX-License-Identifier: MIT-0
+
 // API Endpoints - Update these when deploying to a new environment
 export const ENDPOINTS = {
-  unifiedConverter: 'https://abc123.execute-api.us-east-1.amazonaws.com/prod',
-  dvaas: 'https://abc123.execute-api.us-east-1.amazonaws.com/prod',
-  customConverter: 'https://abc123.execute-api.us-east-1.amazonaws.com/prod',
-  ataas: 'https://abc123.execute-api.us-east-1.amazonaws.com/prod',
-  multiInstrument: 'https://abc123.execute-api.us-east-1.amazonaws.com/prod',
+  unifiedConverter: 'https://uv53e7sj4k.execute-api.us-east-1.amazonaws.com/prod',
+  dvaas: 'https://8oujzjf3qg.execute-api.us-east-1.amazonaws.com/prod',
+  customConverter: 'https://lfoeu00978.execute-api.us-east-1.amazonaws.com/prod',
+  ataas: 'https://1n9k8uhjk8.execute-api.us-east-1.amazonaws.com/prod',
+  multiInstrument: 'https://ji40tgsy3i.execute-api.us-east-1.amazonaws.com/prod',
 }
 
 // API Key - set after deployment if API key protection is enabled

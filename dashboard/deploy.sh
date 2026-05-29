@@ -1,4 +1,7 @@
 #!/bin/bash
+# Copyright Amazon.com, Inc. or its affiliates. All Rights Reserved.
+# SPDX-License-Identifier: MIT-0
+
 # Deploy ASM Dashboard to S3
 
 echo "Building dashboard..."

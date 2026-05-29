@@ -6,6 +6,7 @@
 - AWS CLI configured (`aws configure`)
 - AWS CDK installed (`npm install -g aws-cdk`)
 - Python 3.12+
+- [uv](https://docs.astral.sh/uv/getting-started/installation/) (Python package manager)
 - Node.js 18+
 - Docker or [Finch](https://runfinch.com/) (required for building Lambda layers during `cdk deploy`)
 - AWS Bedrock Claude model access enabled (for AI fallback)
@@ -27,7 +28,7 @@ export CDK_DOCKER=finch   # only if using Finch instead of Docker
 
 ```bash
 cd services
-pip install -r requirements.txt
+uv sync          # install CDK tooling deps
 cdk bootstrap    # First time only
 cdk deploy --require-approval never
 ```

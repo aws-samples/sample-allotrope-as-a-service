@@ -1,5 +1,5 @@
 {
-  "app": "python deploy_services.py",
+  "app": "uv run deploy_services.py",
   "watch": {
     "include": [
       "**"

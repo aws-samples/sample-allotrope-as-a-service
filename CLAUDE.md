@@ -8,7 +8,7 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 
 ```bash
 cd services
-pip install -r requirements.txt
+uv sync                # install CDK tooling deps
 cdk bootstrap          # first time only
 cdk deploy             # deploy all Lambda functions and APIs
 cdk synth              # synthesize CloudFormation (validates CDK without deploying)

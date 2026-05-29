@@ -61,7 +61,14 @@ MultiInstrumentAPIEndpoint = https://xxxxxxxxxx.execute-api.us-east-1.amazonaws.
 
 ## Step 3: Update Dashboard Configuration
 
-Edit `dashboard/src/config.js` with your endpoints from Step 2:
+Run the following helper script to update `dashboard/src/config.js` with your endpoints from Step 2:
+
+```bash
+cd ../dashboard
+python update-config.py
+```
+
+Alternatively, you may manually update the following values in `dashboard/src/config.js`:
 
 ```javascript
 export const ENDPOINTS = {
@@ -73,19 +80,9 @@ export const ENDPOINTS = {
 }
 ```
 
-**Or use the helper script:**
-
-```bash
-cd dashboard
-python update-config.py
-```
-
-This reads the CDK outputs automatically and updates config.js.
-
 ## Step 4: Deploy Dashboard
 
 ```bash
-cd dashboard
 npm install
 npm run build
 cdk deploy --require-approval never
@@ -125,28 +122,17 @@ The ADM subfolders are flattened into `schemas/json-schemas/` (e.g. `absorbance/
 Then redeploy DVaaS:
 
 ```bash
-cd services
+cd ..
 cdk deploy --require-approval never
 ```
 
-## Step 6: Enable Bedrock Model Access (optional)
-
-If you want the AI-powered fallback (ATaaS):
-
-1. Open AWS Console → Amazon Bedrock
-2. Go to Model access → Manage model access
-3. Request access for **Anthropic Claude 4.6 Sonnet**
-4. Wait for approval (usually instant)
-
-Without this, the AI fallback route will return an error, but all other routes (custom converters, allotropy) work fine.
-
-## Step 7: Create Your First User Account
+## Step 6: Create Your First User Account
 
 Open the CloudFront URL. You'll see a login page. Click **"Need an account? Create one"** to register with your email and a password (minimum 8 characters). After registering, sign in to access the dashboard.
 
 All users are stored in the `ASMUsers` DynamoDB table. Each deployment has its own user database.
 
-## Step 8: Verify Deployment
+## Step 7: Verify Deployment
 
 Open the CloudFront URL and test:
 

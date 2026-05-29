@@ -16,7 +16,7 @@ This service provides automated conversion of laboratory instrument data to Allo
 
 ## 📁 Repository Structure
 
-```
+```bash
 asm-converter/
 ├── services/              # Backend Lambda services
 │   ├── ataas/            # AI-powered transformation service
@@ -33,51 +33,32 @@ asm-converter/
 └── MEMORY.md            # Project history and decisions
 ```
 
-## 🚀 Quick Start
+## 🚀 Deployment
 
-### Prerequisites
-
-- AWS Account with Bedrock access
-- AWS CDK installed (`npm install -g aws-cdk`)
-- Python 3.12+
-- Node.js 18+ (for dashboard)
-
-### Deploy Services
-
-```bash
-cd services
-pip install -r requirements.txt
-cdk bootstrap  # First time only
-cdk deploy
-```
-
-### Deploy Dashboard (Optional)
-
-```bash
-cd dashboard
-npm install
-npm run build
-cdk deploy
-```
+Please refer to [DEPLOYMENT](./DEPLOYMENT.md) for detailed deployment instructions.
 
 ## 🔧 Services
 
 ### 1. ATaaS (ASM Transformation as a Service)
+
 - **Endpoint**: `/prod/convert`
 - **Purpose**: AI-powered file analysis and ASM conversion
 - **Model**: AWS Bedrock Claude 4.6 Sonnet
 
 ### 2. DVaaS (Data Validation as a Service)
+
 - **Endpoint**: `/prod/validate`
 - **Purpose**: ASM validation and certification
 - **Features**: PDF attestation, comprehensive validation
 
 ### 3. Multi-Instrument Service
+
 - **Endpoint**: `/prod/convert`
 - **Purpose**: 31+ instruments via allotropy library
 - **Supported**: Plate readers, cell counters, solution analyzers, etc.
 
 ### 4. Unified Converter
+
 - **Endpoint**: `/prod/convert`
 - **Purpose**: Intelligent routing (allotropy → custom → AI)
 - **Recommended**: Use this endpoint for all conversions
@@ -87,6 +68,7 @@ cdk deploy
 See [SUPPORTED-INSTRUMENTS.md](docs/SUPPORTED-INSTRUMENTS.md) for complete list.
 
 **Via Allotropy Library**: 31 instruments including:
+
 - Beckman Vi-CELL (BLU, XR)
 - Molecular Devices SoftMax Pro
 - PerkinElmer EnVision
@@ -94,15 +76,9 @@ See [SUPPORTED-INSTRUMENTS.md](docs/SUPPORTED-INSTRUMENTS.md) for complete list.
 - And 27 more...
 
 **Custom Converters**:
+
 - Nova BioProfile FLEX2 (solution analyzer)
 - Charles River EndoScan-V (endotoxin testing)
-
-## 📖 Documentation
-
-- [Manifest Schema](docs/MANIFEST-SCHEMA.md) - Required metadata format
-- [Customer Validation Analysis](docs/CUSTOMER-VALIDATION-ANALYSIS.md) - Compliance improvements
-- [Supported Instruments](docs/SUPPORTED-INSTRUMENTS.md) - Complete instrument list
-- [Memory](MEMORY.md) - Project history and technical decisions
 
 ## 🔐 Security & Compliance
 
@@ -122,15 +98,8 @@ curl -X POST https://your-api-endpoint/prod/convert \
 
 ## 📝 License
 
-[Add your license here - MIT, Apache 2.0, etc.]
-
-## 🤝 Contributing
-
-[Add contribution guidelines if open source]
-
-## 📧 Contact
-
-[Add contact information]
+Copyright Amazon.com, Inc. or its affiliates. All Rights Reserved.
+SPDX-License-Identifier: MIT-0
 
 ---
 

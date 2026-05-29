@@ -1,7 +1,6 @@
 <!--
-  Copyright 2016 Amazon.com, Inc. or its affiliates. All Rights Reserved.
-  Licensed under the Apache License, Version 2.0.
-  http://aws.amazon.com/apache2.0/
+Copyright Amazon.com, Inc. or its affiliates. All Rights Reserved.
+SPDX-License-Identifier: MIT-0
 -->
 <!DOCTYPE html>
 <html lang="en">
@@ -393,7 +392,7 @@ print("Done. Files saved: output.asm.json, validation_report.pdf")</code></pre>
   <p>DVaaS validates ASM files using a multi-layer approach based on official Allotrope standards. Understanding how validation works helps you interpret results and build compliant converters.</p>
 
   <h3>Validation Engine: jsonschema-rs</h3>
-  <p>The core validation engine is <a href="https://github.com/Stranger6667/jsonschema-rs">jsonschema-rs</a>, a Rust-based JSON Schema validator that supports JSON Schema draft 2020-12. This is the same standard used by the Allotrope Foundation to define their ASM schemas.</p>
+  <p>The core validation engine is <a href="https://github.com/Stranger6667/jsonschema-rs" target="_blank" rel="noopener noreferrer">jsonschema-rs</a>, a Rust-based JSON Schema validator that supports JSON Schema draft 2020-12. This is the same standard used by the Allotrope Foundation to define their ASM schemas.</p>
   <p>We chose jsonschema-rs because:</p>
   <ul>
     <li>It implements the same JSON Schema draft (2020-12) that Allotrope uses</li>
@@ -403,7 +402,7 @@ print("Done. Files saved: output.asm.json, validation_report.pdf")</code></pre>
   </ul>
 
   <h3>Allotrope JSON Schemas</h3>
-  <p>The official Allotrope ASM schemas are published at <a href="https://gitlab.com/allotrope-public/asm">gitlab.com/allotrope-public/asm</a>. We bundle these schemas locally in the DVaaS Lambda deployment package under <code>schemas/</code>.</p>
+  <p>The official Allotrope ASM schemas are published at <a href="https://gitlab.com/allotrope-public/asm" target="_blank" rel="noopener noreferrer">gitlab.com/allotrope-public/asm</a>. We bundle these schemas locally in the DVaaS Lambda deployment package under <code>schemas/</code>.</p>
 
   <p>The schema hierarchy works as follows:</p>
   <pre><code>$asm.manifest (in your ASM file)
@@ -533,7 +532,7 @@ print("Done. Files saved: output.asm.json, validation_report.pdf")</code></pre>
   <h3>Schema Updates</h3>
   <p>Allotrope publishes schema updates periodically. To update the schemas used by DVaaS:</p>
   <ol>
-    <li>Download the latest schemas from <a href="https://gitlab.com/allotrope-public/asm/-/tree/main/json-schemas">gitlab.com/allotrope-public/asm</a></li>
+    <li>Download the latest schemas from <a href="https://gitlab.com/allotrope-public/asm/-/tree/main/json-schemas" target="_blank" rel="noopener noreferrer">gitlab.com/allotrope-public/asm</a></li>
     <li>Replace the contents of <code>services/dvaas/schemas/json-schemas/</code> and <code>services/dvaas/schemas/manifests/</code></li>
     <li>Redeploy DVaaS: <code>cd services &amp;&amp; cdk deploy</code></li>
   </ol>

@@ -1,0 +1,25 @@
+{
+  "$asm.manifest": "http://purl.allotrope.org/manifests/solution-analyzer/REC/2025/06/solution-analyzer.manifest",
+  "solution analyzer aggregate document": {
+    "device system document": {
+      "device identifier": "bioprofile flex2",
+      "product manufacturer": "nova biomedical",
+      "device document": [{"device type": "solution analyzer"}]
+    },
+    "data system document": {
+      "file name": "test.csv",
+      "ASM converter name": "test-converter",
+      "ASM converter version": "1.0.0"
+    },
+    "solution analyzer document": [{
+      "analyst": "test-user",
+      "measurement aggregate document": {
+        "measurement document": [{
+          "measurement identifier": "550e8400-e29b-41d4-a716-446655440000",
+          "measurement time": "2024-01-15T10:30:00.000+00:00",
+          "sample document": {"sample identifier": "S001"}
+        }]
+      }
+    }]
+  }
+}

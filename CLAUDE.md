@@ -31,8 +31,10 @@ After backend deployment, update API endpoints in `dashboard/src/config.js` from
 ### Local tests
 
 ```bash
-python services/simple_test.py
-python services/test_autonomous_services.py
+cd services
+uv sync --group dev    # first time only
+uv run pytest          # run all unit tests (no AWS creds required)
+uv run pytest --cov=. --cov-report=term-missing  # with coverage
 ```
 
 ## Architecture

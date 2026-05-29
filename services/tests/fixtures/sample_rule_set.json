@@ -1,0 +1,31 @@
+{
+  "rule_set_id": "test-rules-v1",
+  "rules": [
+    {
+      "rule_id": "T-001",
+      "check": "value_matches_pattern",
+      "path": "**.measurement identifier",
+      "pattern": "^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$",
+      "level": "L1",
+      "severity": "error",
+      "message": "Measurement identifier '{value}' is not a valid UUID"
+    },
+    {
+      "rule_id": "T-002",
+      "check": "field_required",
+      "path": "**.sample document",
+      "field": "sample identifier",
+      "level": "L1",
+      "severity": "error",
+      "message": "Sample document must include sample identifier"
+    },
+    {
+      "rule_id": "T-003",
+      "check": "path_exists",
+      "path": "**.device system document",
+      "level": "L3",
+      "severity": "error",
+      "message": "ASM must include device system document"
+    }
+  ]
+}

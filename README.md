@@ -89,12 +89,50 @@ See [SUPPORTED-INSTRUMENTS.md](docs/SUPPORTED-INSTRUMENTS.md) for complete list.
 
 ## 🧪 Testing
 
+Unit tests cover the Python backend services and require no deployed infrastructure or AWS credentials.
+
+### Prerequisites
+
 ```bash
-# Test with sample file
-curl -X POST https://your-api-endpoint/prod/convert \
-  -H "Content-Type: application/json" \
-  -d @demo-samples/sample-request.json
+cd services
+uv sync --group dev    # installs pytest, boto3, moto, pytest-mock
 ```
+
+### Running tests
+
+```bash
+cd services
+
+# Run all unit tests
+uv run pytest
+
+# Run with coverage report
+uv run pytest --cov=. --cov-report=term-missing
+
+# Run a single test file
+uv run pytest tests/test_rule_engine.py -v
+
+# Run a single test
+uv run pytest tests/test_rule_engine.py::TestResolvePath::test_simple_nested
+```
+
+### Test structure
+
+```bash
+services/tests/
+  conftest.py                   # shared fixtures and module loader
+  fixtures/
+    nova_flex2_sample.csv       # sample Nova FLEX2 instrument data
+    sample_asm_valid.json       # minimal valid ASM document
+    sample_rule_set.json        # sample validation rule set
+  test_custom_converter.py      # sandbox import allowlist and exec() isolation
+  test_multi_instrument.py      # instrument type detection and CSV converters
+  test_rule_engine.py           # DVaaS rule engine (path resolution, all check types)
+  test_unified_converter.py     # Nova FLEX2 detection and conversion, error responses
+  test_validate_asm.py          # ASM attribute validation, technique detection
+```
+
+AWS SDK calls (boto3) are mocked via [moto](https://github.com/getmoto/moto); allotropy is stubbed since it is a Lambda layer dependency not required for unit tests.
 
 ## 📝 License
 

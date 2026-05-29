@@ -114,14 +114,28 @@ export default function ConverterManagementApp() {
         }
       }
 
-      // Security: filesystem access
-      // const fsPatterns = ["open(", "Path(", "os.path", ".read_text", ".write_text", ".read_bytes", ".write_bytes"];
-      // for (const pattern of fsPatterns) {
-      //   if (content.includes(pattern)) {
-      //     errors.push(`Filesystem access not allowed: Code contains ${pattern} — converter must use file_content string parameter, not read files directly`);
-      //     break;
-      //   }
-      // }
+      // Security: filesystem access — only flag patterns found inside the convert() body,
+      // so __main__ blocks and local test helpers don't produce false positives.
+      const fsPatterns = ["open(", "Path(", "os.path", ".read_text", ".write_text", ".read_bytes", ".write_bytes"];
+      const lines = content.split('\n');
+      const convertDefIndex = lines.findIndex(l => /^\s*def convert\s*\(/.test(l));
+      if (convertDefIndex !== -1) {
+        const baseIndent = lines[convertDefIndex].match(/^(\s*)/)[1].length;
+        const convertBodyLines = [];
+        for (let i = convertDefIndex + 1; i < lines.length; i++) {
+          const line = lines[i];
+          if (line.trim() === '') { convertBodyLines.push(line); continue; }
+          if (line.match(/^(\s*)/)[1].length <= baseIndent) break;
+          convertBodyLines.push(line);
+        }
+        const convertBody = convertBodyLines.join('\n');
+        for (const pattern of fsPatterns) {
+          if (convertBody.includes(pattern)) {
+            errors.push(`Filesystem access not allowed: Code contains ${pattern} — converter must use file_content string parameter, not read files directly`);
+            break;
+          }
+        }
+      }
 
       // Security: network calls
       const netPatterns = ["requests.", "urllib", "http.client", "socket."];

@@ -27,8 +27,6 @@ asm-converter/
 ├── dashboard/            # React dashboard (optional)
 │   ├── src/
 │   └── deploy-stack.py
-├── docs/                 # Documentation
-├── demo-samples/         # Sample files for testing
 ├── README.md            # This file
 └── MEMORY.md            # Project history and decisions
 ```

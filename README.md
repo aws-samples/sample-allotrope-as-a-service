@@ -19,16 +19,22 @@ This service provides automated conversion of laboratory instrument data to Allo
 ```bash
 asm-converter/
 ├── services/              # Backend Lambda services
-│   ├── ataas/            # AI-powered transformation service
-│   ├── dvaas/            # Data validation service
-│   ├── multi-instrument/ # Allotropy-based converter (31+ instruments)
+│   ├── ataas/            # AI-powered transformation service (Bedrock Claude)
+│   ├── custom-converter/ # Customer-uploaded Python converter sandbox
+│   ├── dvaas/            # Data validation and certification service
+│   ├── multi-instrument/ # Allotropy-based converter (50+ instruments)
 │   ├── unified-converter/# Intelligent routing service
+│   ├── lambda-layers/    # Shared Lambda layers (allotropy, reportlab, etc.)
+│   ├── tests/            # Unit tests
 │   └── deploy_services.py
-├── dashboard/            # React dashboard (optional)
+├── dashboard/            # React dashboard (Cloudscape + Vite)
 │   ├── src/
 │   └── deploy-stack.py
-├── README.md            # This file
-└── MEMORY.md            # Project history and decisions
+├── example/              # Sample instrument data and converter scripts
+├── images/               # Architecture and documentation images
+├── DEPLOYMENT.md         # Deployment instructions
+├── RELEASE-NOTES.md      # Release history
+└── README.md             # This file
 ```
 
 ## 🚀 Deployment
